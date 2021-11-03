@@ -330,8 +330,8 @@ Class MagAmmo : Inventory abstract
 
 	override bool HandlePickup( Inventory item )
 	{
-		// see if the mag can be split apart
-		if ( (item is 'Ammo') && (ParentAmmo == Ammo(item).GetParentAmmo()) )
+		// see if the mag can be split apart (only for droppable mag ammo)
+		if ( !bUNDROPPABLE && (item is 'Ammo') && (ParentAmmo == Ammo(item).GetParentAmmo()) )
 		{
 			// double-check that parent ammo exists
 			if ( !pamo )
@@ -362,35 +362,75 @@ Class MagAmmo : Inventory abstract
 		// drop excess mag ammo
 		if ( (item is 'MagAmmo') && (MagAmmo(item).GetParentMagAmmo() == GetClass()) )
 		{
-			int excess = Amount+item.Amount;
-			if ( excess > MaxAmount ) excess -= MaxAmount;
-			if ( excess < item.Amount )
+			if ( bUNDROPPABLE )
 			{
-				// enumerate all subclasses
-				Array<Class<MagAmmo> > ammotypes;
-				ammotypes.Clear();
-				for ( int i=0; i<AllActorClasses.Size(); i++ )
+				// undroppable mag ammo only drops full mags.
+				// due to the way this works, we theoretically
+				// should never end up with ammo "disappearing"
+				bool given = false;
+				while ( Amount+item.Amount >= MaxAmount )
 				{
-					if ( AllActorClasses[i] is GetParentMagAmmo() )
-						ammotypes.Push((Class<MagAmmo>)(AllActorClasses[i]));
-				}
-				// sort from largest to smallest
-				qsort_ammotypes(ammotypes,0,ammotypes.Size()-1);
-				// drop spares
-				Inventory last;
-				while ( excess > 0 )
-				{
-					for ( int i=0; i<ammotypes.Size(); i++ )
+					if ( Amount < ClipSize ) break;
+					// first of all, see if we can INCREASE
+					// parent ammo, rather than drop a mag
+					if ( pamo.Amount < pamo.MaxAmount )
 					{
-						let def = GetDefaultByType(ammotypes[i]);
-						if ( excess >= def.Amount )
+						pamo.Amount++;
+						given = true;
+						if ( Owner.CheckLocalView() )
+						{
+							SWWMAmmo(pamo).bSinglePrint = true;
+							pamo.PrintPickupMessage(true,pamo.PickupMessage());
+						}
+					}
+					else DoDrop(ParentAmmo);
+					Amount -= ClipSize;
+				}
+				if ( given ) pamo.PlayPickupSound(Owner);
+			}
+			else
+			{
+				int excess = Amount+item.Amount;
+				if ( excess > MaxAmount ) excess -= MaxAmount;
+				if ( excess < item.Amount )
+				{
+					// enumerate all subclasses
+					Array<Class<MagAmmo> > ammotypes;
+					ammotypes.Clear();
+					for ( int i=0; i<AllActorClasses.Size(); i++ )
+					{
+						if ( AllActorClasses[i] is GetParentMagAmmo() )
+							ammotypes.Push((Class<MagAmmo>)(AllActorClasses[i]));
+					}
+					// sort from largest to smallest
+					qsort_ammotypes(ammotypes,0,ammotypes.Size()-1);
+					// drop spares
+					Inventory last;
+					while ( excess > 0 )
+					{
+						// drop full mag if possible
+						if ( excess >= ClipSize )
 						{
 							double ang = FRandom[Junk](0,360);
-							last = DoDrop(ammotypes[i]);
+							last = DoDrop(ParentAmmo);
 							last.SetOrigin(item.pos,false);
 							last.vel.xy = (cos(ang),sin(ang))*FRandom[Junk](2,5);
-							excess -= def.Amount;
-							break;
+							excess -= ClipSize;
+							continue;
+						}
+						// drop bullets otherwise
+						for ( int i=0; i<ammotypes.Size(); i++ )
+						{
+							let def = GetDefaultByType(ammotypes[i]);
+							if ( excess >= def.Amount )
+							{
+								double ang = FRandom[Junk](0,360);
+								last = DoDrop(ammotypes[i]);
+								last.SetOrigin(item.pos,false);
+								last.vel.xy = (cos(ang),sin(ang))*FRandom[Junk](2,5);
+								excess -= def.Amount;
+								break;
+							}
 						}
 					}
 				}
@@ -479,7 +519,7 @@ Class MagAmmo : Inventory abstract
 	{
 		Super.DoEffect();
 		// drop excess ammo
-		if ( !sv_infiniteammo && !Owner.FindInventory('PowerInfiniteAmmo') )
+		if ( !bUNDROPPABLE && !sv_infiniteammo && !Owner.FindInventory('PowerInfiniteAmmo') )
 		{
 			int excess = Amount-MaxAmount;
 			if ( excess > 0 ) CreateTossable(excess);
