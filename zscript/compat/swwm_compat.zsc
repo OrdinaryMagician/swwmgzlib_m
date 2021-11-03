@@ -130,6 +130,138 @@ Class SWWMLevelCompatibility : LevelPostProcessor
 				if ( nbackpack ) SetThingEdNum(i,0);
 				nbackpack++;
 			}
+			// no cheesing of the exit
+			AddSectorTag(3,669);
+			OffsetSectorPlane(3,0,-72.);
+			for ( int i=149; i<=153; i++ )
+			{
+				SetLineFlags(i,Line.ML_CHECKSWITCHRANGE);
+				SetWallTexture(i,1,2,"BRICK4");
+			}
+			level.ExecuteSpecial(ACS_Execute,null,null,false,-Int('DIMPLE_EXITOPEN'));
+			// mark the DM-exclusive bfg room as a secret
+			SetSectorSpecial(1,0);
+			SetSectorSpecial(23,1024);
+			SetWallTexture(168,1,2,"BRICK4");	// fix gap
+			// remove the deathmatch exit
+			ClearLineSpecial(174);
+			SetWallTexture(174,0,1,"BRONZE3");
+			level.Lines[174].sidedef[0].SetTextureYOffset(1,0);
+			//
+			// ABANDON ALL HOPE YE WHO ENTER HERE
+			//
+			// we're going to recycle the exit sign linedefs to
+			// commit some serious crimes here, this will be fun
+			//  (in ccw order from bottom left)
+			//  vertexes of exit sign: 151, 152, 153, 154
+			//  linedefs of exit sign: 184, 185, 186, 187
+			//  vertexes of northeast pillar: 23, 0, 24, 8
+			//  linedefs of northeast pillar: 22, 23, 24, 21
+			// displace vertices of exit sign inside pillar
+			SetVertex(151,-112,-48);
+			SetVertex(152,-80,-48);
+			SetVertex(153,-80,-16);
+			SetVertex(154,-112,-16);
+			// move pillar references
+			SetLineVertexes(22,151,152);
+			SetLineVertexes(23,152,153);
+			SetLineVertexes(24,153,154);
+			SetLineVertexes(21,154,151);
+			// move exit sign references
+			SetLineVertexes(184,23,0);
+			SetLineVertexes(185,0,24);
+			SetLineVertexes(186,24,8);
+			SetLineVertexes(187,8,23);
+			// set pillar sector refs
+			SetLineSectorRef(22,0,24);
+			SetLineSectorRef(23,0,24);
+			SetLineSectorRef(24,0,24);
+			SetLineSectorRef(21,0,24);
+			// set exit sign sector refs
+			SetLineSectorRef(184,0,0);
+			SetLineSectorRef(185,0,10);
+			SetLineSectorRef(186,0,10);
+			SetLineSectorRef(187,0,0);
+			// change the textures
+			SetWallTexture(184,0,0,"BROWN1");
+			SetWallTexture(185,0,0,"BROWN1");
+			SetWallTexture(186,0,0,"BROWN1");
+			SetWallTexture(187,0,0,"BROWN1");
+			SetWallTexture(184,0,2,"BROWN1");
+			SetWallTexture(185,0,2,"BROWN1");
+			SetWallTexture(186,0,2,"BROWN1");
+			SetWallTexture(187,0,2,"BROWN1");
+			level.Lines[184].sidedef[0].SetTextureXScale(0,8.);
+			level.Lines[185].sidedef[0].SetTextureXScale(0,2.);
+			level.Lines[186].sidedef[0].SetTextureXScale(0,8.);
+			level.Lines[187].sidedef[0].SetTextureXScale(0,2.);
+			level.Lines[184].sidedef[0].SetTextureXScale(2,8.);
+			level.Lines[185].sidedef[0].SetTextureXScale(2,2.);
+			level.Lines[186].sidedef[0].SetTextureXScale(2,8.);
+			level.Lines[187].sidedef[0].SetTextureXScale(2,2.);
+			level.Lines[184].sidedef[0].SetTextureXOffset(0,0);
+			level.Lines[185].sidedef[0].SetTextureXOffset(0,0);
+			level.Lines[186].sidedef[0].SetTextureXOffset(0,0);
+			level.Lines[187].sidedef[0].SetTextureXOffset(0,0);
+			level.Lines[184].sidedef[0].SetTextureYOffset(0,24);
+			level.Lines[185].sidedef[0].SetTextureYOffset(0,24);
+			level.Lines[186].sidedef[0].SetTextureYOffset(0,24);
+			level.Lines[187].sidedef[0].SetTextureYOffset(0,24);
+			level.Lines[184].sidedef[0].SetTextureXOffset(2,0);
+			level.Lines[185].sidedef[0].SetTextureXOffset(2,0);
+			level.Lines[186].sidedef[0].SetTextureXOffset(2,0);
+			level.Lines[187].sidedef[0].SetTextureXOffset(2,0);
+			level.Lines[184].sidedef[0].SetTextureYOffset(2,24);
+			level.Lines[185].sidedef[0].SetTextureYOffset(2,24);
+			level.Lines[186].sidedef[0].SetTextureYOffset(2,24);
+			level.Lines[187].sidedef[0].SetTextureYOffset(2,24);
+			SetWallTexture(22,0,1,"BROWN144");
+			SetWallTexture(23,0,1,"SW1DIRT");
+			SetWallTexture(24,0,1,"BROWN144");
+			SetWallTexture(21,0,1,"BROWN144");
+			level.Lines[22].sidedef[0].SetTextureXScale(1,.5);
+			level.Lines[23].sidedef[0].SetTextureXScale(1,.5);
+			level.Lines[24].sidedef[0].SetTextureXScale(1,.5);
+			level.Lines[21].sidedef[0].SetTextureXScale(1,.5);
+			level.Lines[22].sidedef[0].SetTextureXOffset(1,96);
+			level.Lines[23].sidedef[0].SetTextureXOffset(1,16);
+			level.Lines[24].sidedef[0].SetTextureXOffset(1,32);
+			level.Lines[21].sidedef[0].SetTextureXOffset(1,64);
+			level.Lines[22].sidedef[0].SetTextureYOffset(1,4);
+			level.Lines[23].sidedef[0].SetTextureYOffset(1,4);
+			level.Lines[24].sidedef[0].SetTextureYOffset(1,4);
+			level.Lines[21].sidedef[0].SetTextureYOffset(1,4);
+			// make the pillar openable with use
+			OffsetSectorPlane(24,0,24+64);
+			OffsetSectorPlane(24,1,8);
+			SetLineSpecial(184,Floor_MoveToValue,0,8,40,0);
+			SetLineSpecial(185,Floor_MoveToValue,0,8,40,0);
+			SetLineSpecial(186,Floor_MoveToValue,0,8,40,0);
+			SetLineSpecial(187,Floor_MoveToValue,0,8,40,0);
+			SetLineActivation(184,SPAC_Use);
+			SetLineActivation(185,SPAC_Use);
+			SetLineActivation(186,SPAC_Use);
+			SetLineActivation(187,SPAC_Use);
+			SetLineFlags(184,Line.ML_SECRET);
+			SetLineFlags(185,Line.ML_SECRET);
+			SetLineFlags(186,Line.ML_SECRET);
+			SetLineFlags(187,Line.ML_SECRET);
+			SetLineFlags(22,Line.ML_DONTDRAW);
+			SetLineFlags(23,Line.ML_DONTDRAW);
+			SetLineFlags(24,Line.ML_DONTDRAW);
+			SetLineFlags(21,Line.ML_DONTDRAW);
+			SetLineActivation(23,SPAC_Use);
+			SetLineSpecial(23,Door_Open,668,16);
+			AddSectorTag(25,668);
+			// hide the secret sector lines
+			for ( int i=164; i<=175; i++ )
+			{
+				if ( i == 168 ) continue;
+				SetLineFlags(i,Line.ML_DONTDRAW);
+			}
+			//
+			// OK, THE CRIME TIME IS OVER
+			//
 			break;
 		// Doom 2 Redux MAP20
 		case 'C9FFFD855FCF9BD6BC3ABCCA5DC2240A':
