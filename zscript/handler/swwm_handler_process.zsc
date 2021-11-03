@@ -1,0 +1,83 @@
+// event processing
+extend Class SWWMHandler
+{
+	override void NetworkProcess( ConsoleEvent e )
+	{
+		if ( e.Name ~== "swwmfixitemcaps" )
+		{
+			// this command is only really needed when I update item max amounts mid-playthrough
+			if ( multiplayer && (e.player != Net_Arbitrator) )
+			{
+				if ( e.player == consoleplayer )
+					Console.Printf("Only the net arbitrator can call this event.");
+				return;
+			}
+			for ( int i=0; i<MAXPLAYERS; i++ )
+			{
+				if ( !playeringame[i] || !players[i].mo ) continue;
+				let mo = players[i].mo;
+				Inventory hams = mo.FindInventory("HammerspaceEmbiggener");
+				if ( hams )
+				{
+					if ( hams.MaxAmount != hams.default.MaxAmount )
+						Console.Printf("Adjust %s capacity (%d -> %d)",hams.GetTag(),hams.MaxAmount,hams.default.MaxAmount);
+					hams.MaxAmount = hams.default.MaxAmount;
+					hams.Amount = min(hams.Amount,hams.MaxAmount);
+				}
+				for ( Inventory inv=mo.inv; inv; inv=inv.inv )
+				{
+					if ( inv is 'Ammo' )
+					{
+						Ammo(inv).BackpackMaxAmount = Ammo(inv).default.BackpackMaxAmount;
+						int newmax = inv.default.MaxAmount;
+						if ( (hams.Amount > 0) && (Ammo(inv).BackpackMaxAmount > 0) )
+						{
+							double factor = (Ammo(inv).BackpackMaxAmount-inv.default.MaxAmount)/double(hams.MaxAmount);
+							newmax = int(inv.default.MaxAmount+hams.Amount*factor);
+						}
+						if ( inv.MaxAmount != newmax )
+							Console.Printf("Adjust %s capacity (%d -> %d)",inv.GetTag(),inv.MaxAmount,newmax);
+						int dropme = max(0,inv.Amount-newmax);
+						if ( dropme )
+						{
+							Console.Printf("Dropped %dx %s.",dropme,inv.GetTag());
+							// non-SWWM ammos won't subdivide, but whatever, this is a debug command
+							inv.CreateTossable(dropme);
+						}
+						inv.MaxAmount = newmax;
+					}
+					else if ( inv is 'MagAmmo' )
+					{
+						if ( inv.MaxAmount != inv.default.MaxAmount )
+							Console.Printf("Adjust %s capacity (%d -> %d)",inv.GetTag(),inv.MaxAmount,inv.default.MaxAmount);
+						// just drop the extras
+						int dropme = max(0,inv.Amount-inv.default.MaxAmount);
+						if ( dropme )
+						{
+							Console.Printf("Dropped %dx %s.",dropme,inv.GetTag());
+							inv.CreateTossable(dropme);
+						}
+						inv.MaxAmount = inv.default.MaxAmount;
+					}
+					else
+					{
+						if ( inv.MaxAmount != inv.default.MaxAmount )
+							Console.Printf("Adjust %s capacity (%d -> %d)",inv.GetTag(),inv.MaxAmount,inv.default.MaxAmount);
+						// only drop droppables (obviously)
+						if ( !inv.bUNDROPPABLE && !inv.bUNTOSSABLE )
+						{
+							int dropme = max(0,inv.Amount-inv.default.MaxAmount);
+							if ( dropme )
+							{
+								Console.Printf("Dropped %dx %s.",dropme,inv.GetTag());
+								for ( int j=0; j<dropme; j++ ) inv.CreateTossable(j);
+							}
+						}
+						inv.MaxAmount = inv.default.MaxAmount;
+						inv.Amount = min(inv.Amount,inv.MaxAmount);
+					}
+				}
+			}
+		}
+	}
+}

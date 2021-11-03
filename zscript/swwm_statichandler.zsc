@@ -1,0 +1,348 @@
+// Static handler responsible for some special stuff
+
+// save version holder
+Class SWWMSaveVerData : Thinker
+{
+	String ver;
+}
+
+Class SWWMStaticHandler : StaticEventHandler
+{
+	// crash handler
+	ui bool wasinmap;
+	ui int timer, msgpick;
+	// broccoli doccoli
+	bool isbd;
+	ui int bdtimer;
+	ui TextureID scr;
+	// versioning
+	bool tainted;
+	String taintver;
+	bool mptaint[MAXPLAYERS];
+	bool mprecv[MAXPLAYERS];
+	String mpver[MAXPLAYERS];
+	int checktic;
+	ui bool mpsent, checked;
+	int maptime;
+	bool unloading;
+
+	override void NewGame()
+	{
+		// set save version every new session
+		let svd = new("SWWMSaveVerData");
+		svd.ChangeStatNum(Thinker.STAT_STATIC);
+		svd.ver = StringTable.Localize("$SWWM_SHORTVER");
+	}
+
+	override void WorldUnloaded( WorldEvent e )
+	{
+		SWWMHandler.ClearAllShaders(players[consoleplayer]);
+		unloading = true;
+	}
+
+	override void WorldTick()
+	{
+		maptime++;
+		if ( !isbd ) return;
+		for ( int i=0; i<MAXPLAYERS; i++ ) if ( playeringame[i] ) players[i].cheats |= CF_TOTALLYFROZEN;
+	}
+
+	override void WorldLoaded( WorldEvent e )
+	{
+		unloading = false;
+		maptime = 0;
+		if ( e.IsSavegame || e.IsReopen )
+		{
+			// restore underwater sounds for players
+			for ( int i=0; i<MAXPLAYERS; i++ )
+			{
+				if ( !playeringame[i] || !(players[i].mo is 'SWWMPlayer') ) continue;
+				SWWMPlayer(players[i].mo).CheckUnderwaterAmb(true);
+			}
+		}
+		SWWMHandler.ClearAllShaders(players[consoleplayer]);
+		if ( !e.IsSaveGame ) return;
+		// save version checker
+		checktic = gametic+5;
+		let ti = ThinkerIterator.Create("SWWMSaveVerData",Thinker.STAT_STATIC);
+		let svd = SWWMSaveVerData(ti.Next());
+		if ( !svd )
+		{
+			tainted = true;
+			taintver = "\cg(no version info)\c-";
+			return;
+		}
+		String cver = StringTable.Localize("$SWWM_SHORTVER");
+		if ( svd.ver != cver )
+		{
+			tainted = true;
+			taintver = svd.ver;
+		}
+	}
+
+	override void OnRegister()
+	{
+		// preload various fonts
+		Font.GetFont('k6x8Shaded');
+		Font.GetFont('MiniwiShaded');
+		Font.GetFont('MPlusShaded');
+		Font.GetFont('TewiShaded');
+		// used for "big text"
+		Font.GetFont('MPlusShadedOutline');
+		Font.GetFont('TewiShadedOutline');
+		// any mod-defined fonts
+		PreloadModFonts();
+		// check for brutal doom
+		for ( int i=0; i<AllActorClasses.size(); i++ )
+		{
+			if ( (AllActorClasses[i].GetClassName() != "BrutalWeapon")
+				&& (AllActorClasses[i].GetClassName() != "BrutalDoomer") ) continue;
+			isbd = true;
+			Console.Printf(
+				"\cx┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\c-\n"
+				"\cx┃   \cfIf you have BD on your autoload you really shouldn't.   \cx┃\c-\n"
+				"\cx┃  \cfIf you manually loaded it with this mod, why would you?  \cx┃\c-\n"
+				"\cx┃         \cfThey're not compatible and never will be.         \cx┃\c-\n"
+				"\cx┃    \cfThis mod will now shit the bed once you go in-game,    \cx┃\c-\n"
+				"\cx┃            \cfand trust me, it's better this way.            \cx┃\c-\n"
+				"\cx┃             \cf<See you again, have a nice day>              \cx┃\c-\n"
+				"\cx┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\c-");
+			S_StartSound("compat/warn",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+			break;
+		}
+		// warning for unsupported
+		if ( Wads.FindLump("swwmgamesupported.txt") != -1 ) return;
+		Console.Printf(
+			"\cx┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\c-\n"
+			"\cx┃                     \cr[\cgWARNING\cr]                     \cx┃\c-\n"
+			"\cx┃  \cjThe mod is \cfNOT\cj compatible with the loaded IWAD.  \cx┃\c-\n"
+			"\cx┃            \cjIssues \cfCAN\cj and \cfWILL\cj happen.            \cx┃\c-\n"
+			"\cx┃               \cr[\cgYOU ARE ON YOUR OWN\cr]               \cx┃\c-\n"
+			"\cx┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\c-");
+		S_StartSound("compat/warn",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+	}
+
+	override void RenderOverlay( RenderEvent e )
+	{
+		// warn on use of incorrect render settings
+		// make sure to find the cvars, rather than use them directly
+		// just in case anything changes in the future and we end up
+		// breaking shit (not the first time a mod does that)
+		int yy = 8;
+		let backend = CVar.FindCVar('vid_preferbackend');
+		let rmode = CVar.FindCVar('vid_rendermode');
+		if ( backend && (backend.GetInt() > 1) )
+		{
+			String str = "UNSUPPORTED VIDEO BACKEND - PLEASE SWITCH TO OPENGL OR VULKAN";
+			Screen.DrawText(newsmallfont,Font.CR_RED,(Screen.GetWidth()-newsmallfont.StringWidth(str)*CleanXFac_1)/2,yy,str,DTA_CleanNoMove_1,true);
+			yy += 16*CleanYFac_1;
+		}
+		if ( rmode && (rmode.GetInt() != 4) )
+		{
+			String str = "UNSUPPORTED RENDER MODE - PLEASE SWITCH TO HARDWARE RENDERING";
+			Screen.DrawText(newsmallfont,Font.CR_RED,(Screen.GetWidth()-newsmallfont.StringWidth(str)*CleanXFac_1)/2,yy,str,DTA_CleanNoMove_1,true);
+		}
+		if ( !isbd ) return;
+		if ( !scr ) scr = TexMan.CheckForTexture("graphics/bdscreen.png",TexMan.Type_Any);
+		Screen.Dim("Red",(bdtimer/350.)-.2,0,0,Screen.GetWidth(),Screen.GetHeight());
+		double ar = Screen.GetAspectRatio();
+		Vector2 tsize = TexMan.GetScaledSize(scr);
+		Vector2 vsize = (Screen.GetWidth(),Screen.GetHeight());
+		if ( (tsize.x > vsize.x) || (tsize.y > vsize.y) )
+		{
+			double sar = tsize.x/tsize.y;
+			if ( sar > ar ) vsize = (tsize.x,tsize.x/ar);
+			else if ( sar < ar ) vsize = (tsize.y*ar,tsize.y);
+			else vsize = tsize;
+		}
+		Screen.DrawTexture(scr,false,(vsize.x-tsize.x)/2.+FRandom[bdscreen](-1,1)*max(bdtimer-40,0)**3*.000003,(vsize.y-tsize.y)/2.+FRandom[bdscreen](-1,1)*max(bdtimer-40,0)**3*.000003,DTA_VirtualWidthF,vsize.x,DTA_VirtualHeightF,vsize.y,DTA_KeepRatio,true,DTA_Alpha,min(1.,bdtimer/50.));
+		Screen.Dim("Red",(bdtimer/70.)-3.5,0,0,Screen.GetWidth(),Screen.GetHeight());
+	}
+
+	override void ConsoleProcess( ConsoleEvent e )
+	{
+		if ( e.Name ~== "swwmresetcvars" )
+		{
+			Array<String> cvarlist;
+			SWWMUtility.GetCVars(cvarlist);
+			for ( int i=0; i<cvarlist.Size(); i++ )
+			{
+				// don't reset this one
+				if ( cvarlist[i] == SWWMMODPREFIX.."_playtime" )
+					continue;
+				CVar.FindCVar(cvarlist[i]).ResetToDefault();
+			}
+		}
+		else if ( e.Name ~== "swwmresettooltips" )
+		{
+			CVar.FindCVar(SWWMMODPREFIX.."_tooltipshown").ResetToDefault();
+			CVar.FindCVar(SWWMMODPREFIX.."_tooltipnote").ResetToDefault();
+		}
+		else if ( e.Name ~== "swwmlistcvars" )
+		{
+			// debug
+			Array<String> cvarlist;
+			SWWMUtility.GetCVars(cvarlist);
+			for ( int i=0; i<cvarlist.Size(); i++ )
+			{
+				let cv = CVar.FindCVar(cvarlist[i]);
+				Console.Printf(cvarlist[i].." = "..cv.GetString());
+			}
+		}
+		else if ( e.Name ~== "swwmgetplaytime" )
+		{
+			int val = CVar.FindCVar(SWWMMODPREFIX.."_playtime").GetInt();
+			int sec = (val%60);
+			int min = ((val/60)%60);
+			int hour = ((val/3600)%24);
+			int day = val/86400;
+			String str = "";
+			if ( day ) str.AppendFormat("%d days",day);
+			if ( hour )
+			{
+				if ( str != "" ) str = str..", ";
+				str.AppendFormat("%d hours",hour);
+			}
+			if ( min )
+			{
+				if ( str != "" ) str = str..", ";
+				str.AppendFormat("%d minutes",min);
+			}
+			if ( sec )
+			{
+				if ( str != "" ) str = str..", ";
+				str.AppendFormat("%d seconds",sec);
+			}
+			if ( str == "" ) Console.Printf("No Data");
+			else Console.Printf(str);
+		}
+		else if ( e.Name ~== "swwmgetversion" )
+		{
+			let ti = ThinkerIterator.Create("SWWMSaveVerData",Thinker.STAT_STATIC);
+			let svd = SWWMSaveVerData(ti.Next());
+			if ( svd ) Console.Printf("\cj%s\c-",svd.ver);
+			else Console.Printf("\cg(no version data)\c-");
+			if ( tainted ) Console.Printf("\cgversion mismatched\c-");
+			else Console.Printf("\cdversion not mismatched\c-");
+		}
+	}
+
+	override void NetworkProcess( ConsoleEvent e )
+	{
+		if ( e.IsManual ) return;
+		if ( e.Name.Left(12) ~== "swwmversion." )
+		{
+			String verstr = e.Name.Mid(12);
+			mprecv[e.Player] = true;
+			mpver[e.Player] = verstr;
+			if ( verstr != StringTable.Localize("$SWWM_SHORTVER") )
+				mptaint[e.Player] = true;
+		}
+	}
+
+	override void PostUiTick()
+	{
+		if ( (gametic > 0) && !(gametic%GameTicRate) )
+		{
+			let pt = CVar.FindCVar(SWWMMODPREFIX.."_playtime");
+			int ct = pt.GetInt();
+			pt.SetInt(ct+1);
+		}
+		if ( gamestate != GS_LEVEL ) return;
+		if ( !mpsent )
+		{
+			EventHandler.SendNetworkEvent("swwmversion."..StringTable.Localize("$SWWM_SHORTVER"));
+			mpsent = true;
+			return;
+		}
+		if ( checked || (gametic < checktic) ) return;
+		if ( multiplayer )
+		{
+			for ( int i=0; i<MAXPLAYERS; i++ )
+			{
+				if ( !playeringame[i] || mprecv[i] ) continue;
+				// waiting for version info from all players
+				return;
+			}
+		}
+		checked = true;
+		String cver = StringTable.Localize("$SWWM_SHORTVER");
+		if ( tainted )
+		{
+			let ti = ThinkerIterator.Create("SWWMSaveVerData",Thinker.STAT_STATIC);
+			let svd = SWWMSaveVerData(ti.Next());
+			if ( !svd ) Console.Printf("\cgWARNING:\n \cjSave contains no version data. Issues may happen.\c-");
+			else
+			{
+				Console.Printf("\cgWARNING:\n \cjVersion mismatch with save data. Issues may happen.\c-");
+				Console.Printf("\cgSaved:\n \cj"..svd.ver.."\c-");
+				Console.Printf("\cgCurrent:\n \cj"..cver.."\c-");
+			}
+		}
+		if ( multiplayer )
+		{
+			bool found = false;
+			for ( int i=0; i<MAXPLAYERS; i++ )
+			{
+				if ( !playeringame[i] || (i == consoleplayer) || (!mptaint[i] && (mpver[i] != "")) ) continue;
+				if ( !found )
+				{
+					Console.Printf("\cfWARNING:\n \cjVersion mismatch between players. Desyncs will happen.\c-");
+					Console.Printf("\cgYou:\n \cj"..cver.."\c-");
+				}
+				found = true;
+				Console.Printf("\cgPlayer %d (\c-%s\cg):\n \cj%s\c-",i+1,players[i].GetUserName(),(mpver[i]=="")?"\cg(no version data)\c-":mpver[i]);
+			}
+		}
+	}
+
+	override void UiTick()
+	{
+		if ( isbd && (gamestate == GS_LEVEL) )
+		{
+			if ( bdtimer == 1 )
+			{
+				S_StartSound("brutal/ezmodo",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+				S_StartSound("brutal/ezmodo",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+			}
+			else if ( bdtimer == 350 ) ThrowAbortException("This manual abort is for your own safety");
+			bdtimer++;
+		}
+		else bdtimer = 0;
+		// Fancy crash effect
+		if ( (gamestate == GS_LEVEL) || (gamestate == GS_TITLELEVEL) )
+		{
+			wasinmap = true;
+			timer = 0;
+		}
+		else if ( (gamestate == GS_FULLCONSOLE) && ((wasinmap && !players[consoleplayer].viewheight) || (timer > 0)) )
+		{
+			wasinmap = false;
+			if ( timer == 1 )
+			{
+				msgpick = Random[UIStuff](1,8);
+				Console.Printf("\cf%s\c-",StringTable.Localize("$CRASHMSG"..msgpick.."A"));
+				if ( isbd )
+				{
+					S_StartSound("crash/glass",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+					S_StartSound("crash/glass",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+				}
+				else S_StartSound("crash/crash",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+			}
+			else if ( timer == 70 )
+			{
+				Console.Printf("\cf%s\c-",StringTable.Localize("$CRASHMSG"..msgpick.."B"));
+				S_StartSound("crash/curb",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+			}
+			else if ( timer == 140 )
+			{
+				if ( isbd ) Console.Printf("\cfYou shouldn't have tried running this with Brutal Doom.\c-");
+				else Console.Printf("\cfYou should probably screenshot this error and show it to Marisa.\c-");
+				Console.Printf("\cfLoaded Version:\n \cj%s\c-",StringTable.Localize("$SWWM_SHORTVER"));
+				if ( tainted ) Console.Printf("\cfSavegame Version:\n \cj%s\c-",taintver);
+			}
+			timer++;
+		}
+	}
+}
+

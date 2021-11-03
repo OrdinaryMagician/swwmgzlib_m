@@ -1,0 +1,597 @@
+// class replacements
+
+extend Class SWWMHandler
+{
+	transient CVar modblood, drlaskill;
+
+	private Class<Actor> GetDRLAReplacee( Class<Actor> a )
+	{
+		static const String refpool[] =
+		{
+			"Zombieman",
+			"Shotgunguy",
+			"Chaingunguy",
+			"DoomImp",
+			"Demon",
+			"Spectre",
+			"LostSoul",
+			"Cacodemon",
+			"HellKnight",
+			"BaronOfHell",
+			"Arachnotron",
+			"PainElemental",
+			"Revenant",
+			"Fatso",
+			"Archvile",
+			"Cyberdemon",
+			"SpiderMastermind",
+			"BossEye",
+			"BossBrain"
+		};
+		static const String babypool[] =
+		{
+			"RLFormerHumanPistol",
+			"RLFormerSergeantShotgun",
+			"RLFormerCommandoChaingun",
+			"RLImp",
+			"RLDemon",
+			"RLSpectre",
+			"RLLostSoul",
+			"RLCacodemon",
+			"RLHellKnight",
+			"RLBaronOfHell",
+			"RLArachnotron",
+			"RLPainElemental",
+			"RLRevenant",
+			"RLMancubus",
+			"RLArchvile",
+			"RLCyberdemon",
+			"RLSpiderMastermindVariantSpawner",
+			"RLEasyBossEye",
+			"RLBossBrain"
+		};
+		static const String easypool[] =
+		{
+			"RLFormerHumanNoArmageddonSpawner",
+			"RLFormerSergeantNoArmageddonSpawner",
+			"RLFormerCommandoNoArmageddonSpawner",
+			"RLImpNoArmageddonSpawner",
+			"RLDemonNoArmageddonSpawner",
+			"RLSpectreNoArmageddonSpawner",
+			"RLLostSoulNoArmageddonSpawner",
+			"RLCacodemonNoArmageddonSpawner",
+			"RLHellKnightNoArmageddonSpawner",
+			"RLBaronOfHellNoArmageddonSpawner",
+			"RLArachnotronNoArmageddonSpawner",
+			"RLPainElementalNoArmageddonSpawner",
+			"RLRevenantNoArmageddonSpawner",
+			"RLMancubusNoArmageddonSpawner",
+			"RLArchvileNoArmageddonSpawner",
+			"RLCyberdemonNoArmageddonSpawner",
+			"RLSpiderMastermindNoArmageddonSpawner",
+			"RLBossEye",
+			"RLBossBrain"
+		};
+		static const String normalpool[] =
+		{
+			"RLFormerHumanNoArmageddonSpawner",
+			"RLFormerSergeantNoArmageddonSpawner",
+			"RLFormerCommandoNoArmageddonSpawner",
+			"RLImpNoArmageddonSpawner",
+			"RLDemonNoArmageddonSpawner",
+			"RLSpectreNoArmageddonSpawner",
+			"RLLostSoulNoArmageddonSpawner",
+			"RLCacodemonNoArmageddonSpawner",
+			"RLHellKnightNoArmageddonSpawner",
+			"RLBaronOfHellNoArmageddonSpawner",
+			"RLArachnotronNoArmageddonSpawner",
+			"RLPainElementalNoArmageddonSpawner",
+			"RLRevenantNoArmageddonSpawner",
+			"RLMancubusNoArmageddonSpawner",
+			"RLArchvileNoArmageddonSpawner",
+			"RLCyberdemonNoArmageddonSpawner",
+			"RLSpiderMastermindNoArmageddonSpawner",
+			"RLBossEye",
+			"RLBossBrain"
+		};
+		static const String hardpool[] =
+		{
+			"RLFormerHumanSpawner",
+			"RLFormerSergeantSpawner",
+			"RLFormerCommandoSpawner",
+			"RLImpSpawner",
+			"RLDemonSpawner",
+			"RLSpectreSpawner",
+			"RLLostSoulSpawner",
+			"RLCacodemonSpawner",
+			"RLHellKnightSpawner",
+			"RLBaronOfHellSpawner",
+			"RLArachnotronSpawner",
+			"RLPainElementalSpawner",
+			"RLRevenantSpawner",
+			"RLMancubusSpawner",
+			"RLArchvileSpawner",
+			"RLCyberdemonSpawner",
+			"RLSpiderMastermindSpawner",
+			"RLUVBossEye",
+			"RLBossBrain"
+		};
+		static const String nightmarepool[] =
+		{
+			"RLEliteFormerHumanSpawner",
+			"RLEliteFormerSergeantSpawner",
+			"RLEliteFormerCommandoSpawner",
+			"RLNightmareImp",
+			"RLNightmareDemon",
+			"RLNightmareSpectre",
+			"RLNightmareLostSoul",
+			"RLNightmareCacodemon",
+			"RLNightmareHellKnight",
+			"RLNightmareBaronOfHell",
+			"RLNightmareArachnotron",
+			"RLNightmarePainElemental",
+			"RLNightmareRevenant",
+			"RLNightmareMancubus",
+			"RLNightmareArchvile",
+			"RLNightmareCyberdemonSpawner",
+			"RLNightmareSpiderMastermindSpawner",
+			"RLNightmareBossEye",
+			"RLNightmareBossBrain"
+		};
+		static const String technophobiapool[] =
+		{
+			"RLFormerCyborgBattleRifle",
+			"RLFormerCyborgBattleRifle",
+			"RLFormerCyborgBattleRifle",
+			"RLCyberneticImp",
+			"RLCyberneticDemon",
+			"RLCyberneticSpectre",
+			"RLCyberneticLostSoul",
+			"RLCacodemon",
+			"RLCyberneticHellKnight",
+			"RLCyberneticBaronOfHell",
+			"RLCyberneticArachnotron",
+			"RLCyberneticPainElemental",
+			"RLCyberneticRevenant",
+			"RLCyberneticMancubus",
+			"RLCyberneticArchvile",
+			"RLCyberneticCyberdemonSpawner",
+			"RLCyberneticSpiderMastermindSpawner",
+			"RLTechnophobiaBossEye",
+			"RLTechnophobiaBossBrain"
+		};
+		static const String armageddonpool[] =
+		{
+			"RLFormerAssaultTrooper",
+			"RLFormerOverwatch",
+			"RLFormerShocktrooper",
+			"RLArmageddonImp",
+			"RLArmageddonDemon",
+			"RLArmageddonSpectreSpawner",
+			"RLTheHungrySpawner",
+			"RLArmageddonCacodemon",
+			"RLArmageddonHellKnightSpawner",
+			"RLArmageddonBaronOfHell",
+			"RLArmageddonArachnotron",
+			"RLArmageddonPainElemental",
+			"RLArmageddonRevenant",
+			"RLArmageddonMancubus",
+			"RLArmageddonArchvileSpawner",
+			"RLArmageddonCyberdemonSpawner",
+			"RLArmageddonSpiderMastermindSpawner",
+			"RLArmageddonBossEye",
+			"RLArmageddonBossBrain"
+		};
+		static const String adaptivepool[] =
+		{
+			"RLAdaptiveFormerHuman",
+			"RLAdaptiveFormerSergeant",
+			"RLAdaptiveFormerCommando",
+			"RLAdaptiveImp",
+			"RLAdaptiveDemon",
+			"RLAdaptiveSpectre",
+			"RLAdaptiveLostSoul",
+			"RLAdaptiveCacodemon",
+			"RLAdaptiveHellKnight",
+			"RLAdaptiveBaronOfHell",
+			"RLAdaptiveArachnotron",
+			"RLAdaptivePainElemental",
+			"RLAdaptiveRevenant",
+			"RLAdaptiveMancubus",
+			"RLAdaptiveArchvile",
+			"RLAdaptiveCyberdemon",
+			"RLAdaptiveSpiderMastermind",
+			"RLUVBossEye",
+			"RLBossBrain"
+		};
+		if ( !drlaskill ) drlaskill = CVar.FindCVar(SWWMMODPREFIX.."_drlaskill");
+		switch ( drlaskill.GetInt() )
+		{
+		case 0:
+			for ( int i=0; i<18; i++ )
+			{
+				if ( !(a is babypool[i]) ) continue;
+				return refpool[i];
+			}
+			break;
+		case 1:
+			for ( int i=0; i<18; i++ )
+			{
+				if ( !(a is easypool[i]) ) continue;
+				return refpool[i];
+			}
+			break;
+		case 2:
+			for ( int i=0; i<18; i++ )
+			{
+				if ( !(a is normalpool[i]) ) continue;
+				return refpool[i];
+			}
+			break;
+		case 3:
+			for ( int i=0; i<18; i++ )
+			{
+				if ( !(a is hardpool[i]) ) continue;
+				return refpool[i];
+			}
+			break;
+		case 4:
+			for ( int i=0; i<18; i++ )
+			{
+				if ( !(a is nightmarepool[i]) ) continue;
+				return refpool[i];
+			}
+			break;
+		case 5:
+			for ( int i=0; i<18; i++ )
+			{
+				if ( !(a is technophobiapool[i]) ) continue;
+				return refpool[i];
+			}
+			break;
+		case 6:
+			for ( int i=0; i<18; i++ )
+			{
+				if ( !(a is armageddonpool[i]) ) continue;
+				return refpool[i];
+			}
+			break;
+		case 7:
+		default:
+			for ( int i=0; i<18; i++ )
+			{
+				if ( !(a is adaptivepool[i]) ) continue;
+				return refpool[i];
+			}
+			break;
+		}
+		return null;
+	}
+
+	override void CheckReplacee( ReplacedEvent e )
+	{
+		// drla stuff, needed so boss deaths work
+		if ( !hasdrlamonsters ) return;
+		let rep = GetDRLAReplacee(e.Replacement);
+		if ( rep ) e.Replacee = rep;
+	}
+
+	private Class<Actor> GetDRLAReplacement( Class<Actor> a )
+	{
+		static const String refpool[] =
+		{
+			"Zombieman",
+			"Shotgunguy",
+			"Chaingunguy",
+			"DoomImp",
+			"Demon",
+			"Spectre",
+			"LostSoul",
+			"Cacodemon",
+			"HellKnight",
+			"BaronOfHell",
+			"Arachnotron",
+			"PainElemental",
+			"Revenant",
+			"Fatso",
+			"Archvile",
+			"Cyberdemon",
+			"SpiderMastermind",
+			"BossEye",
+			"BossBrain"
+		};
+		static const String babypool[] =
+		{
+			"RLFormerHumanPistol",
+			"RLFormerSergeantShotgun",
+			"RLFormerCommandoChaingun",
+			"RLImp",
+			"RLDemon",
+			"RLSpectre",
+			"RLLostSoul",
+			"RLCacodemon",
+			"RLHellKnight",
+			"RLBaronOfHell",
+			"RLArachnotron",
+			"RLPainElemental",
+			"RLRevenant",
+			"RLMancubus",
+			"RLArchvile",
+			"RLCyberdemon",
+			"RLSpiderMastermindVariantSpawner",
+			"RLEasyBossEye",
+			"RLBossBrain"
+		};
+		static const String easypool[] =
+		{
+			"RLFormerHumanNoArmageddonSpawner",
+			"RLFormerSergeantNoArmageddonSpawner",
+			"RLFormerCommandoNoArmageddonSpawner",
+			"RLImpNoArmageddonSpawner",
+			"RLDemonNoArmageddonSpawner",
+			"RLSpectreNoArmageddonSpawner",
+			"RLLostSoulNoArmageddonSpawner",
+			"RLCacodemonNoArmageddonSpawner",
+			"RLHellKnightNoArmageddonSpawner",
+			"RLBaronOfHellNoArmageddonSpawner",
+			"RLArachnotronNoArmageddonSpawner",
+			"RLPainElementalNoArmageddonSpawner",
+			"RLRevenantNoArmageddonSpawner",
+			"RLMancubusNoArmageddonSpawner",
+			"RLArchvileNoArmageddonSpawner",
+			"RLCyberdemonNoArmageddonSpawner",
+			"RLSpiderMastermindNoArmageddonSpawner",
+			"RLBossEye",
+			"RLBossBrain"
+		};
+		static const String normalpool[] =
+		{
+			"RLFormerHumanNoArmageddonSpawner",
+			"RLFormerSergeantNoArmageddonSpawner",
+			"RLFormerCommandoNoArmageddonSpawner",
+			"RLImpNoArmageddonSpawner",
+			"RLDemonNoArmageddonSpawner",
+			"RLSpectreNoArmageddonSpawner",
+			"RLLostSoulNoArmageddonSpawner",
+			"RLCacodemonNoArmageddonSpawner",
+			"RLHellKnightNoArmageddonSpawner",
+			"RLBaronOfHellNoArmageddonSpawner",
+			"RLArachnotronNoArmageddonSpawner",
+			"RLPainElementalNoArmageddonSpawner",
+			"RLRevenantNoArmageddonSpawner",
+			"RLMancubusNoArmageddonSpawner",
+			"RLArchvileNoArmageddonSpawner",
+			"RLCyberdemonNoArmageddonSpawner",
+			"RLSpiderMastermindNoArmageddonSpawner",
+			"RLBossEye",
+			"RLBossBrain"
+		};
+		static const String hardpool[] =
+		{
+			"RLFormerHumanSpawner",
+			"RLFormerSergeantSpawner",
+			"RLFormerCommandoSpawner",
+			"RLImpSpawner",
+			"RLDemonSpawner",
+			"RLSpectreSpawner",
+			"RLLostSoulSpawner",
+			"RLCacodemonSpawner",
+			"RLHellKnightSpawner",
+			"RLBaronOfHellSpawner",
+			"RLArachnotronSpawner",
+			"RLPainElementalSpawner",
+			"RLRevenantSpawner",
+			"RLMancubusSpawner",
+			"RLArchvileSpawner",
+			"RLCyberdemonSpawner",
+			"RLSpiderMastermindSpawner",
+			"RLUVBossEye",
+			"RLBossBrain"
+		};
+		static const String nightmarepool[] =
+		{
+			"RLEliteFormerHumanSpawner",
+			"RLEliteFormerSergeantSpawner",
+			"RLEliteFormerCommandoSpawner",
+			"RLNightmareImp",
+			"RLNightmareDemon",
+			"RLNightmareSpectre",
+			"RLNightmareLostSoul",
+			"RLNightmareCacodemon",
+			"RLNightmareHellKnight",
+			"RLNightmareBaronOfHell",
+			"RLNightmareArachnotron",
+			"RLNightmarePainElemental",
+			"RLNightmareRevenant",
+			"RLNightmareMancubus",
+			"RLNightmareArchvile",
+			"RLNightmareCyberdemonSpawner",
+			"RLNightmareSpiderMastermindSpawner",
+			"RLNightmareBossEye",
+			"RLNightmareBossBrain"
+		};
+		static const String technophobiapool[] =
+		{
+			"RLFormerCyborgBattleRifle",
+			"RLFormerCyborgBattleRifle",
+			"RLFormerCyborgBattleRifle",
+			"RLCyberneticImp",
+			"RLCyberneticDemon",
+			"RLCyberneticSpectre",
+			"RLCyberneticLostSoul",
+			"RLCacodemon",
+			"RLCyberneticHellKnight",
+			"RLCyberneticBaronOfHell",
+			"RLCyberneticArachnotron",
+			"RLCyberneticPainElemental",
+			"RLCyberneticRevenant",
+			"RLCyberneticMancubus",
+			"RLCyberneticArchvile",
+			"RLCyberneticCyberdemonSpawner",
+			"RLCyberneticSpiderMastermindSpawner",
+			"RLTechnophobiaBossEye",
+			"RLTechnophobiaBossBrain"
+		};
+		static const String armageddonpool[] =
+		{
+			"RLFormerAssaultTrooper",
+			"RLFormerOverwatch",
+			"RLFormerShocktrooper",
+			"RLArmageddonImp",
+			"RLArmageddonDemon",
+			"RLArmageddonSpectreSpawner",
+			"RLTheHungrySpawner",
+			"RLArmageddonCacodemon",
+			"RLArmageddonHellKnightSpawner",
+			"RLArmageddonBaronOfHell",
+			"RLArmageddonArachnotron",
+			"RLArmageddonPainElemental",
+			"RLArmageddonRevenant",
+			"RLArmageddonMancubus",
+			"RLArmageddonArchvileSpawner",
+			"RLArmageddonCyberdemonSpawner",
+			"RLArmageddonSpiderMastermindSpawner",
+			"RLArmageddonBossEye",
+			"RLArmageddonBossBrain"
+		};
+		static const String adaptivepool[] =
+		{
+			"RLAdaptiveFormerHuman",
+			"RLAdaptiveFormerSergeant",
+			"RLAdaptiveFormerCommando",
+			"RLAdaptiveImp",
+			"RLAdaptiveDemon",
+			"RLAdaptiveSpectre",
+			"RLAdaptiveLostSoul",
+			"RLAdaptiveCacodemon",
+			"RLAdaptiveHellKnight",
+			"RLAdaptiveBaronOfHell",
+			"RLAdaptiveArachnotron",
+			"RLAdaptivePainElemental",
+			"RLAdaptiveRevenant",
+			"RLAdaptiveMancubus",
+			"RLAdaptiveArchvile",
+			"RLAdaptiveCyberdemon",
+			"RLAdaptiveSpiderMastermind",
+			"RLUVBossEye",
+			"RLBossBrain"
+		};
+		if ( !drlaskill ) drlaskill = CVar.FindCVar(SWWMMODPREFIX.."_drlaskill");
+		switch ( drlaskill.GetInt() )
+		{
+		case 0:
+			for ( int i=0; i<18; i++ )
+			{
+				if ( !(a is refpool[i]) ) continue;
+				return babypool[i];
+			}
+			break;
+		case 1:
+			for ( int i=0; i<18; i++ )
+			{
+				if ( !(a is refpool[i]) ) continue;
+				return easypool[i];
+			}
+			break;
+		case 2:
+			for ( int i=0; i<18; i++ )
+			{
+				if ( !(a is refpool[i]) ) continue;
+				return normalpool[i];
+			}
+			break;
+		case 3:
+			for ( int i=0; i<18; i++ )
+			{
+				if ( !(a is refpool[i]) ) continue;
+				return hardpool[i];
+			}
+			break;
+		case 4:
+			for ( int i=0; i<18; i++ )
+			{
+				if ( !(a is refpool[i]) ) continue;
+				return nightmarepool[i];
+			}
+			break;
+		case 5:
+			for ( int i=0; i<18; i++ )
+			{
+				if ( !(a is refpool[i]) ) continue;
+				return technophobiapool[i];
+			}
+			break;
+		case 6:
+			for ( int i=0; i<18; i++ )
+			{
+				if ( !(a is refpool[i]) ) continue;
+				return armageddonpool[i];
+			}
+			break;
+		case 7:
+		default:
+			for ( int i=0; i<18; i++ )
+			{
+				if ( !(a is refpool[i]) ) continue;
+				return adaptivepool[i];
+			}
+			break;
+		}
+		return null;
+	}
+
+	override void CheckReplacement( ReplaceEvent e )
+	{
+		// respect final replacements
+		if ( e.IsFinal ) return;
+		// DRLA Monsters stuff
+		if ( hasdrlamonsters )
+		{
+			let rep = GetDRLAReplacement(e.Replacee);
+			if ( rep )
+			{
+				e.Replacement = rep;
+				e.IsFinal = true;
+				return;
+			}
+		}
+		// only replace vanilla blood if no other gore mod is doing it
+		if ( (e.Replacee == "Blood") && (!e.Replacement || e.Replacement == "Blood") )
+		{
+			if ( !modblood ) modblood = CVar.FindCVar(SWWMMODPREFIX.."_blood");
+			if ( modblood.GetBool() ) e.Replacement = "mkBlood";
+		}
+		else if ( e.Replacee is 'ItemFog' ) e.Replacement = 'SWWMItemFog';
+		else if ( e.Replacee is 'TeleportFog' ) e.Replacement = 'SWWMTeleportFog';
+		else if ( (e.Replacee is 'CommanderKeen') && (!e.Replacement || (e.Replacement == 'CommanderKeen')) )
+		{
+			let def = GetDefaultByType(e.Replacee);
+			bool dehackery = false;
+			for ( State s=def.SpawnState; s; s=s.NextState )
+			{
+				if ( s.bDEHACKED ) dehackery = true;
+				// keep checking until we hit a loop, just in case
+				if ( s.NextState && (s.DistanceTo(s.NextState) <= 0) ) break;
+			}
+			if ( dehackery ) return;
+			e.Replacement = 'SWWMHangingKeen';
+		}
+		else if ( (e.Replacee is 'BossBrain') && (!e.Replacement || (e.Replacement == 'BossBrain')) )
+		{
+			let def = GetDefaultByType(e.Replacee);
+			bool dehackery = false;
+			for ( State s=def.SpawnState; s; s=s.NextState )
+			{
+				if ( s.bDEHACKED ) dehackery = true;
+				// keep checking until we hit a loop, just in case
+				if ( s.NextState && (s.DistanceTo(s.NextState) <= 0) ) break;
+			}
+			if ( dehackery ) return;
+			e.Replacement = 'SWWMBossBrain';
+		}
+		else if ( !ModReplacement(e) ) return;
+		// this last part is kind of ugly, but it works
+		// guarantees that OUR replacements are all final
+		e.IsFinal = true;
+	}
+}

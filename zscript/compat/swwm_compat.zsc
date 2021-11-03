@@ -1,0 +1,187 @@
+// level compatibility scripts
+// sometimes shit breaks, or certain changes are needed for balance or to mesh
+// with the mod's mechanics better, this is here for that
+
+Class SWWMLevelCompatibility : LevelPostProcessor
+{
+	private void EquinoxBossBrainHandle( uint lineno, int sectortag )
+	{
+		// don't spawn boss brains until it's time to crush them
+		for ( int i=0; i<GetThingCount(); i++ )
+		{
+			if ( GetThingEdNum(i) != 88 ) continue;
+			SetThingEdNum(i,9001);
+			SetThingID(i,666);
+		}
+		// change the crusher line
+		SetLineSpecial(lineno,ACS_Execute,-Int('EQUINOX_BRAINCRUSH'),0,sectortag);
+	}
+
+	protected void Apply( Name checksum, String mapname )
+	{
+		int ncellsa = 0, ncellsb = 0;
+		int nbackpack = 0;
+		switch ( checksum )
+		{
+		case 'none':
+			return;
+		// okuplok
+		case 'F7F353146676920238935A8D0D1B6E8E':
+			// add more backpacks on top of existing one, for a full embiggening
+			// (players will need it)
+			for ( int i=1; i<SWWMMAXBACKPACK; i++ ) AddThing(8,(11808,-2016,0));
+			break;
+		// NRFTL MAP08
+		case '7EB864A03948C3F918F9223B2D1F8911':
+			// prevent easy cheesing of the exit teleporter
+			AddSectorTag(155,24);
+			OffsetSectorPlane(155,1,-80.);
+			SetLineSpecial(652,ACS_Execute,-Int('NERVE_EXITOPEN'));
+			break;
+		// INTER-EPISODE PROGRESSION STUFF
+		// Doom E1M8
+		case '97079958C7E89C1908890730B8B9FEB7':
+		case '058FB092EA1B70DA1E3CBF501C4A91A1':
+			level.nextmap = "E2M1";
+			break;
+		// Doom E2M8
+		case 'EFFE91DF41AD41F6973C06F0AD67DDB9':
+			level.nextmap = "E3M1";
+			break;
+		// Doom E3M8
+		case 'EF128313112110ED6C1549AF96AF26C9':
+			if ( LevelInfo.MapExists("E4M1") ) level.nextmap = "E4M1";
+			else if ( LevelInfo.MapExists("MAP01") ) level.nextmap = "MAP01";
+			break;
+		// Doom E4M8
+		case '2DC939E508AB8EB68AF79D5B60568711':
+			if ( LevelInfo.MapExists("E5M1") ) level.nextmap = "E5M1";
+			else if ( LevelInfo.MapExists("MAP01") ) level.nextmap = "MAP01";
+			break;
+		// SIGIL E5M8
+		case '6EAD80DA1F30B4B3546FA294EEF9F87C':
+			if ( LevelInfo.MapExists("MAP01") )  level.nextmap = "MAP01";
+			break;
+		// Heretic E1M8
+		case '27639D04F8090D57A47D354992435893':
+			level.nextmap = "E2M1";
+			break;
+		// Heretic E2M8
+		case '5158C22A0F30CE5E558FD2A05D67685E':
+			level.nextmap = "E3M1";
+			break;
+		// Heretic E3M8
+		case '4719C2C71EF28F52310B889DD5A9778B':
+			if ( LevelInfo.MapExists("E4M1") ) level.nextmap = "E4M1";
+			break;
+		// Heretic E4M8
+		case '30D1480A6D4F3A3153739D4CCF659C4E':
+			level.nextmap = "E5M1";
+			// remove a multiplayer-exclusive teleport because it's dumb as all fuck that it exists
+			SetThingEdNum(78,0);
+			break;
+		// Micro Slaughter Community Project MAP13 (beta) / MAP14 (v1)
+		case 'E45AA3BE411845AA0DEE7CA5DAAB65FE':
+		case 'CDF12AAE960E6BD11D98E1F0A1782B7B':
+			// reduce OBSCENELY EXCESSIVE number of cell packs in voodoo doll conveyors (400), which will cause immense lag when replaced with mod ammo
+			// unsurprisingly, this actually makes the map go from completely unplayable to having perfectly smooth performance (gee, I wonder why)
+			for ( int i=0; i<GetThingCount(); i++ )
+			{
+				if ( GetThingEdNum(i) != 17 ) continue;
+				Vector3 pos = GetThingPos(i);
+				if ( pos.y != 480. ) continue;
+				if ( pos.x == -5472. )
+				{
+					ncellsa++;
+					if ( ncellsa > 20 ) SetThingEdNum(i,0);
+				}
+				else if ( pos.x == -5344. )
+				{
+					ncellsb++;
+					if ( ncellsb > 20 ) SetThingEdNum(i,0);
+				}
+			}
+			break;
+		// EQUINOX: various boss brain setups that could be cheesed with wall-penetrating weapons
+		// Equinox MAP04
+		case 'E66BCCFAD7AC40EFB21E2A19131E1522':
+			EquinoxBossBrainHandle(2406,27);
+			// raise floor by 10 units so its untextured lower lines don't glitch out at eye level
+			OffsetSectorPlane(248,0,10.);
+			break;
+		// Equinox MAP07
+		case 'A0B6B83DC8BD50FC84170572840DE585':
+			EquinoxBossBrainHandle(3423,31);
+			break;
+		// Equinox MAP10
+		case 'F91E3FE225F10EECBE21486E1BB14834':
+			EquinoxBossBrainHandle(2813,29);
+			break;
+		// Equinox MAP13
+		case '3805A661D5C4523AFF7BF86991071043':
+			EquinoxBossBrainHandle(4106,60);
+			break;
+		// Doom 2 MAP07
+		case '291F24417FB3DD411339AE82EF9B3597':
+			// remove excess backpacks (there's 10 of them for fuck's sake)
+			for ( int i=0; i<GetThingCount(); i++ )
+			{
+				if ( GetThingEdNum(i) != 8 ) continue;
+				if ( nbackpack ) SetThingEdNum(i,0);
+				nbackpack++;
+			}
+			break;
+		// Doom 2 Redux MAP20
+		case 'C9FFFD855FCF9BD6BC3ABCCA5DC2240A':
+			// move boss brain so the player telefrags it (lets the mod know this is a death exit)
+			SetThingXY(497,3296,-96);
+			AddThing(2035,(3360,-96,0),315);	// put a barrel in the hole that was left
+			break;
+		}
+		switch ( checksum )
+		{
+		// ALL of Equinox
+		case '9705315427A2F951A538B23C39199236':
+		case '54E9953A3C1A88641E00AA353BAF46E9':
+		case 'DD3986E184829DAB73160F4C122155F9':
+		case 'B3E6CAE9983EA1DC4D9544DA26118569':
+		case '3E4DFC55EAE85A7FE02DD21ED33AABCA':
+		case 'ECCB69F1BBF91D8F67D8583EA2546863':
+		case 'E66BCCFAD7AC40EFB21E2A19131E1522':
+		case 'A0B6B83DC8BD50FC84170572840DE585':
+		case '9BA1ACB72D878AFA3CB22B810D6CCD9A':
+		case 'A26749D9B9CD70ECED5C7B6BAB6D859E':
+		case '3805A661D5C4523AFF7BF86991071043':
+		case 'F91E3FE225F10EECBE21486E1BB14834':
+		case '838BA30EB0B003C070414093BFDFA72A':
+			// replace certain animated flats with duplicates
+			// this avoids unintended TERRAIN defs from applying to them
+			level.ReplaceTextures("SLIME01","EQNXSL01",0);
+			level.ReplaceTextures("SLIME02","EQNXSL02",0);
+			level.ReplaceTextures("SLIME03","EQNXSL03",0);
+			level.ReplaceTextures("SLIME04","EQNXSL04",0);
+			level.ReplaceTextures("SLIME09","EQNXSL09",0);
+			level.ReplaceTextures("SLIME10","EQNXSL10",0);
+			level.ReplaceTextures("SLIME11","EQNXSL11",0);
+			level.ReplaceTextures("SLIME12","EQNXSL12",0);
+			level.ReplaceTextures("BLOOD1","EQNXBLD1",0);
+			level.ReplaceTextures("BLOOD2","EQNXBLD2",0);
+			level.ReplaceTextures("BLOOD3","EQNXBLD3",0);
+			level.ReplaceTextures("RROCK05","EQNXRR05",0);
+			level.ReplaceTextures("RROCK06","EQNXRR06",0);
+			level.ReplaceTextures("RROCK07","EQNXRR07",0);
+			level.ReplaceTextures("RROCK08","EQNXRR08",0);
+			break;
+		}
+		// [Hexen] force Mystic Ambit Incants to spawn outside coop
+		if ( gameinfo.gametype&GAME_Hexen )
+		{
+			for ( int i=0; i<GetThingCount(); i++ )
+			{
+				if ( GetThingEdNum(i) != 10120 ) continue;
+				uint flg = GetThingFlags(i);
+				SetThingFlags(i,flg|MTF_SINGLE);
+			}
+		}
+	}
+}

@@ -1,0 +1,67 @@
+// WorldThingDamaged and friends
+
+extend Class SWWMHandler
+{
+	// gibbing
+	private void DoGibThing( WorldEvent e )
+	{
+		// no gib if used the kill monsters cheat
+		if ( e.DamageType == 'Massacre' ) return;
+		int gibhealth = e.Thing.GetGibHealth();
+		bool gotgibbed = (!e.Thing.bDONTGIB && ((e.Inflictor && e.Inflictor.bEXTREMEDEATH) || (e.DamageSource && e.DamageSource.bEXTREMEDEATH) || (e.DamageType == 'Extreme') || (e.Thing.Health < gibhealth)) && (!e.Inflictor || !e.Inflictor.bNOEXTREMEDEATH) && (!e.DamageSource || !e.DamageSource.bNOEXTREMEDEATH));
+		bool forcegibbed = false;
+		// force gib availability for some vanilla Doom monsters
+		if ( gotgibbed && ((e.Thing.GetClass() == "Demon") || (e.Thing.GetClass() == "Spectre") || (e.Thing.GetClass() == "HellKnight") || (e.Thing.GetClass() == "BaronOfHell") || (e.Thing.GetClass() == "Cacodemon") || (e.Thing.GetClass() == "Revenant") || (e.Thing.GetClass() == "Archvile") || (e.Thing.GetClass() == "Fatso") || (e.Thing.GetClass() == "Arachnotron")) )
+			forcegibbed = true;
+		if ( !e.Thing.FindState("XDeath",true) && !e.Thing.FindState("Death.Extreme",true) && !forcegibbed )
+			gotgibbed = false;
+		// only do special handling if they use our blood
+		if ( (e.Thing.GetBloodType(0) != "mkBlood") || e.Thing.bNOBLOOD )
+			return;
+		CorpseFallTracker.TrackBody(e.Thing);
+		bool b;
+		Actor a;
+		// special handling of some monsters
+		if ( e.Thing.GetClass() == "Cyberdemon" )
+		{
+			[b,a] = e.Thing.A_SpawnItemEx("mkGibber",flags:SXF_USEBLOODCOLOR);
+			if ( !b ) return;
+			mkGibber(a).gibbed = e.Thing;
+			mkGibber(a).delay = 40;
+			a.special1 = 1;
+			a.A_SetSize(e.Thing.default.radius,e.Thing.default.height);
+			return;
+		}
+		else if ( e.Thing.GetClass() == "SpiderMastermind" )
+		{
+			[b,a] = e.Thing.A_SpawnItemEx("mkGibber",flags:SXF_USEBLOODCOLOR);
+			if ( !b ) return;
+			mkGibber(a).gibbed = e.Thing;
+			mkGibber(a).delay = 60;
+			a.special1 = 1;
+			a.A_SetSize(e.Thing.default.radius,e.Thing.default.height);
+		}
+		else if ( gotgibbed )
+		{
+			[b,a] = e.Thing.A_SpawnItemEx("mkGibber",flags:SXF_USEBLOODCOLOR);
+			if ( !b ) return;
+			mkGibber(a).gibbed = e.Thing;
+			a.A_SetSize(e.Thing.default.radius,e.Thing.default.height);
+		}
+	}
+
+	override void WorldThingDamaged( WorldEvent e )
+	{
+		if ( (e.Thing.Health > 0) || e.Thing.bKilled || e.Thing.bCorpse )
+			return;
+		DoGibThing(e);
+		// romero hax
+		if ( (e.Thing is 'BossBrain') && (e.DamageType == 'Telefrag') )
+			e.DamageSource.DamageMobj(null,null,Actor.TELEFRAG_DAMAGE,'EndLevel');
+		// voodoo doll telefragging barrel hax (eviternity death exits)
+		if ( (e.Thing is 'ExplosiveBarrel') && (e.DamageType == 'Telefrag') && e.DamageSource.player && (e.DamageSource.player.mo != e.DamageSource) )
+			e.DamageSource.DamageMobj(null,null,Actor.TELEFRAG_DAMAGE,'EndLevel');
+		if ( !e.Thing.player && !e.Thing.bIsMonster && !e.Thing.bCountKill && !(e.Thing is 'ScriptedMarine') )
+			return;
+	}
+}

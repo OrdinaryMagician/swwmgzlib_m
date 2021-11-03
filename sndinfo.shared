@@ -1,0 +1,107 @@
+$pitchshiftrange 0
+
+crash/crash1	sounds/DUCK.ogg
+crash/crash2	sounds/BORK98.ogg
+crash/crash3	sounds/BORKXP.ogg
+crash/crash4	sounds/GNOME.ogg
+crash/crash5	sounds/FRANCETIM.ogg
+crash/crash6	sounds/ONO.ogg
+$random crash/crash { crash/crash1 crash/crash2 crash/crash3 crash/crash4 crash/crash5 crash/crash6 }
+crash/glass	sounds/GLASSCRK.ogg
+crash/curb	sounds/CURB.ogg
+brutal/ezmodo	sounds/EASYMODO.ogg
+compat/warn	sounds/UTWARN.ogg
+hahaha/hahaha	sounds/HAHAHA.ogg
+
+// used by boss brain
+explodium/hit1		sounds/explodiumgun/expl_hit1.ogg
+explodium/hit2		sounds/explodiumgun/expl_hit2.ogg
+explodium/hit3		sounds/explodiumgun/expl_hit3.ogg
+$random explodium/hit { explodium/hit1 explodium/hit2 explodium/hit3 }
+$limit explodium/hit 32
+
+misc/w_pkup		sounds/general/wpickup.ogg
+misc/w_pkup_vip		sounds/general/wpickup_vip.ogg
+misc/p_pkup		sounds/general/ppickup.ogg
+misc/p_pkup_vip		sounds/general/ppickup_vip.ogg
+misc/i_pkup		sounds/general/ipickup.ogg
+misc/k_pkup		sounds/general/kpickup.ogg
+misc/ammo_pkup		sounds/general/apickup.ogg
+misc/bullet_pkup	sounds/general/bpickup.ogg
+misc/ammo_pkup_vip	sounds/general/apickup_vip.ogg
+misc/bullet_pkup_vip	sounds/general/bpickup_vip.ogg
+misc/armor_pkup		sounds/general/spickup.ogg
+misc/health_pkup	sounds/general/hpickup.ogg
+misc/spawn		sounds/CORK.ogg
+misc/teleport		sounds/general/teleport.ogg
+misc/gibber1		sounds/general/Gib1.ogg
+misc/gibber2		sounds/general/Gib2.ogg
+misc/gibber3		sounds/general/Gib3.ogg
+misc/gibber4		sounds/general/Gib4.ogg
+misc/gibber5		sounds/general/Gib5.ogg
+$random misc/gibber { misc/gibber1 misc/gibber2 misc/gibber3 misc/gibber4 misc/gibber5 }
+misc/gibhit1		sounds/general/gibP1.ogg
+misc/gibhit2		sounds/general/gibP3.ogg
+misc/gibhit3		sounds/general/gibP4.ogg
+misc/gibhit4		sounds/general/gibP5.ogg
+misc/gibhit5		sounds/general/gibP6.ogg
+$random misc/gibhit { misc/gibhit1 misc/gibhit2 misc/gibhit3 misc/gibhit4 misc/gibhit5 }
+misc/blooddrop		sounds/general/bloddrop.ogg
+misc/bodythump		sounds/general/thump.ogg
+
+misc/underwater	sounds/general/uWater1a.ogg
+misc/underslime	sounds/general/uGoop1.ogg
+misc/underlava	sounds/general/uLava1.ogg
+misc/waterenter	sounds/general/DIVE.ogg
+misc/slimeenter	sounds/general/GoopJ1.ogg
+misc/lavaenter	sounds/general/LavaJ1.ogg
+misc/waterexit	sounds/general/surfaceb.ogg
+misc/slimeexit	sounds/general/GoopE1.ogg
+misc/lavaexit	sounds/general/LavaE1.ogg
+
+misc/ricochet1	sounds/general/ric1.ogg
+misc/ricochet2	sounds/general/ric2.ogg
+misc/ricochet3	sounds/general/ric3.ogg
+$random misc/ricochet { misc/ricochet1 misc/ricochet2 misc/ricochet3 }
+
+armor/hit1	sounds/items/hullhit.ogg
+armor/hit2	sounds/items/hullhit2.ogg
+armor/hit3	sounds/items/hullhit3.ogg
+armor/hit4	sounds/items/hullhit4.ogg
+armor/hit5	sounds/items/hullhit5.ogg
+$random armor/hit { armor/hit1 armor/hit2 armor/hit3 armor/hit4 armor/hit5 }
+
+// shared powerups
+powerup/embiggener	sounds/items/embiggen.ogg
+
+newkeen/hit	sounds/keenhit.ogg
+newkeen/die	sounds/keendie.ogg
+newkeen/fall	sounds/keenfall.ogg
+newkeen/bounce	sounds/keenbounce.ogg
+
+menu/activate	sounds/hmenu/hmenu1.ogg
+menu/backup	sounds/hmenu/hmenu2.ogg
+menu/prompt	sounds/hmenu/hmenu1.ogg
+menu/cursor	sounds/hmenu/hmenu4.ogg
+menu/change	sounds/hmenu/hmenu3.ogg
+menu/invalid	sounds/hmenu/hmenu3.ogg
+menu/dismiss	sounds/hmenu/hmenu2.ogg
+menu/choose	sounds/hmenu/hmenu2.ogg
+menu/clear	sounds/hmenu/hmenu2.ogg
+menu/advance	sounds/hmenu/hmenu1.ogg
+
+UseArtifact	DSEMPTY
+StartupTick	DSEMPTY
+
+world/watersplash	sounds/terrain/DSSPLASH.ogg
+world/watersplash2	sounds/terrain/DSSPLSML.ogg
+world/lavasizzle	sounds/terrain/DSLVSIZ.ogg
+world/lavasizzle2	sounds/terrain/DSLVSIZ2.ogg
+world/sludgegloop	sounds/terrain/DSPLOOSH.ogg
+world/sludgegloop2	sounds/terrain/DSPLOSML.ogg
+$limit world/watersplash 8
+$limit world/watersplash2 8
+$limit world/lavasizzle 8
+$limit world/lavasizzle2 8
+$limit world/sludgegloop 8
+$limit world/sludgegloop2 8

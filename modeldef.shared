@@ -1,0 +1,108 @@
+Model "Unknown"
+{
+	Path "models"
+
+	Model 0 "extra/IAmError_d.3d"
+	Skin 0 "matcap/errormap.png"
+	Scale 0.0625 0.0625 0.0625
+	AngleOffset 90
+	ZOffset 32
+	FrameIndex UNKN A 0 0
+}
+
+Model "SWWMChip"
+{
+	Path "models"
+
+	Model 0 "Chunky_d.3d"
+	Skin 0 "Chunky.png"
+	Scale 0.02 0.02 0.02
+	USEACTORPITCH
+	USEACTORROLL
+
+	FrameIndex XZW1 A 0 0
+	FrameIndex XZW1 B 0 1
+	FrameIndex XZW1 C 0 2
+	FrameIndex XZW1 D 0 3
+	FrameIndex XZW1 E 0 4
+	FrameIndex XZW1 F 0 5
+	FrameIndex XZW1 G 0 6
+	FrameIndex XZW1 H 0 7
+	ZOffset 0.2
+	FrameIndex XZW2 A 0 0
+	FrameIndex XZW2 B 0 1
+	FrameIndex XZW2 C 0 2
+	FrameIndex XZW2 D 0 3
+	FrameIndex XZW2 E 0 4
+	FrameIndex XZW2 F 0 5
+	FrameIndex XZW2 G 0 6
+	FrameIndex XZW2 H 0 7
+}
+
+Model "mkBloodDrop"
+{
+	Path "models/extra"
+	Model 0 "flat_d.3d"
+	Scale 0.06 0.06 0.06
+	ZOffset 0.1
+	USEACTORPITCH
+	USEACTORROLL
+	DONTCULLBACKFACES
+
+	Skin 0 "BloodDrop1.png"
+	FrameIndex SBLD F 0 0
+	Skin 0 "BloodDrop2.png"
+	FrameIndex SBLD G 0 0
+	Skin 0 "BloodDrop3.png"
+	FrameIndex SBLD H 0 0
+	Skin 0 "BloodDrop4.png"
+	FrameIndex SBLD I 0 0
+}
+
+Model "SWWMShadow"
+{
+	Path "models/extra"
+	Model 0 "flat_d.3d"
+	Skin 0 "BlobShadow.png"
+	Scale 0.06 0.06 0.06
+	ZOffset 0.1
+	USEACTORPITCH
+	USEACTORROLL
+
+	FrameIndex XZW1 A 0 0
+}
+
+Model "HammerspaceEmbiggener"
+{
+	Path "models"
+
+	Model 0 "Embiggener_d.3d"
+	Skin 0 "Embiggener.png"
+	Scale 0.03 0.03 0.03
+	PitchOffset 20
+	ZOffset 16
+	ROTATING
+
+	FrameIndex XZW1 A 0 0
+}
+Model "BulkHammerspaceEmbiggener"
+{
+	Path "models"
+
+	Model 0 "Embiggener_d.3d"
+	Skin 0 "Embiggener.png"
+	Scale 0.03 0.03 0.03
+	PitchOffset 20
+	ZOffset 16
+	ROTATING
+
+	FrameIndex XZW1 A 0 0
+	Skin 0 "Embiggener_Tier2.png"
+	FrameIndex XZW1 B 0 0
+	Skin 0 "Embiggener_Tier3.png"
+	FrameIndex XZW1 C 0 0
+	Skin 0 "Embiggener_Tier4.png"
+	FrameIndex XZW1 D 0 0
+	Skin 0 "Embiggener_Tier5.png"
+	FrameIndex XZW1 E 0 0
+}

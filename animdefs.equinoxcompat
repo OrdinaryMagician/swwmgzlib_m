@@ -1,0 +1,19 @@
+flat optional EQNXSL01
+	pic EQNXSL01 tics 8
+	pic EQNXSL02 tics 8
+	pic EQNXSL03 tics 8
+	pic EQNXSL04 tics 8
+flat optional EQNXSL09
+	pic EQNXSL09 tics 8
+	pic EQNXSL10 tics 8
+	pic EQNXSL11 tics 8
+	pic EQNXSL12 tics 8
+flat optional EQNXBLD1
+	pic EQNXBLD1 tics 8
+	pic EQNXBLD2 tics 8
+	pic EQNXBLD3 tics 8
+flat optional EQNXRR05
+	pic EQNXRR05 tics 8
+	pic EQNXRR06 tics 8
+	pic EQNXRR07 tics 8
+	pic EQNXRR08 tics 8

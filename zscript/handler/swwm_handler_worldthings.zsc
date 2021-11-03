@@ -1,0 +1,168 @@
+// WorldThing* events (excluding damage)
+
+extend Class SWWMHandler
+{
+	transient CVar useshadows;
+
+	private bool HexenMap40()
+	{
+		if ( level.GetChecksum() ~== "2A6C4235B942467D25FD50D5B313E67A" ) return true;	// 1.1
+		if ( level.GetChecksum() ~== "1C5DE5A921DEE405E98E7E09D9829387" ) return true;	// 1.0
+		if ( level.GetChecksum() ~== "EFAFE59092DE5E613562ACF52B86C37F" ) return true;	// beta
+		return false;
+	}
+
+	override void WorldThingDied( WorldEvent e )
+	{
+		// Korax instakill
+		if ( (e.Thing is 'Korax') && !e.Thing.special2 && HexenMap40() )
+		{
+			e.Thing.special2 = 1;
+			// terminate the monster closet scripts, open all the
+			// doors ourselves
+			level.ExecuteSpecial(ACS_Terminate,e.Thing,null,false,220);
+			level.ExecuteSpecial(ACS_Terminate,e.Thing,null,false,220);
+			level.ExecuteSpecial(ACS_Terminate,e.Thing,null,false,221);
+			level.ExecuteSpecial(ACS_Terminate,e.Thing,null,false,255);
+			level.ExecuteSpecial(Door_Open,e.Thing,null,false,10,16);
+			level.ExecuteSpecial(Door_Open,e.Thing,null,false,11,16);
+			level.ExecuteSpecial(Door_Open,e.Thing,null,false,12,16);
+			level.ExecuteSpecial(Door_Open,e.Thing,null,false,13,16);
+			level.ExecuteSpecial(Door_Open,e.Thing,null,false,14,16);
+			level.ExecuteSpecial(Door_Open,e.Thing,null,false,10,16);
+			// keep the portal closed, you can't leave unless you
+			// kill everyone else
+			let t = new("UglyBoyGetsFuckedUp");
+			t.ChangeStatNum(Thinker.STAT_USER);
+		}
+		// force insert gib animations on some vanilla Doom monsters
+		int gibhealth = e.Thing.GetGibHealth();
+		bool gotgibbed = (!e.Thing.bDONTGIB && ((e.Inflictor && e.Inflictor.bEXTREMEDEATH) || (e.DamageSource && e.DamageSource.bEXTREMEDEATH) || (e.DamageType == 'Extreme') || (e.Thing.Health < gibhealth)) && (!e.Inflictor || !e.Inflictor.bNOEXTREMEDEATH) && (!e.DamageSource || !e.DamageSource.bNOEXTREMEDEATH));
+		if ( !gotgibbed )
+			return;
+		if ( (e.Thing.GetClass() == "Demon") || (e.Thing.GetClass() == "Spectre") )
+			ExtraGibDeaths.GibThis(e.Thing,"DemonXDeath");
+		else if ( e.Thing.GetClass() == "HellKnight" )
+			ExtraGibDeaths.GibThis(e.Thing,"KnightXDeath");
+		else if ( e.Thing.GetClass() == "BaronOfHell" )
+			ExtraGibDeaths.GibThis(e.Thing,"BaronXDeath");
+		else if ( e.Thing.GetClass() == "Cacodemon" )
+			ExtraGibDeaths.GibThis(e.Thing,"CacoXDeath");
+		else if ( e.Thing.GetClass() == "Revenant" )
+			ExtraGibDeaths.GibThis(e.Thing,"BonerXDeath");
+		else if ( e.Thing.GetClass() == "Archvile" )
+			ExtraGibDeaths.GibThis(e.Thing,"VileXDeath");
+		else if ( e.Thing.GetClass() == "Arachnotron" )
+			ExtraGibDeaths.GibThis(e.Thing,"ArachXDeath");
+		else if ( e.Thing.GetClass() == "Fatso" )
+			ExtraGibDeaths.GibThis(e.Thing,"FatsoXDeath");
+	}
+
+	private void DoKeyTagFix( Actor a )
+	{
+		if ( a is 'RedCard' ) a.SetTag("$T_REDCARD");
+		else if ( a is 'BlueCard' ) a.SetTag("$T_BLUECARD");
+		else if ( a is 'YellowCard' ) a.SetTag("$T_YELLOWCARD");
+		else if ( a is 'RedSkull' ) a.SetTag("$T_REDSKULL");
+		else if ( a is 'BlueSkull' ) a.SetTag("$T_BLUESKULL");
+		else if ( a is 'YellowSkull' ) a.SetTag("$T_YELLOWSKULL");
+		else if ( a is 'KeyYellow' ) a.SetTag("$T_YELLOWKEY");
+		else if ( a is 'KeyGreen' ) a.SetTag("$T_GREENKEY");
+		else if ( a is 'KeyBlue' ) a.SetTag("$T_BLUEKEY");
+		else if ( a.GetClassName() == 'KeyRed' ) a.SetTag("$T_REDKEY");
+		else if ( a is 'KeySteel' ) a.SetTag("$T_KEYSTEEL");
+		else if ( a is 'KeyCave' ) a.SetTag("$T_KEYCAVE");
+		else if ( a is 'KeyAxe' ) a.SetTag("$T_KEYAXE");
+		else if ( a is 'KeyFire' ) a.SetTag("$T_KEYFIRE");
+		else if ( a is 'KeyEmerald' ) a.SetTag("$T_KEYEMERALD");
+		else if ( a is 'KeyDungeon' ) a.SetTag("$T_KEYDUNGEON");
+		else if ( a is 'KeySilver' ) a.SetTag("$T_KEYSILVER");
+		else if ( a is 'KeyRusted' ) a.SetTag("$T_KEYRUSTED");
+		else if ( a is 'KeyHorn' ) a.SetTag("$T_KEYHORN");
+		else if ( a is 'KeySwamp' ) a.SetTag("$T_KEYSWAMP");
+		else if ( a is 'KeyCastle' ) a.SetTag("$T_KEYCASTLE");
+	}
+
+	// tempfix keys have no tags
+	static void KeyTagFix( Actor a )
+	{
+		let hnd = SWWMHandler(Find("SWWMHandler"));
+		if ( hnd ) hnd.DoKeyTagFix(a);
+	}
+
+	// copies the floatbob of overlapping identical items, so it doesn't look weird
+	private void CopyFloatBob( Actor a )
+	{
+		let bt = BlockThingsIterator.Create(a,16);
+		while ( bt.Next() )
+		{
+			let t = bt.Thing;
+			if ( !t || (t == a) || !(t is 'Inventory') || !(t.spawnpoint ~== a.spawnpoint) ) continue;
+			a.floatbobphase = t.floatbobphase;
+			a.angle = t.angle;	// also copy angle
+			break;
+		}
+	}
+
+	private bool SuppressMultiItem( WorldEvent e )
+	{
+		// quick checks
+		if ( !G_SkillPropertyInt(SKILLP_SpawnMulti) || multiplayer || sv_alwaysspawnmulti )
+			return false;
+		// is it coop inventory? suppress it
+		if ( (e.Thing.spawnflags&(MTF_COOPERATIVE|MTF_DEATHMATCH)) && !(e.Thing.spawnflags&MTF_SINGLE) && (e.Thing is 'Inventory') )
+		{
+			e.Thing.ClearCounters();
+			e.Thing.Destroy();
+			return true;
+		}
+		return false;
+	}
+
+	override void WorldThingSpawned( WorldEvent e )
+	{
+		if ( !e.Thing || SuppressMultiItem(e) )
+			return;
+		IWantDieSpawn(e);
+		if ( (e.Thing is 'TeleportDest') || (e.Thing is 'BossTarget') )
+		{
+			let d = Actor.Spawn("SWWMTeleportDest",e.Thing.pos);
+			d.bNOGRAVITY = e.Thing.bNOGRAVITY;
+		}
+		if ( e.Thing is 'Inventory' )
+		{
+			CopyFloatBob(e.Thing);
+			if ( Inventory(e.Thing).PickupFlash is 'SWWMPickupFlash' )
+			{
+				let p = Actor.Spawn(Inventory(e.Thing).PickupFlash,e.Thing.Vec3Offset(0,0,16));
+				p.target = e.Thing;
+				p.SetStateLabel("Pickup");
+			}
+		}
+		if ( e.Thing is 'Key' ) DoKeyTagFix(e.Thing);
+		if ( !useshadows ) useshadows = CVar.FindCVar(SWWMMODPREFIX.."_shadows");
+		if ( useshadows.GetBool() && (e.Thing.bSHOOTABLE || e.Thing.bISMONSTER || (e.Thing is 'Inventory')) && ((e.Thing is 'SWWMPlayer') || (e.Thing.SpawnState.sprite == e.Thing.GetSpriteIndex('XZW1'))) )
+			SWWMShadow.Track(e.Thing);
+		// vanilla blood color changes
+		if ( (e.Thing.GetClass() == "BaronOfHell") || (e.Thing.GetClass() == "HellKnight") || (e.Thing.GetClass() == "Bishop") || (e.Thing.GetClass() == "Korax") )
+		{
+			let gb = Actor.Spawn("GreenBloodReference");
+			e.Thing.CopyBloodColor(gb);
+			gb.Destroy();
+		}
+		else if ( e.Thing.GetClass() == "Cacodemon" )
+		{
+			let bb = Actor.Spawn("BlueBloodReference");
+			e.Thing.CopyBloodColor(bb);
+			bb.Destroy();
+		}
+		else if ( (e.Thing.GetClass() == "Wizard") || (e.Thing.GetClass() == "Heresiarch") || (e.Thing.GetClass() == "Sorcerer2") )
+		{
+			let pb = Actor.Spawn("PurpleBloodReference");
+			e.Thing.CopyBloodColor(pb);
+			pb.Destroy();
+		}
+		else if ( e.Thing.GetClass() == "LostSoul" )
+			e.Thing.bNOBLOOD = true;
+	}
+}

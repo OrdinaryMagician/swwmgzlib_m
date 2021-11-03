@@ -1,0 +1,30 @@
+// marb colors ♥
+Heliotrope
+{
+	#130023  #C885FF
+Console:
+	#000000  #9664BF    0 127
+	#C885FF  #FFFFFF  128 256
+Flat:
+	#C885FF
+}
+BlushPink
+{
+	#220923  #F367F8
+Console:
+	#000000  #BB4FBF    0 127
+	#F367F8  #FFFFFF  128 256
+Flat:
+	#F367F8
+}
+
+// desaturate and lighten blue slightly so it's not completely unreadable
+Blue
+{
+	#101040  #3030FF
+Console:
+	#000000  #20207F    0 127
+	#4040FF  #DEDEFF  128 256
+Flat:
+	#9999FF
+}

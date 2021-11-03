@@ -1,0 +1,85 @@
+// I WANT DIE
+
+// fuck
+Class DontDuplicate : Inventory {}
+Class DontDuplicate2 : Inventory {}
+Class HOLYCOWIMTOTALLYGOINGSOFASTOHFUCK : Inventory
+{
+	override void DoEffect()
+	{
+		Super.DoEffect();
+		if ( !Owner || (Owner.Health <= 0) ) return;
+		if ( (Owner.tics > 1) && (Owner.tics > max(1,Owner.CurState.tics/2)) )
+			Owner.tics = max(1,Owner.CurState.tics/2);
+	}
+}
+
+extend Class SWWMHandler
+{
+	private void IWantDieSpawn( WorldEvent e )
+	{
+		if ( iwantdie == -1 ) iwantdie = (G_SkillName() == StringTable.Localize("$"..SWWMMODPREFIX.."_SKLUNATIC"));
+		if ( iwantdie )
+		{
+			if ( SWWMUtility.ValidProjectile(e.Thing) && !e.Thing.FindInventory("DontDuplicate") && (e.Thing.target && e.Thing.target.bISMONSTER && !e.Thing.target.player) )
+			{
+				e.Thing.speed *= 2;
+				e.Thing.vel *= 2;
+				Vector3 x, y, z;
+				double ang = e.Thing.target.target?e.Thing.AngleTo(e.Thing.target.target):e.Thing.angle;
+				double pt = e.Thing.target.target?SWWMUtility.PitchTo(e.Thing,e.Thing.target.target,.5):e.Thing.pitch;
+				[x, y, z] = swwm_CoordUtil.GetAxes(pt,ang,e.Thing.roll);
+				int numpt = Random[ExtraMissiles](1,2);
+				for ( int i=0; i<numpt; i++ )
+				{
+					double a = FRandom[ExtraMissiles](0,360);
+					double s = FRandom[ExtraMissiles](0,.1);
+					Vector3 dir = (x+y*cos(a)*s+z*sin(a)*s).unit();
+					let p = Actor.Spawn(e.Thing.GetClass(),e.Thing.pos);
+					p.GiveInventory("DontDuplicate",1);
+					p.target = e.Thing.target;
+					p.tracer = e.Thing.tracer;
+					p.master = e.Thing.master;
+					p.speed *= FRandom[ExtraMissiles](1.,3.);
+					p.vel = dir*p.speed;
+					p.angle = atan2(dir.y,dir.x);
+					p.pitch = asin(-dir.z);
+					p.roll = e.Thing.roll;
+				}
+			}
+			if ( e.Thing.bISMONSTER && !(e.Thing is 'PlayerPawn') )
+			{
+				e.Thing.GiveInventory("HOLYCOWIMTOTALLYGOINGSOFASTOHFUCK",1);
+				// avoid if it has some sort of special handling
+				if ( e.Thing.special || e.Thing.tid || e.Thing.bDORMANT ) return;
+				// random chance to spawn doubles
+				if ( !e.Thing.FindInventory("DontDuplicate") && !Random[ExtraMissiles](0,2) )
+				{
+					int numpt = Random[ExtraMissiles](1,2);
+					for ( int i=0; i<numpt; i++ )
+					{
+						// three attempts for each
+						for ( int j=0; j<3; j++ )
+						{
+							let x = Actor.Spawn(e.Thing.GetClass(),e.Thing.Vec3Angle(e.Thing.Radius*FRandom[ExtraMissiles](1.5,4.),FRandom[ExtraMissiles](0,360)));
+							if ( x.pos.z+x.height > x.ceilingz ) x.SetZ(x.ceilingz-x.height);
+							if ( x.pos.z < x.floorz ) x.SetZ(x.floorz);
+							if ( !x.TestMobjLocation() || !x.TestMobjZ() || !level.IsPointInLevel(x.pos) )
+							{
+								x.ClearCounters();
+								x.Destroy();
+							}
+							else
+							{
+								x.angle = e.Thing.angle;
+								x.bAMBUSH = e.Thing.bAMBUSH;
+								x.GiveInventory("DontDuplicate",1);
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

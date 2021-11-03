@@ -1,0 +1,25 @@
+Most of the work here is original, but there are some notable exceptions:
+ - Many sounds have been mixed and matched and filtered and whatnot from the following games:
+   * Fallout New Vegas
+   * Fallout 4
+   * Unreal
+   * Unreal Tournament
+   * Unreal Tournament 2004
+   * Unreal Tournament 3
+   * Deus Ex
+   * Thief
+   * System Shock 2
+ - In addition, a whole lot of stock sounds and internet meme sounds have also been used.
+ - This mod uses Gutamatics, by Gutawer. Big thanks.
+ - The anti-BD feature uses art and music by IOSYS, art was edited into the Doom palette.
+ - The crash handler uses a short clip of the Curb Your Enthusiasm theme.
+ - Tewi font by lucy (https://github.com/lucy/tewi-font). Modified to add gradients and drop shadow.
+ - MPlus font by M⁺ FONTS PROJECT (http://mplus-fonts.osdn.jp/mplus-bitmap-fonts). Modified to add gradients and drop shadow.
+ - Miniwi font by Josuah Demangeon (http://josuah.net). Modified to add gradients and drop shadow.
+ - k6x8 font by littlelimit (https://littlelimit.net/k6x8.htm). Modified to add gradients and drop shadow.
+ - Slope alignment utility code by ZZYZX & Nash.
+ - Extra gib anims for vanilla monsters:
+   * Ryan Cordell (Demon, Cacodemon, Revenant, Archvile)
+   * Amuscaria (Baron of Hell, Hell Knight)
+   * Blox (Arachnotron, Mancubus)
+ - SiFi270 (Less mean-spirited Keen replacement)

@@ -1,0 +1,241 @@
+// melee stuff
+
+Class UseList
+{
+	Line hitline;
+	int hitside, hitpart;
+	Actor hitactor;
+	Vector3 pos;
+}
+
+Class UseLineTracer : LineTracer
+{
+	Array<UseList> uses;
+
+	static play bool TangibleLine( UseList u )
+	{
+		if ( u.hitpart != TIER_MIDDLE ) return true;	// lower/upper/ffloor
+		Line l = u.HitLine;
+		if ( !l.sidedef[1] ) return true; // onesided line
+		Side s = l.sidedef[u.hitside];
+		if ( s.GetTexture(1).IsNull() ) return false;	// no midtex
+		double ofs = s.GetTextureYOffset(1);
+		Vector2 siz = TexMan.GetScaledSize(s.GetTexture(1));
+		Vector2 tofs = TexMan.GetScaledOffset(s.GetTexture(1));
+		ofs += tofs.y;
+		ofs *= s.GetTextureYScale(1);
+		siz.y *= s.GetTextureYScale(1);
+		SecPlane ceil, flor;
+		if ( (l.frontsector.floorplane.ZatPoint(l.v1.p) > l.backsector.floorplane.ZatPoint(l.v1.p))
+			&& (l.frontsector.floorplane.ZatPoint(l.v2.p) > l.backsector.floorplane.ZatPoint(l.v2.p)) )
+			flor = l.frontsector.floorplane;
+		else flor = l.backsector.floorplane;
+		if ( (l.frontsector.ceilingplane.ZatPoint(l.v1.p) < l.backsector.ceilingplane.ZatPoint(l.v1.p))
+			&& (l.frontsector.ceilingplane.ZatPoint(l.v2.p) < l.backsector.ceilingplane.ZatPoint(l.v2.p)) )
+			ceil = l.frontsector.ceilingplane;
+		else ceil = l.backsector.ceilingplane;
+		double ceilpoint = max(ceil.ZatPoint(l.v1.p),ceil.ZatPoint(l.v2.p));
+		double florpoint = min(flor.ZatPoint(l.v1.p),flor.ZatPoint(l.v2.p));
+		if ( l.flags&Line.ML_DONTPEGBOTTOM )
+		{
+			if ( u.pos.z > florpoint+ofs+siz.y ) return false;
+			if ( u.pos.z < florpoint+ofs ) return false;
+			return true;
+		}
+		else
+		{
+			if ( u.pos.z > ceilpoint+ofs ) return false;
+			if ( u.pos.z < (ceilpoint+ofs)-siz.y ) return false;
+			return true;
+		}
+		return false;
+	}
+
+	override ETraceStatus TraceCallback()
+	{
+		if ( Results.HitType == TRACE_HitActor )
+		{
+			let u = new("UseList");
+			u.hitline = null;
+			u.hitactor = Results.HitActor;
+			u.pos = Results.HitPos;
+			uses.Push(u);
+			return TRACE_Skip;
+		}
+		if ( Results.HitType == TRACE_HitWall )
+		{
+			if ( Results.HitLine.Activation&(SPAC_Use|SPAC_UseThrough) )
+			{
+				let u = new("UseList");
+				u.hitline = Results.HitLine;
+				u.hitside = Results.Side;
+				u.hitpart = Results.FFloor?TIER_FFLOOR:Results.Tier;
+				u.hitactor = null;
+				u.pos = Results.HitPos;
+				uses.Push(u);
+			}
+			if ( Results.Tier == TIER_Middle )
+			{
+				if ( !Results.HitLine.sidedef[1] || (Results.HitLine.Flags&(Line.ML_BlockHitscan|Line.ML_BlockEverything|Line.ML_BlockUse)) )
+					return TRACE_Stop;
+				return TRACE_Skip;
+			}
+		}
+		return TRACE_Stop;
+	}
+}
+
+Class MHitList
+{
+	Actor a;
+	Vector3 dir, pos;
+}
+
+extend Class SWWMWeapon
+{
+	// multi-hit cone rather than the usual one-hit arc, more fun
+	private action bool TryMelee( double spread, int dmg, String hitsound = "", double rangemul = 1., double kickmul = 1. )
+	{
+		Vector3 x, y, z, dir;
+		[x, y, z] = swwm_CoordUtil.GetAxes(pitch,angle,roll);
+		Vector3 origin = Vec2OffsetZ(0,0,player.viewz);
+		Array<MHitList> hits;
+		hits.Clear();
+		FLineTraceData d;
+		int rings = 1;
+		double step = spread/20.;
+		double range = 1.5*DEFMELEERANGE*rangemul;
+		for ( double i=0; i<spread; i+=step )
+		{
+			for ( int j=0; j<360; j+=(360/rings) )
+			{
+				dir = (x+y*cos(j)*1.5*i+z*sin(j)*i).unit();	// wide ring
+				LineTrace(atan2(dir.y,dir.x),range,asin(-dir.z),TRF_ABSPOSITION,origin.z,origin.x,origin.y,d);
+				if ( d.HitType != TRACE_HitActor ) continue;
+				bool addme = true;
+				for ( int k=0; k<hits.Size(); k++ )
+				{
+					if ( hits[k].a != d.HitActor ) continue;
+					if ( (hits[k].dir dot x) < (dir dot x) )
+					{
+						// closer to centerpoint
+						hits[k].dir = dir;
+						hits[k].pos = d.HitLocation;
+					}
+					addme = false;
+					break;
+				}
+				if ( !addme ) continue;
+				let nhit = new("MHitList");
+				nhit.a = d.HitActor;
+				nhit.dir = dir;
+				nhit.pos = d.HitLocation;
+				hits.Push(nhit);
+			}
+			rings += 5;
+		}
+		// no targets
+		if ( hits.Size() <= 0 ) return false;
+		bool blooded = false;
+		bool bloodless = false;
+		int flg = DMG_USEANGLE|DMG_THRUSTLESS;
+		double diff = 0.;
+		for ( int i=0; i<hits.Size(); i++ )
+		{
+			diff += deltaangle(self.angle,AngleTo(hits[i].a));
+			SWWMUtility.DoKnockback(hits[i].a,hits[i].dir,dmg*2000*kickmul);
+			// lol oops
+			if ( !hits[i].a.bDORMANT ) hits[i].a.DaggerAlert(self);
+			if ( !hits[i].a.bNOBLOOD && !hits[i].a.bDORMANT && !hits[i].a.bINVULNERABLE ) blooded = true;
+			else bloodless = true;
+			int newdmg = hits[i].a.DamageMobj(invoker,self,dmg,'Melee',flg,atan2(hits[i].dir.y,hits[i].dir.x));
+			// things can instantly cease to exist after taking damage (wow)
+			if ( hits[i].a )
+			{
+				if ( hits[i].a.player ) hits[i].a.A_QuakeEx(2,2,2,6,0,1,"",QF_RELATIVE|QF_SCALEDOWN,rollIntensity:0.25);
+				if ( !hits[i].a.bNOBLOOD && !hits[i].a.bDORMANT && !hits[i].a.bINVULNERABLE )
+				{
+					hits[i].a.TraceBleed(newdmg,invoker);
+					hits[i].a.SpawnBlood(hits[i].pos,atan2(hits[i].dir.y,hits[i].dir.x)+180,newdmg);
+				}
+				else
+				{
+					let p = Spawn("PunchImpact",hits[i].pos);
+					p.angle = atan2(hits[i].dir.y,hits[i].dir.x);
+				}
+			}
+		}
+		self.angle += clamp(diff/hits.Size(),-5.,5.);	// averaged reorient
+		invoker.bEXTREMEDEATH = invoker.default.bEXTREMEDEATH;
+		invoker.bNOEXTREMEDEATH = invoker.default.bEXTREMEDEATH;
+		A_QuakeEx(1,1,1,3,0,1,"",QF_RELATIVE|QF_SCALEDOWN,rollIntensity:0.12);
+		if ( hitsound == "" )
+		{
+			if ( blooded ) A_StartSound("melee/hitf",CHAN_WEAPON,CHANF_OVERLAP);
+			if ( bloodless ) A_StartSound("melee/hit",CHAN_WEAPON,CHANF_OVERLAP);
+		}
+		else A_StartSound(hitsound,CHAN_WEAPON,CHANF_OVERLAP);
+		A_AlertMonsters();
+		A_BumpFOV(.96);
+		return true;
+	}
+	action void A_Melee( int dmg, String hitsound = "", double rangemul = 1., double spreadmul = 1., double kickmul = 1. )
+	{
+		Vector3 origin = Vec3Offset(0,0,player.viewheight);
+		Vector3 dir = (cos(angle)*cos(pitch),sin(angle)*cos(pitch),sin(-pitch));
+		// check for usables
+		let ut = new("UseLineTracer");
+		ut.uses.Clear();
+		ut.Trace(origin,CurSector,dir,DEFMELEERANGE*rangemul,0);
+		for ( int i=0; i<ut.uses.Size(); i++ )
+		{
+			if ( ut.uses[i].hitactor )
+			{
+				if ( ut.uses[i].hitactor == self ) continue;
+				if ( ut.uses[i].hitactor.Used(self) ) break;
+			}
+			else if ( ut.uses[i].hitline && UseLineTracer.TangibleLine(ut.uses[i]) )
+			{
+				int locknum = SWWMUtility.GetLineLock(ut.uses[i].hitline);
+				if ( !locknum || CheckKeys(locknum,false,true) )
+					ut.uses[i].hitline.RemoteActivate(self,ut.uses[i].hitside,SPAC_Use,ut.uses[i].pos);
+				if ( !(ut.uses[i].hitline.activation&SPAC_UseThrough) ) break;
+			}
+		}
+		// check for shootables
+		SWWMBulletTrail.DoTrail(self,origin,dir,DEFMELEERANGE*rangemul,0);
+		if ( TryMelee(.2*spreadmul,dmg,hitsound,rangemul,kickmul) )
+			return;
+		// check for walls instead
+		FTranslatedLineTarget t;
+		double slope = AimLineAttack(angle,DEFMELEERANGE*rangemul,t,0.,ALF_CHECK3D);
+		FLineTraceData d;
+		LineTrace(angle,DEFMELEERANGE*rangemul,slope,TRF_THRUACTORS,player.viewheight,data:d);
+		if ( d.HitType == TRACE_HitNone ) return;
+		Vector3 HitNormal = -d.HitDir;
+		if ( d.HitType == TRACE_HitFloor )
+		{
+			if ( d.Hit3DFloor ) HitNormal = -d.Hit3DFloor.top.Normal;
+			else HitNormal = d.HitSector.floorplane.Normal;
+		}
+		else if ( d.HitType == TRACE_HitCeiling )
+		{
+			if ( d.Hit3DFloor ) HitNormal = -d.Hit3DFloor.bottom.Normal;
+			else HitNormal = d.HitSector.ceilingplane.Normal;
+		}
+		else if ( d.HitType == TRACE_HitWall )
+		{
+			HitNormal = (-d.HitLine.delta.y,d.HitLine.delta.x,0).unit();
+			if ( !d.LineSide ) HitNormal *= -1;
+			d.HitLine.RemoteActivate(self,d.LineSide,SPAC_Impact,d.HitLocation+HitNormal*4);
+		}
+		let p = Spawn("PunchImpact",d.HitLocation+HitNormal*4);
+		p.angle = atan2(HitNormal.y,HitNormal.x);
+		p.pitch = asin(-HitNormal.z);
+		if ( d.HitType == TRACE_HitFloor ) p.CheckSplash(40);
+		A_QuakeEx(1,1,1,3,0,1,"",QF_RELATIVE|QF_SCALEDOWN,rollIntensity:0.12);
+		A_BumpFOV(.98);
+		A_StartSound((hitsound!="")?hitsound:"melee/hit",CHAN_WEAPON,CHANF_OVERLAP);
+		A_AlertMonsters();
+	}
+}

@@ -1,0 +1,60 @@
+flat optional EQNXSL01, 64, 64
+{
+	Patch SLIME01, 0, 0
+}
+flat optional EQNXSL02, 64, 64
+{
+	Patch SLIME02, 0, 0
+}
+flat optional EQNXSL03, 64, 64
+{
+	Patch SLIME03, 0, 0
+}
+flat optional EQNXSL04, 64, 64
+{
+	Patch SLIME04, 0, 0
+}
+flat optional EQNXSL09, 64, 64
+{
+	Patch SLIME09, 0, 0
+}
+flat optional EQNXSL10, 64, 64
+{
+	Patch SLIME10, 0, 0
+}
+flat optional EQNXSL11, 64, 64
+{
+	Patch SLIME11, 0, 0
+}
+flat optional EQNXSL12, 64, 64
+{
+	Patch SLIME12, 0, 0
+}
+flat optional EQNXBLD1, 64, 64
+{
+	Patch BLOOD1, 0, 0
+}
+flat optional EQNXBLD2, 64, 64
+{
+	Patch BLOOD2, 0, 0
+}
+flat optional EQNXBLD3, 64, 64
+{
+	Patch BLOOD3, 0, 0
+}
+flat optional EQNXRR05, 64, 64
+{
+	Patch RROCK05, 0, 0
+}
+flat optional EQNXRR06, 64, 64
+{
+	Patch RROCK06, 0, 0
+}
+flat optional EQNXRR07, 64, 64
+{
+	Patch RROCK07, 0, 0
+}
+flat optional EQNXRR08, 64, 64
+{
+	Patch RROCK08, 0, 0
+}

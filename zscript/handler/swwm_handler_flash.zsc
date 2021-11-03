@@ -1,0 +1,109 @@
+// screen flashes
+
+// Screen flashes from DT
+Class GenericFlash : HUDMessageBase
+{
+	Color col;
+	int duration;
+	double alpha;
+	Actor cam;
+	transient CVar flashstr;
+
+	GenericFlash Setup( Actor camera, Color c, int d )
+	{
+		alpha = 1.0;
+		col = c;
+		duration = d;
+		cam = camera;
+		return self;
+	}
+	override bool Tick()
+	{
+		if ( duration > 0 ) alpha -= 1./duration;
+		return (alpha<=0)||(!cam);
+	}
+	override void Draw( int bottom, int visibility )
+	{
+		if ( automapactive || (visibility != BaseStatusBar.HUDMSGLayer_UnderHUD) ) return;
+		if ( cam && (players[consoleplayer].camera != cam) ) return;
+		if ( !flashstr ) flashstr = CVar.FindCVar(SWWMMODPREFIX.."_flashstrength");
+		Screen.Dim(col,(col.a/255.)*alpha*flashstr.GetFloat(),0,0,Screen.GetWidth(),Screen.GetHeight());
+	}
+}
+
+Class QueuedFlash
+{
+	Color c;
+	int duration;
+	int tic;
+	Actor cam;
+}
+
+extend Class SWWMHandler
+{
+	transient Array<QueuedFlash> flashes;
+	// heal/armor flashes need to be handled here so they don't stack
+	transient int hflash[MAXPLAYERS], aflash[MAXPLAYERS];
+
+	static void HealthFlash( int p )
+	{
+		let hnd = SWWMHandler(EventHandler.Find("SWWMHandler"));
+		if ( !hnd || (p == -1) ) return;
+		hnd.hflash[p] = gametic+5;
+	}
+
+	static void ArmorFlash( int p )
+	{
+		let hnd = SWWMHandler(EventHandler.Find("SWWMHandler"));
+		if ( !hnd || (p == -1) ) return;
+		hnd.aflash[p] = gametic+5;
+	}
+
+	static void DoFlash( Actor camera, Color c, int duration )
+	{
+		// don't flash when paused
+		if ( menuactive && (menuactive != Menu.OnNoPause) ) return;
+		QueuedFlash qf = new("QueuedFlash");
+		qf.duration = duration;
+		qf.c = c;
+		qf.tic = gametic;
+		qf.cam = camera;
+		let hnd = SWWMHandler(EventHandler.Find("SWWMHandler"));
+		if ( !hnd ) return;	// not supposed to happen
+		hnd.flashes.push(qf);
+	}
+
+	private void FlashTick()
+	{
+		for ( int i=0; i<flashes.size(); i++ )
+		{
+			if ( flashes[i].tic >= gametic ) continue;
+			flashes.Delete(i);
+			i--;
+		}
+	}
+	private ui void FlashUITick()
+	{
+		for ( int i=0; i<flashes.size(); i++ )
+		{
+			if ( flashes[i].tic < gametic ) continue;
+			GenericFlash gf = new("GenericFlash").Setup(flashes[i].cam,flashes[i].c,flashes[i].duration);
+			StatusBar.AttachMessage(gf,0,BaseStatusBar.HUDMSGLayer_UnderHUD);
+		}
+	}
+	private ui void FlashRender( RenderEvent e )
+	{
+		int camplayer = players[consoleplayer].Camera.PlayerNumber();
+		if ( camplayer == -1 ) return;
+		if ( gametic < hflash[camplayer] )
+		{
+			double fstr = (hflash[camplayer]-(gametic+e.FracTic))/5.;
+			Screen.Dim(SWWMHEALTHFLASH,.1875*fstr,0,0,Screen.GetWidth(),Screen.GetHeight());
+		}
+		if ( gametic < aflash[camplayer] )
+		{
+			double fstr = (aflash[camplayer]-(gametic+e.FracTic))/5.;
+			Screen.Dim(SWWMARMORFLASH,.1875*fstr,0,0,Screen.GetWidth(),Screen.GetHeight());
+		}
+	}
+}

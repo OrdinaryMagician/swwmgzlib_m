@@ -1,0 +1,55 @@
+// Handler responsible for item replacements and whatever else
+// most of the code is split up to make it easier to navigate
+// (remember to extend the class in projects using this)
+
+Class SWWMHandler : EventHandler
+{
+	// used by base items
+	transient int lastpickuptic[MAXPLAYERS];
+
+	// stuff to reduce worldthingspawned overhead
+	int iwantdie;
+
+	// for checkreplacement
+	bool hasdrlamonsters;
+
+	override void OnRegister()
+	{
+		// "uninitialize" some vars
+		iwantdie = -1;
+		// this one can be initialized here easily
+		for ( int i=0; i<AllActorClasses.Size(); i++ )
+		{
+			if ( AllActorClasses[i].GetClassName() != "RLMonster" ) continue;
+			hasdrlamonsters = true;
+			break;
+		}
+	}
+
+	override void WorldTick()
+	{
+		QueueMaintenance();
+		FlashTick();
+	}
+
+	override void PostUiTick()
+	{
+		FlashUITick();
+	}
+
+	// stuff for hud
+	override void RenderUnderlay( RenderEvent e )
+	{
+		// armor/health flashes
+		FlashRender(e);
+		// weapon underlays
+		if ( players[consoleplayer].ReadyWeapon is 'SWWMWeapon' )
+			SWWMWeapon(players[consoleplayer].ReadyWeapon).RenderUnderlay(e);
+	}
+
+	// various shaders
+	override void RenderOverlay( RenderEvent e )
+	{
+		RenderShaders(e);
+	}
+}

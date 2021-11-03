@@ -1,0 +1,33 @@
+// common code goes here
+
+// extra sound channels for the mod
+enum ESWWMGZChannels
+{
+	CHAN_YOUDONEFUCKEDUP = 63200,	// exception handler
+	CHAN_VOICEOVER = 63201,		// voice acting
+	CHAN_FOOTSTEP = 63202,		// footstep sounds and others
+	CHAN_WEAPONEXTRA = 63203,	// additional weapon sounds (usually loops)
+	CHAN_POWERUP = 63204,		// powerup sounds
+	CHAN_POWERUPEXTRA = 63205,	// additional powerup sounds
+	CHAN_PLAYEREXTRA = 63206,	// additional player sounds (usually loops)
+	CHAN_ITEMEXTRA = 63207,		// additional item sounds
+	CHAN_WEAPONEXTRA2 = 63208,	// additional weapon sound slot
+	CHAN_WEAPONEXTRA3 = 63209,	// additional weapon sound slot (again)
+	CHAN_DAMAGE = 63210,		// used for impact/hit sounds
+	CHAN_AMBEXTRA = 63211,		// player ambience when submerged
+	CHAN_VOICEOVERAUX = 63212	// extra channel to make voice acting louder if needed
+};
+
+const FallbackTag = "AWESOME IT'S PENIS"; // used on tag processing, please don't mind the actual string used)
+const MaxBouncePerTic = 40;	// maximum simultaneous bounces in one tic for a lightweight actor before we consider it's stuck
+
+// basic "does nothing" actor, used to remove stuff in CheckReplacement
+Class SWWMNothing : Actor
+{
+	States
+	{
+	Spawn:
+		TNT1 A 1;
+		Stop;
+	}
+}

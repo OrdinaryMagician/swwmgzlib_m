@@ -1,0 +1,117 @@
+// various utility thinkers
+
+// Korax instakill handler
+Class UglyBoyGetsFuckedUp : Thinker
+{
+	bool wedone;
+
+	override void Tick()
+	{
+		if ( wedone ) return;
+		if ( level.killed_monsters < level.total_monsters )
+		{
+			// stop portal door
+			int sidx = level.CreateSectorTagIterator(145).Next();
+			if ( sidx == -1 ) return;
+			Sector door = level.Sectors[sidx];
+			let ti = ThinkerIterator.Create("SectorEffect");
+			SectorEffect se;
+			while ( se = SectorEffect(ti.Next()) )
+			{
+				if ( se.GetSector() != door ) continue;
+				se.Destroy();
+				door.StopSoundSequence(CHAN_VOICE);
+			}
+			return;
+		}
+		wedone = true;
+		level.ExecuteSpecial(Door_Open,null,null,false,145,8);
+		Destroy();
+	}
+}
+
+// temporary token
+Class SWWMAccumulatingDamage : Inventory {}
+
+Class SWWMDamageAccumulator : Thinker
+{
+	Actor victim, inflictor, source;
+	Array<Int> amounts;
+	int total;
+	Name type;
+	bool dontgib;
+	int flags;
+
+	override void Tick()
+	{
+		Super.Tick();
+		// so many damn safeguards in this
+		if ( !victim || (victim.Health <= 0) )
+		{
+			Destroy();
+			return;
+		}
+		int gibhealth = victim.GetGibHealth();
+		// お前はもう死んでいる
+		if ( (victim.health-total <= gibhealth) && !dontgib )
+		{
+			// safeguard for inflictors that have somehow ceased to exist, which apparently STILL CAN HAPPEN
+			if ( inflictor ) inflictor.bEXTREMEDEATH = true;
+			else type = 'Extreme';
+		}
+		// make sure accumulation isn't reentrant
+		if ( inflictor ) inflictor.GiveInventory("SWWMAccumulatingDamage",1);
+		// 何？
+		for ( int i=0; i<amounts.Size(); i++ )
+		{
+			if ( !victim ) break;
+			victim.DamageMobj(inflictor,source,amounts[i],type,DMG_THRUSTLESS|flags);
+		}
+		// clean up
+		if ( inflictor )
+		{
+			inflictor.TakeInventory("SWWMAccumulatingDamage",1);
+			inflictor.bEXTREMEDEATH = false;
+		}
+		Destroy();
+	}
+
+	static void Accumulate( Actor victim, int amount, Actor inflictor, Actor source, Name type, bool dontgib = false, int flags = 0 )
+	{
+		if ( !victim ) return;
+		let ti = ThinkerIterator.Create("SWWMDamageAccumulator",STAT_USER);
+		SWWMDamageAccumulator a, match = null;
+		while ( a = SWWMDamageAccumulator(ti.Next()) )
+		{
+			if ( a.victim != victim ) continue;
+			match = a;
+			break;
+		}
+		if ( !match )
+		{
+			match = new("SWWMDamageAccumulator");
+			match.ChangeStatNum(STAT_USER);
+			match.victim = victim;
+			match.amounts.Clear();
+		}
+		match.amounts.Push(amount);
+		match.total += amount;
+		match.inflictor = inflictor;
+		match.source = source;
+		match.type = type;
+		match.dontgib = dontgib;
+		match.flags = flags;
+	}
+
+	static clearscope int GetAmount( Actor victim )
+	{
+		let ti = ThinkerIterator.Create("SWWMDamageAccumulator",STAT_USER);
+		SWWMDamageAccumulator a, match = null;
+		while ( a = SWWMDamageAccumulator(ti.Next()) )
+		{
+			if ( a.victim != victim ) continue;
+			return a.total;
+		}
+		return 0;
+	}
+}

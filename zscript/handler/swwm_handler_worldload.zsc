@@ -1,0 +1,35 @@
+// WorldLoaded/WorldUnloaded events
+
+extend Class SWWMHandler
+{
+	// list contains a sector that belongs to each portal group
+	// used to ease some portal-aware functions
+	Array<int> psectors;
+
+	override void WorldLoaded( WorldEvent e )
+	{
+		if ( e.IsReopen ) return;
+		if ( level.levelname ~== "Modder Test Map" )
+			level.ReplaceTextures("-noflat-","kinstile",0);
+		// portal group counting
+		psectors.Clear();
+		for ( int i=0; i<level.sectors.Size(); i++ )
+		{
+			Sector s = level.sectors[i];
+			if ( psectors.Size() <= s.portalgroup )
+				psectors.Resize(s.portalgroup+1);
+			psectors[s.portalgroup] = s.Index();
+		}
+		// add teleporter sparks
+		for ( int i=0; i<level.lines.Size(); i++ )
+		{
+			Line l = level.lines[i];
+			if ( SWWMUtility.IsTeleportLine(l) )
+			{
+				let a = SWWMTeleportLine(Actor.Spawn("SWWMTeleportLine"));
+				a.tline = l;
+			}
+		}
+	}
+
+}

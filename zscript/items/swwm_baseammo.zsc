@@ -1,0 +1,619 @@
+// Common code for ammo division
+Class SWWMAmmo : Ammo
+{
+	Mixin SWWMOverlapPickupSound;
+	Mixin SWWMUseToPickup;
+	Mixin SWWMRespawn;
+
+	String PickupTag;
+	Class<MagAmmo> MagAmmoType;
+	private int SAmmoFlags;
+	transient bool bSinglePrint;	// used for pickup messages of mag manager
+
+	Property PickupTag : PickupTag;
+	Property MagAmmoType : MagAmmoType;
+
+	FlagDef UsePickupMsg : SAmmoFlags, 0;	// use the set pickup message rather than generating from pickup tag
+
+	override Class<Ammo> GetParentAmmo()
+	{
+		Class<Object> type = GetClass();
+		while ( (type.GetParentClass() != "SWWMAmmo") && type.GetParentClass() )
+			type = type.GetParentClass();
+		return (Class<Ammo>)(type);
+	}
+
+	override string PickupMessage()
+	{
+		if ( bUsePickupMsg ) return Super.PickupMessage();
+		String tagstr = "$T_"..PickupTag;
+		if ( (Amount > 1) && !bSinglePrint )
+		{
+			tagstr = tagstr.."S";
+			return String.Format("%d %s",Amount,StringTable.Localize(tagstr));
+		}
+		bSinglePrint = false;
+		return StringTable.Localize(tagstr);
+	}
+
+	private Inventory DoDrop( Class<Inventory> type )
+	{
+		let copy = Inventory(Spawn(type,Owner.Pos,NO_REPLACE));
+		if ( !copy ) return null;
+		copy.DropTime = 30;
+		copy.bSpecial = copy.bSolid = false;
+		copy.SetOrigin(Owner.Vec3Offset(0,0,10.),false);
+		copy.Angle = Owner.Angle;
+		copy.VelFromAngle(5.);
+		copy.Vel.Z = 1.;
+		copy.Vel += Owner.Vel;
+		copy.bNoGravity = false;
+		copy.ClearCounters();
+		copy.OnDrop(Owner);
+		copy.vel += (RotateVector((FRandom[Junk](-1.5,.5),FRandom[Junk](-2.5,2.5)),Owner.angle),FRandom[Junk](2.,5.));
+		return copy;
+	}
+
+	override bool SpecialDropAction( Actor dropper )
+	{
+		if ( CVar.FindCVar(SWWMMODPREFIX.."_enemydrops").GetInt() >= 0 )
+		{
+			// random chance to not drop
+			if ( Random[DropChance](1,100) <= Accuracy ) return true;
+			if ( Amount == default.Amount ) return false;
+			// subdivide
+			Owner = dropper; // needed for positioning to work
+			CreateTossable(Amount);
+			return true;
+		}
+		// no ammo drops from enemies
+		return true;
+	}
+
+	private bool CmpAmmo( Class<Ammo> a, Class<Ammo> b )
+	{
+		let amta = GetDefaultByType(a).Amount;
+		let amtb = GetDefaultByType(b).Amount;
+		return (amta < amtb);
+	}
+
+	private int partition_ammotypes( Array<Class<Ammo> > a, int l, int h )
+	{
+		Class<Ammo> pv = a[h];
+		int i = (l-1);
+		for ( int j=l; j<=(h-1); j++ )
+		{
+			if ( CmpAmmo(pv,a[j]) )
+			{
+				i++;
+				Class<Ammo> tmp = a[j];
+				a[j] = a[i];
+				a[i] = tmp;
+			}
+		}
+		Class<Ammo> tmp = a[h];
+		a[h] = a[i+1];
+		a[i+1] = tmp;
+		return i+1;
+	}
+	private void qsort_ammotypes( Array<Class<Ammo> > a, int l, int h )
+	{
+		if ( l >= h ) return;
+		int p = partition_ammotypes(a,l,h);
+		qsort_ammotypes(a,l,p-1);
+		qsort_ammotypes(a,p+1,h);
+	}
+
+	override inventory CreateTossable( int amt )
+	{
+		if ( bUndroppable || bUntossable || !Owner || (Amount <= 0) || (amt == 0) )
+			return null;
+		// cap
+		amt = min(amount,amt);
+		// enumerate all subclasses
+		Array<Class<Ammo> > ammotypes;
+		ammotypes.Clear();
+		for ( int i=0; i<AllActorClasses.Size(); i++ )
+		{
+			if ( AllActorClasses[i] is GetParentAmmo() )
+				ammotypes.Push((Class<Ammo>)(AllActorClasses[i]));
+		}
+		// sort from largest to smallest
+		qsort_ammotypes(ammotypes,0,ammotypes.Size()-1);
+		// perform subdivision
+		Inventory last = null;
+		while ( amt > 0 )
+		{
+			for ( int i=0; i<ammotypes.Size(); i++ )
+			{
+				let def = GetDefaultByType(ammotypes[i]);
+				if ( amt >= def.Amount )
+				{
+					last = DoDrop(ammotypes[i]);
+					amt -= def.Amount;
+					Amount -= def.Amount;
+					break;
+				}
+			}
+		}
+		return last;
+	}
+
+	override bool HandlePickup( Inventory item )
+	{
+		// drop excess ammo
+		if ( (item is 'Ammo') && (Ammo(item).GetParentAmmo() == GetParentAmmo()) )
+		{
+			int excess = Amount+item.Amount;
+			if ( excess > MaxAmount ) excess -= MaxAmount;
+			if ( excess < item.Amount )
+			{
+				// enumerate all subclasses
+				Array<Class<Ammo> > ammotypes;
+				ammotypes.Clear();
+				for ( int i=0; i<AllActorClasses.Size(); i++ )
+				{
+					if ( AllActorClasses[i] is GetParentAmmo() )
+						ammotypes.Push((Class<Ammo>)(AllActorClasses[i]));
+				}
+				// sort from largest to smallest
+				qsort_ammotypes(ammotypes,0,ammotypes.Size()-1);
+				// drop spares
+				Inventory last;
+				while ( excess > 0 )
+				{
+					for ( int i=0; i<ammotypes.Size(); i++ )
+					{
+						let def = GetDefaultByType(ammotypes[i]);
+						if ( excess >= def.Amount )
+						{
+							double ang = FRandom[Junk](0,360);
+							last = DoDrop(ammotypes[i]);
+							last.SetOrigin(item.pos,false);
+							last.vel.xy = (cos(ang),sin(ang))*FRandom[Junk](2,5);
+							excess -= def.Amount;
+							break;
+						}
+					}
+				}
+			}
+		}
+		return Super.HandlePickup(item);
+	}
+
+	override void DoEffect()
+	{
+		Super.DoEffect();
+		// drop excess ammo
+		if ( !sv_infiniteammo && !Owner.FindInventory('PowerInfiniteAmmo') )
+		{
+			int excess = Amount-MaxAmount;
+			if ( excess > 0 ) CreateTossable(excess);
+		}
+	}
+
+	override bool CanPickup( Actor toucher )
+	{
+		// don't allow picking up ammo for weapons we can't pick up
+		if ( !Super.CanPickup(toucher) ) return false;
+		for ( int i=0; i<AllActorClasses.Size(); i++ )
+		{
+			let w = (Class<Weapon>)(AllActorClasses[i]);
+			if ( !w ) continue;
+			if ( w is 'SWWMWeapon' )
+			{
+				let def = GetDefaultByType((Class<SWWMWeapon>)(w));
+				if ( !def.UsesAmmo(GetClass()) ) continue;
+				if ( !def.CanPickup(toucher) ) return false;
+			}
+			else
+			{
+				let def = GetDefaultByType(w);
+				if ( (def.AmmoType1 != GetClass()) && (def.AmmoType2 != GetClass()) ) continue;
+				if ( !def.CanPickup(toucher) ) return false;
+			}
+		}
+		return true;
+	}
+
+	override void AttachToOwner( Actor other )
+	{
+		Super.AttachToOwner(other);
+		// attach our mag ammo if we have none
+		if ( MagAmmoType && !Owner.FindInventory(MagAmmoType) )
+		{
+			let ma = Inventory(Spawn(MagAmmoType));
+			ma.Amount = 0;
+			ma.AttachToOwner(Owner);
+		}
+	}
+
+	override void ModifyDropAmount( int dropamount )
+	{
+		Super.ModifyDropAmount(dropamount);
+		int maxdrop = 1;
+		for ( int i=0; i<AllActorClasses.Size(); i++ )
+		{
+			if ( !(AllActorClasses[i] is GetParentAmmo()) ) continue;
+			let def = GetDefaultByType((Class<Ammo>)(AllActorClasses[i]));
+			maxdrop = max(maxdrop,def.amount);
+		}
+		Amount = Random[ShellDrop](1,clamp(dropamount,1,maxdrop));
+	}
+
+	default
+	{
+		+INVENTORY.IGNORESKILL;
+		Inventory.PickupFlash "SWWMPickupFlash";
+	}
+}
+
+// Common code for individual bullets
+Class MagAmmo : Inventory abstract
+{
+	Mixin SWWMOverlapPickupSound;
+	Mixin SWWMUseToPickup;
+	Mixin SWWMRespawn;
+
+	Class<Ammo> ParentAmmo;
+	Ammo pamo;
+	int ClipSize;
+	int countdown;
+	String PickupTag;
+	transient bool bSinglePrint;	// used for pickup messages of mag manager
+
+	Property ParentAmmo : ParentAmmo;
+	Property ClipSize : ClipSize;
+	Property PickupTag : PickupTag;
+
+	default
+	{
+		+INVENTORY.KEEPDEPLETED;
+		Inventory.PickupSound "misc/bullet_pkup";
+		Inventory.Amount 1;
+		Inventory.PickupFlash "SWWMPickupFlash";
+	}
+
+	virtual Class<MagAmmo> GetParentMagAmmo()
+	{
+		Class<Object> type = GetClass();
+		while ( (type.GetParentClass() != "MagAmmo") && type.GetParentClass() )
+			type = type.GetParentClass();
+		return (Class<MagAmmo>)(type);
+	}
+
+	private bool CmpAmmo( Class<MagAmmo> a, Class<MagAmmo> b )
+	{
+		let amta = GetDefaultByType(a).Amount;
+		let amtb = GetDefaultByType(b).Amount;
+		return (amta < amtb);
+	}
+
+	private int partition_ammotypes( Array<Class<MagAmmo> > a, int l, int h )
+	{
+		Class<MagAmmo> pv = a[h];
+		int i = (l-1);
+		for ( int j=l; j<=(h-1); j++ )
+		{
+			if ( CmpAmmo(pv,a[j]) )
+			{
+				i++;
+				Class<MagAmmo> tmp = a[j];
+				a[j] = a[i];
+				a[i] = tmp;
+			}
+		}
+		Class<MagAmmo> tmp = a[h];
+		a[h] = a[i+1];
+		a[i+1] = tmp;
+		return i+1;
+	}
+	private void qsort_ammotypes( Array<Class<MagAmmo> > a, int l, int h )
+	{
+		if ( l >= h ) return;
+		int p = partition_ammotypes(a,l,h);
+		qsort_ammotypes(a,l,p-1);
+		qsort_ammotypes(a,p+1,h);
+	}
+
+	override string PickupMessage()
+	{
+		String tagstr = "$T_"..PickupTag;
+		if ( (Amount > 1) && !bSinglePrint )
+		{
+			tagstr = tagstr.."S";
+			return String.Format("%d %s",Amount,StringTable.Localize(tagstr));
+		}
+		bSinglePrint = false;
+		return StringTable.Localize(tagstr);
+	}
+
+	override bool HandlePickup( Inventory item )
+	{
+		// see if the mag can be split apart
+		if ( (item is 'Ammo') && (ParentAmmo == Ammo(item).GetParentAmmo()) )
+		{
+			// double-check that parent ammo exists
+			if ( !pamo )
+			{
+				pamo = Ammo(Owner.FindInventory(ParentAmmo));
+				if ( !pamo )
+				{
+					pamo = Ammo(Spawn(ParentAmmo));
+					pamo.AttachToOwner(Owner);
+					pamo.Amount = 0;
+				}
+			}
+			if ( (pamo.Amount >= pamo.MaxAmount) && (Amount < MaxAmount) )
+			{
+				// split
+				for ( int i=0; i<item.Amount; i++ )
+				{
+					int bul = ClipSize;
+					int maxgiveamt = min(MaxAmount-Amount,bul);
+					int dropamt = bul-maxgiveamt;
+					if ( dropamt > 0 ) CreateTossable(dropamt);
+					Amount = min(MaxAmount,Amount+bul);
+				}
+				item.bPickupGood = true;
+				return true;
+			}
+		}
+		// drop excess mag ammo
+		if ( (item is 'MagAmmo') && (MagAmmo(item).GetParentMagAmmo() == GetClass()) )
+		{
+			int excess = Amount+item.Amount;
+			if ( excess > MaxAmount ) excess -= MaxAmount;
+			if ( excess < item.Amount )
+			{
+				// enumerate all subclasses
+				Array<Class<MagAmmo> > ammotypes;
+				ammotypes.Clear();
+				for ( int i=0; i<AllActorClasses.Size(); i++ )
+				{
+					if ( AllActorClasses[i] is GetParentMagAmmo() )
+						ammotypes.Push((Class<MagAmmo>)(AllActorClasses[i]));
+				}
+				// sort from largest to smallest
+				qsort_ammotypes(ammotypes,0,ammotypes.Size()-1);
+				// drop spares
+				Inventory last;
+				while ( excess > 0 )
+				{
+					for ( int i=0; i<ammotypes.Size(); i++ )
+					{
+						let def = GetDefaultByType(ammotypes[i]);
+						if ( excess >= def.Amount )
+						{
+							double ang = FRandom[Junk](0,360);
+							last = DoDrop(ammotypes[i]);
+							last.SetOrigin(item.pos,false);
+							last.vel.xy = (cos(ang),sin(ang))*FRandom[Junk](2,5);
+							excess -= def.Amount;
+							break;
+						}
+					}
+				}
+			}
+			if ( Amount < MaxAmount )
+			{
+				int receiving = item.Amount;
+				int oldamt = Amount;
+				if ( (Amount > 0) && ((Amount+item.Amount) < 0) ) Amount = int.max;
+				else Amount += item.Amount;
+				if ( Amount > MaxAmount && !sv_unlimited_pickup ) Amount = MaxAmount;
+				item.bPickupGood = true;
+				// autoswitch if needed (checks parent ammo type)
+				if ( (oldamt == 0) && Owner && Owner.player )
+					PlayerPawn(Owner).CheckWeaponSwitch(ParentAmmo);
+			}
+			return true;
+		}
+		return false;
+	}
+
+	override Inventory CreateCopy( Actor other )
+	{
+		Inventory copy;
+		int amount = Amount;
+		let type = GetParentMagAmmo();
+		if ( (GetClass() != type) && type )
+		{
+			if ( !GoAway() ) Destroy();
+			copy = Inventory(Spawn(type));
+			copy.Amount = amount;
+			copy.BecomeItem();
+		}
+		else
+		{
+			copy = Super.CreateCopy(other);
+			copy.Amount = amount;
+		}
+		if ( copy.Amount > copy.MaxAmount ) copy.Amount = copy.MaxAmount;
+		return copy;
+	}
+
+	override bool CanPickup( Actor toucher )
+	{
+		// don't allow picking up ammo for weapons we can't pick up
+		if ( !Super.CanPickup(toucher) ) return false;
+		let def = GetDefaultByType(ParentAmmo);
+		return def.CanPickup(toucher);
+	}
+
+	private Inventory DoDrop( Class<Inventory> type )
+	{
+		let copy = Inventory(Spawn(type,Owner.Pos,NO_REPLACE));
+		if ( !copy ) return null;
+		copy.DropTime = 30;
+		copy.bSpecial = copy.bSolid = false;
+		copy.SetOrigin(Owner.Vec3Offset(0,0,10.),false);
+		copy.Angle = Owner.Angle;
+		copy.VelFromAngle(5.);
+		copy.Vel.Z = 1.;
+		copy.Vel += Owner.Vel;
+		copy.bNoGravity = false;
+		copy.ClearCounters();
+		copy.OnDrop(Owner);
+		copy.vel += (RotateVector((FRandom[Junk](-1.5,.5),FRandom[Junk](-2.5,2.5)),Owner.angle),FRandom[Junk](2.,5.));
+		return copy;
+	}
+
+	override bool SpecialDropAction( Actor dropper )
+	{
+		if ( CVar.FindCVar(SWWMMODPREFIX.."_enemydrops").GetInt() >= 0 )
+		{
+			// random chance to not drop
+			if ( Random[DropChance](1,100) <= Accuracy ) return true;
+			if ( Amount == default.Amount ) return false;
+			// subdivide
+			Owner = dropper; // needed for positioning to work
+			CreateTossable(Amount);
+			return true;
+		}
+		// no ammo drops from enemies
+		return true;
+	}
+
+	override void DoEffect()
+	{
+		Super.DoEffect();
+		// drop excess ammo
+		if ( !sv_infiniteammo && !Owner.FindInventory('PowerInfiniteAmmo') )
+		{
+			int excess = Amount-MaxAmount;
+			if ( excess > 0 ) CreateTossable(excess);
+		}
+		if ( !pamo )
+		{
+			pamo = Ammo(Owner.FindInventory(ParentAmmo));
+			if ( !pamo )
+			{
+				pamo = Ammo(Spawn(ParentAmmo));
+				pamo.AttachToOwner(Owner);
+				pamo.Amount = 0;
+			}
+		}
+		// check if we can fill a mag (delayed)
+		if ( (Amount < ClipSize) || (pamo.Amount >= pamo.MaxAmount) )
+		{
+			countdown = 35;
+			return;
+		}
+		if ( countdown-- > 0 ) return;
+		MagFill();
+	}
+
+	bool MagFill()
+	{
+		// double-check that parent ammo exists
+		if ( !pamo )
+		{
+			pamo = Ammo(Owner.FindInventory(ParentAmmo));
+			if ( !pamo )
+			{
+				pamo = Ammo(Spawn(ParentAmmo));
+				pamo.AttachToOwner(Owner);
+				pamo.Amount = 0;
+			}
+		}
+		bool given = false;
+		while ( (pamo.Amount < pamo.MaxAmount) && (Amount >= ClipSize) )
+		{
+			pamo.Amount++;
+			Amount -= ClipSize;
+			given = true;
+			if ( Owner.CheckLocalView() )
+			{
+				SWWMAmmo(pamo).bSinglePrint = true;
+				pamo.PrintPickupMessage(true,pamo.PickupMessage());
+			}
+		}
+		if ( given ) pamo.PlayPickupSound(Owner);
+		return given;
+	}
+
+	override inventory CreateTossable( int amt )
+	{
+		if ( bUndroppable || bUntossable || !Owner || (Amount <= 0) || (amt == 0) )
+			return null;
+		// cap
+		amt = min(amount,amt);
+		// enumerate all subclasses
+		Array<Class<MagAmmo> > ammotypes;
+		ammotypes.Clear();
+		for ( int i=0; i<AllActorClasses.Size(); i++ )
+		{
+			if ( AllActorClasses[i] is GetParentMagAmmo() )
+				ammotypes.Push((Class<MagAmmo>)(AllActorClasses[i]));
+		}
+		// sort from largest to smallest
+		qsort_ammotypes(ammotypes,0,ammotypes.Size()-1);
+		// perform subdivision
+		Inventory last = null;
+		let pammo = GetDefaultByType(ParentAmmo);
+		while ( amt > 0 )
+		{
+			// drop full mag if possible
+			if ( amt >= ClipSize )
+			{
+				last = DoDrop(ParentAmmo);
+				amt -= ClipSize;
+				Amount -= ClipSize;
+				continue;
+			}
+			// drop bullets otherwise
+			for ( int i=0; i<ammotypes.Size(); i++ )
+			{
+				let def = GetDefaultByType(ammotypes[i]);
+				if ( amt >= def.Amount )
+				{
+					last = DoDrop(ammotypes[i]);
+					amt -= def.Amount;
+					Amount -= def.Amount;
+					break;
+				}
+			}
+		}
+		return last;
+	}
+
+	override void ModifyDropAmount( int dropamount )
+	{
+		Super.ModifyDropAmount(dropamount);
+		Amount = min(Random[ShellDrop](1,ClipSize),Amount);
+	}
+}
+
+// Ref class for ammo spawners, used by on-demand replacers
+Class SWWMAmmoSpawner : Inventory abstract
+{
+	virtual void SpawnAmmo() {}
+
+	override void PostBeginPlay()
+	{
+		SpawnAmmo();
+		ClearCounters();
+		Destroy();
+	}
+
+	override bool CanPickup( Actor toucher )
+	{
+		return false;
+	}
+
+	override bool TryPickup( in out Actor toucher )
+	{
+		return false;
+	}
+
+	default
+	{
+		+NOGRAVITY;
+		+NOBLOCKMAP;
+		+NOINTERACTION;
+		+NOTELEPORT;
+		+DONTSPLASH;
+		-SPECIAL;
+	}
+}

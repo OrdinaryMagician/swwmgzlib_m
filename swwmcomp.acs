@@ -1,0 +1,16 @@
+#library "SWWMCOMP"
+#include "zcommon.acs"
+
+// these scripts are redirected to by the compatibility postprocessor
+
+SCRIPT "NERVE_EXITOPEN" ( void )
+{
+	Stairs_BuildUpDoomCrush(14,32,16,0,0);
+	Ceiling_RaiseByValue(24,8,80);
+}
+
+SCRIPT "EQUINOX_BRAINCRUSH" ( int tag )
+{
+	ScriptCall("SWWMUtility","SpawnVanillaBossBrain",666);
+	Ceiling_CrushAndRaiseDist(tag,8,8,10);
+}

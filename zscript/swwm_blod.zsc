@@ -1,0 +1,894 @@
+// Gore FX ported over from Soundless Mound, with some edits
+
+// Base blood actor
+Class mkBlood : Actor
+{
+	Default
+	{
+		+NOBLOCKMAP;
+		+NOGRAVITY;
+		+NOTELEPORT;
+		+PUFFGETSOWNER;
+	}
+	action void A_Bleed( int str = 1 )
+	{
+		if ( !target ) return;
+		let b = Spawn("mkBloodSpray",pos);
+		Vector2 dirto = target.Vec2To(self).unit();
+		b.angle = atan2(dirto.y,dirto.x);
+		b.pitch = FRandom[Blood](-60,30);
+		b.translation = translation;
+		b.target = target;
+		b.args[0] = str;
+		if ( target.bloodcolor ) b.SetShade(Color(target.bloodcolor.r/2,target.bloodcolor.g/2,target.bloodcolor.b/2));
+		else b.SetShade(Color(80,0,0));
+		b.CopyBloodColor(target);
+		int numpt = Random[Blood](2,4)+str*2;
+		double sstr = (2.5+str)/3.;
+		Vector3 vdir = (cos(b.angle)*cos(b.pitch),sin(b.angle)*cos(b.pitch),-sin(b.pitch));
+		for ( int i=0; i<numpt; i++ )
+		{
+			Vector3 ndir = (vdir+(FRandom[Blood](-.5,.5),FRandom[Blood](-.5,.5),FRandom[Blood](-.5,.5))).unit()*FRandom[Blood](.2,2.)*sstr;
+			for ( double j=1.; j>=.5; j-=.125 )
+				A_SpawnParticle(b.fillcolor,0,int(12*sstr),2.*str*FRandom[Blood](.6,1.4)*j,0,0,0,0,ndir.x*j,ndir.y*j,ndir.z*j,0,0,-.25,.75,-1,-.02*sstr*j);
+		}
+		let s = Spawn("mkBloodSmoke",pos);
+		s.SetShade(b.fillcolor);
+		s.scale *= .4*str;
+		s.special1 += str-1;
+	}
+	override void Tick()
+	{
+		if ( isFrozen() ) return;
+		if ( !CheckNoDelay() || (tics == -1) ) return;
+		if ( tics > 0 ) tics--;
+		while ( !tics )
+		{
+			if ( !SetState(CurState.NextState) )
+				return;
+		}
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 1 NoDelay A_Bleed(3);
+		Stop;
+		TNT1 A 1 A_Bleed(2);
+		Stop;
+		TNT1 A 1 A_Bleed(1);
+		Stop;
+	}
+}
+
+// a burst of blood attached to a bleeding actor
+Class mkBloodSpray : Actor
+{
+	double str;
+	int cnt;
+	Vector3 attachofs;
+	double baseang;
+	color shadecol;
+
+	Default
+	{
+		+NOBLOCKMAP;
+		+NOGRAVITY;
+		+NOTELEPORT;
+		+NOINTERACTION;
+	}
+	override void PostBeginPlay()
+	{
+		if ( !target )
+		{
+			Destroy();
+			return;
+		}
+		str = FRandom[Blood](2.,4.)*args[0];
+		cnt = Random[Blood](2,3)*args[0];
+		attachofs.xy = RotateVector(target.Vec2To(self),-target.angle);
+		attachofs.z = pos.z-target.pos.z;
+		baseang = angle-target.angle;
+	}
+	private bool IsTargetFlying()
+	{
+		if ( !target ) return false;
+		if ( !target.bNOGRAVITY && (target.pos.z > target.floorz) && target.TestMobjZ() ) return true;
+		if ( ((!target.bNOGRAVITY && target.bBlasted) || (target.health <= 0)) && (target.vel.length() > 10.) ) return true;
+		return false;
+	}
+	override void Tick()
+	{
+		if ( !target )
+		{
+			Destroy();
+			return;
+		}
+		if ( isFrozen() ) return;
+		Vector3 setofs;
+		setofs = (cos(target.angle)*attachofs.x+sin(target.angle)*attachofs.y,sin(target.angle)*attachofs.x-cos(target.angle)*attachofs.y,attachofs.z);
+		SetOrigin(level.Vec3Offset(target.pos,setofs),false);
+		int sz = max(1,args[0]/2);
+		double ang, pt;
+		int cnt = sz-Random[Blood](0,4);
+		for ( int i=0; i<cnt; i++ )
+		{
+			let d = Spawn("mkBloodDrop",pos);
+			d.SetShade(fillcolor);
+			d.CopyBloodColor(self);
+			ang = baseang+target.angle+FRandom[Blood](-15.,15.)*str;
+			pt = pitch+FRandom[Blood](-15.,15.)*str;
+			Vector3 dir = (cos(pt)*cos(ang),cos(pt)*sin(ang),-sin(pt));
+			d.vel = dir*str*FRandom[Blood](.8,1.8);
+			d.scale *= str*.15*FRandom[Blood](.6,1.4);
+		}
+		bool flying = IsTargetFlying();
+		if ( flying ) str *= 1.-(.15/sz);
+		else str *= 1.-(.4/sz);
+		if ( (str <= .05) || ((cnt-- <= 0) && !flying) ) Destroy();
+	}
+}
+
+// drop of salsa
+// becomes a decal on crash
+Class mkBloodDrop : Actor
+{
+	bool killme;
+	bool dead, onceiling;
+	mkBloodDrop prevblod, nextblod;
+	Sector tracksector;
+	int trackplane;
+
+	Default
+	{
+		+MISSILE;
+		+NOBLOCKMAP;
+		+DROPOFF;
+		+NOTELEPORT;
+		+THRUACTORS;
+		+FORCEXYBILLBOARD;
+		+ROLLSPRITE;
+		+ROLLCENTER;
+		+NOINTERACTION;
+		Scale .35;
+		Radius 2;
+		Height 2;
+		Mass 1;
+		RenderStyle "Translucent";
+	}
+	// try to reduce overhead as much as possible with this
+	override void Tick()
+	{
+		prev = pos;	// for interpolation
+		if ( isFrozen() ) return;
+		if ( killme ) A_FadeOut(.01);
+		if ( dead )
+		{
+			// do nothing but follow floor movement and eventually fade out
+			if ( tracksector )
+			{
+				double trackz;
+				if ( trackplane ) trackz = tracksector.ceilingplane.ZAtPoint(pos.xy)-.1;
+				else trackz = tracksector.floorplane.ZAtPoint(pos.xy);
+				if ( trackz != pos.z )
+				{
+					SetZ(trackz);
+					UpdateWaterLevel(false);
+				}
+			}
+			if ( (waterlevel > 0) || GetFloorTerrain().isliquid )
+			{
+				scale *= 1.005;
+				A_FadeOut(.01);
+			}
+			if ( onceiling && (special2 < 200) && (scale.x > .2) )
+			{
+				if ( special1-- ) return;
+				special2 += 10;
+				special1 = Random[Blood](20,30)+special2;
+				let d = Spawn("mkBloodDrop",Vec3Offset(0,0,-2));
+				d.master = self;
+				d.SetShade(fillcolor);
+				d.CopyBloodColor(self);
+				d.scale = Scale*FRandom[Blood](.4,.6);
+			}
+			return;	// we don't need to update states when we're dead
+		}
+		else
+		{
+			// gravitational pull
+			if ( waterlevel <= 0 ) vel.z -= GetGravity();
+			// linetrace-based movement (hopefully more reliable than traditional methods)
+			Vector3 dir = vel;
+			double spd = vel.length();
+			dir /= spd;
+			FLineTraceData d;
+			Vector3 newpos = pos;
+			newpos.z = clamp(newpos.z,floorz,ceilingz);
+			double ang = atan2(dir.y,dir.x);
+			double pt = asin(-dir.z);
+			LineTrace(ang,spd,pt,TRF_THRUACTORS|TRF_THRUHITSCAN|TRF_ABSPOSITION,newpos.z,newpos.x,newpos.y,d);
+			if ( d.HitType != TRACE_HitNone )
+			{
+				Vector3 hitnormal = -d.HitDir;
+				if ( d.HitType == TRACE_HitFloor )
+				{
+					if ( d.Hit3DFloor ) hitnormal = -d.Hit3DFloor.top.Normal;
+					else hitnormal = d.HitSector.floorplane.Normal;
+				}
+				else if ( d.HitType == TRACE_HitCeiling )
+				{
+					if ( d.Hit3DFloor ) hitnormal = -d.Hit3DFloor.bottom.Normal;
+					else hitnormal = d.HitSector.ceilingplane.Normal;
+				}
+				else if ( d.HitType == TRACE_HitWall )
+				{
+					hitnormal = (-d.HitLine.delta.y,d.HitLine.delta.x,0).unit();
+					if ( !d.LineSide ) hitnormal *= -1;
+				}
+				newpos = d.HitLocation+hitnormal;
+			}
+			else newpos = level.Vec3Offset(newpos,vel);
+			newpos.z = clamp(newpos.z,floorz,ceilingz);
+			Vector3 ndiff = level.Vec3Diff(newpos,pos);
+			double ndist = ndiff.length();
+			ndiff /= ndist;
+			for ( int i=0; i<ndist; i++ )
+			{
+				if ( Random[Blood](0,2) ) continue;
+				Vector3 ppos = level.Vec3Offset(pos,ndiff*i)-pos;
+				A_SpawnParticle(fillcolor,0,10,10.*scale.x*FRandom[Blood](.6,1.4),0,ppos.x,ppos.y,ppos.z,vel.x*.1+FRandom[Blood](-.1,.1),vel.y*.1+FRandom[Blood](-.1,.1),vel.z*.1+FRandom[Blood](-.1,.1),0,0,-.5,.5*alpha,-1,-1.*scale.x);
+			}
+			SetOrigin(newpos,true);
+			if ( (d.HitType == TRACE_HitFloor) || (pos.z <= floorz) )
+			{
+				// hacky workaround
+				if ( !d.HitSector )
+				{
+					d.HitSector = floorsector;
+					d.HitTexture = floorsector.GetTexture(0);
+				}
+				if ( d.HitTexture == skyflatnum )
+				{
+					Destroy();
+					return;
+				}
+				// landed on floor
+				SetOrigin(d.HitLocation,true);
+				HitFloor();
+				A_StartSound("misc/blooddrop",volume:.1);
+				if ( master )
+				{
+					// assume we dropped onto the previous spot
+					if ( master.tracer )
+					{
+						Vector3 floordir;
+						if ( d.Hit3DFloor ) floordir = -d.Hit3DFloor.model.ceilingplane.Normal;
+						else floordir = d.HitSector.floorplane.Normal;
+						int numpt = Random[Blood](2,4);
+						for ( int i=0; i<numpt; i++ )
+						{
+							Vector3 ndir = (floordir+(FRandom[Blood](-.5,.5),FRandom[Blood](-.5,.5),FRandom[Blood](-.5,.5))).unit()*FRandom[Blood](.5,8.);
+							for ( double j=1.; j>=.5; j-=.125 )
+								A_SpawnParticle(fillcolor,0,20,10.*scale.x*FRandom[Blood](.6,1.4)*j,0,0,0,0,ndir.x*j,ndir.y*j,ndir.z*j,0,0,-.25,.5*alpha,-1,-1.*scale.x*j);
+						}
+						Destroy();
+						return;
+					}
+					master.tracer = self;
+				}
+				bMISSILE = false;
+				dead = true;
+				Vector3 floordir;
+				if ( d.Hit3DFloor )
+				{
+					tracksector = d.Hit3DFloor.model;
+					trackplane = 1;
+					floordir = -d.Hit3DFloor.model.ceilingplane.Normal;
+				}
+				else
+				{
+					tracksector = d.HitSector;
+					trackplane = 0;
+					floordir = d.HitSector.floorplane.Normal;
+				}
+				SWWMUtility.SetToSlope(self,FRandom[Blood](0,360));
+				A_SetRenderStyle(1.,STYLE_Shaded);
+				frame = Random[Blood](5,8);
+				int numpt = Random[Blood](4,8);
+				for ( int i=0; i<numpt; i++ )
+				{
+					Vector3 ndir = (floordir+(FRandom[Blood](-.5,.5),FRandom[Blood](-.5,.5),FRandom[Blood](-.5,.5))).unit()*FRandom[Blood](.5,8.);
+					for ( double j=1.; j>=.5; j-=.125 )
+						A_SpawnParticle(fillcolor,0,20,10.*scale.x*FRandom[Blood](.6,1.4)*j,0,0,0,0,ndir.x*j,ndir.y*j,ndir.z*j,0,0,-.25,.5*alpha,-1,-1.*scale.x*j);
+				}
+				vel *= 0;
+				return;
+			}
+			if ( (d.HitType == TRACE_HitCeiling) || (pos.z >= ceilingz) )
+			{
+				// hacky workaround
+				if ( !d.HitSector )
+				{
+					d.HitSector = ceilingsector;
+					d.HitTexture = ceilingsector.GetTexture(1);
+				}
+				if ( (d.HitTexture == skyflatnum) || master )
+				{
+					Destroy();
+					return;
+				}
+				// hit the ceiling
+				SetOrigin(d.HitLocation-(0,0,1),true);
+				A_StartSound("misc/blooddrop",volume:.1);
+				bMISSILE = false;
+				dead = true;
+				onceiling = true;
+				Vector3 floordir;
+				if ( d.Hit3DFloor )
+				{
+					tracksector = d.Hit3DFloor.model;
+					trackplane = 0;
+					floordir = -d.Hit3DFloor.model.floorplane.Normal;
+				}
+				else
+				{
+					tracksector = d.HitSector;
+					trackplane = 1;
+					floordir = d.HitSector.ceilingplane.Normal;
+				}
+				SWWMUtility.SetToSlope(self,FRandom[Blood](0,360),true);
+				A_SetRenderStyle(1.,STYLE_Shaded);
+				frame = Random[Blood](5,8);
+				int numpt = Random[Blood](4,8);
+				for ( int i=0; i<numpt; i++ )
+				{
+					Vector3 ndir = (floordir+(FRandom[Blood](-.5,.5),FRandom[Blood](-.5,.5),FRandom[Blood](-.5,.5))).unit()*FRandom[Blood](.5,8.);
+					for ( double j=1.; j>=.5; j-=.125 )
+						A_SpawnParticle(fillcolor,0,20,10.*scale.x*FRandom[Blood](.6,1.4)*j,0,0,0,0,ndir.x*j,ndir.y*j,ndir.z*j,0,0,-.25,.5*alpha,-1,-1.*scale.x*j);
+				}
+				vel *= 0;
+				return;
+			}
+			if ( d.HitType == TRACE_HitWall )
+			{
+				if ( d.HitLine.backsector && (d.HitLine.backsector.GetTexture(1) == skyflatnum) && (d.HitLocation.z >= d.HitLine.backsector.ceilingplane.ZAtPoint(d.HitLocation.xy)) )
+				{
+					Destroy();
+					return;
+				}
+				// hit wall
+				Vector2 walldir = (-d.HitLine.delta.y,d.HitLine.delta.x).unit();
+				if ( d.LineSide ) walldir *= -1;
+				SetOrigin(d.HitLocation-walldir*8,true);
+				TraceBleedAngle(20,atan2(walldir.y,walldir.x),0);
+				A_StartSound("misc/blooddrop",volume:.1);
+				int numpt = Random[Blood](4,8);
+				for ( int i=0; i<numpt; i++ )
+				{
+					Vector3 ndir = (-(walldir.x,walldir.y,0)+(FRandom[Blood](-.5,.5),FRandom[Blood](-.5,.5),FRandom[Blood](-.5,.5))).unit()*FRandom[Blood](.5,8.);
+					for ( double j=1.; j>=.5; j-=.125 )
+						A_SpawnParticle(fillcolor,0,20,10.*scale.x*FRandom[Blood](.6,1.4)*j,0,0,0,0,ndir.x*j,ndir.y*j,ndir.z*j,0,0,-.25,.5*alpha,-1,-1.*scale.x*j);
+				}
+				Destroy();
+				return;
+			}
+			UpdateWaterLevel();
+			if ( waterlevel > 0 ) A_FadeOut();
+			scale *= .99;
+			if ( scale.x <= 0. )
+			{
+				Destroy();
+				return;
+			}
+		}
+		if ( !CheckNoDelay() || (tics == -1) ) return;
+		if ( tics > 0 ) tics--;
+		while ( !tics )
+		{
+			if ( !SetState(CurState.NextState) )
+				return;
+		}
+	}
+	override void PostBeginPlay()
+	{
+		Super.PostBeginPlay();
+		SWWMHandler.QueueBlod(self);
+		int jumps = Random[Blood](0,3);
+		state dest = ResolveState("Spawn");
+		SetState(dest+jumps);
+	}
+	override void OnDestroy()
+	{
+		SWWMHandler.DeQueueBlod(self);
+		Super.OnDestroy();
+	}
+	States
+	{
+	Spawn:
+		SBLD ABCD 2;
+		Loop;
+	}
+}
+
+// chunky salsa in the air
+Class mkBloodSmoke : Actor
+{
+	Default
+	{
+		+NOBLOCKMAP;
+		+NOGRAVITY;
+		+NOINTERACTION;
+		+NOTELEPORT;
+		+FORCEXYBILLBOARD;
+		+ROLLSPRITE;
+		Scale .5;
+		Alpha .35;
+		RenderStyle "Shaded";
+	}
+	override void PostBeginPlay()
+	{
+		int jumps = Random[Blood](0,19);
+		state dest = ResolveState("Spawn");
+		SetState(dest+jumps);
+		roll = FRandom[Blood](0,360);
+	}
+	override void Tick()
+	{
+		if ( isFrozen() ) return;
+		Vector3 newp = level.Vec3Offset(pos,vel);
+		if ( level.IsPointInLevel(newp) ) SetOrigin(newp,true);
+		UpdateWaterLevel();
+		if ( waterlevel > 0 ) A_FadeOut();
+		A_FadeOut(.04/max(1.,special1));
+		A_SetScale(scale.x*(1.+.04/max(1.,special1)));
+		vel *= 1.-.04/max(1.,special1);
+		if ( tics > 0 ) tics--;
+		while ( !tics )
+		{
+			if ( !SetState(CurState.NextState) )
+				return;
+		}
+	}
+	States
+	{
+	Spawn:
+		BSMK ABCDEFGHIJKLMNOPQRST -1;
+		Stop;
+	}
+}
+
+Class mkBloodSmoke2 : mkBloodSmoke
+{
+	Default
+	{
+		Scale .8;
+		Alpha 1.;
+	}
+}
+
+// flying gibs
+// inspired by Lud's Universal Gibs
+Class mkFlyingGib : Actor
+{
+	bool killme;
+	int lastbleed;
+	color shadecol;
+	bool bleeding;
+	double rollvel;
+	mkFlyingGib prevmeat, nextmeat;
+	Vector3 oldpos;
+
+	override void PostBeginPlay()
+	{
+		Super.PostBeginPlay();
+		frame = Random[Blood](0,5);
+		double ang = FRandom[Gibs](0,360);
+		double pt = FRandom[Gibs](-60,20);
+		Vector3 dir = (cos(pt)*cos(ang),cos(pt)*sin(ang),sin(-pt));
+		vel += dir*FRandom[Gibs](4.,8.);
+		if ( master )
+		{
+			vel += master.vel;
+			CopyBloodColor(master);
+		}
+		rollvel = FRandom[Gibs](10,50)*RandomPick[Gibs](-1,1)*clamp(vel.length()/10.,.25,4.);
+		scale *= FRandom[Gibs](.5,1.5);
+		if ( master && master.bloodcolor ) shadecol = Color(master.bloodcolor.r/2,master.bloodcolor.g/2,master.bloodcolor.b/2);
+		else shadecol = Color(80,0,0);
+		bleeding = true;
+		if ( Random[Blood](0,1) ) bXFlip = true;
+		SWWMHandler.QueueMeat(self);
+	}
+
+	override void OnDestroy()
+	{
+		SWWMHandler.DeQueueMeat(self);
+		Super.OnDestroy();
+	}
+
+	override void Tick()
+	{
+		oldpos = pos;
+		Super.Tick();
+		if ( isFrozen() ) return;
+		if ( killme ) A_FadeOut(.01);
+		if ( CurState == ResolveState("Death2") )
+		{
+			if ( vel.length() < .1 )
+				bleeding = false;
+			return;
+		}
+		roll += rollvel;
+		if ( waterlevel > 0 )
+		{
+			rollvel *= .98;
+			vel.xy *= .98;
+			return;
+		}
+		if ( !bleeding ) return;
+		Vector3 ndiff = level.Vec3Diff(pos,oldpos);
+		double ndist = ndiff.length();
+		ndiff /= ndist;
+		for ( int i=0; i<ndist; i++ )
+		{
+			if ( Random[Blood](0,2) ) continue;
+			Vector3 ppos = level.Vec3Offset(oldpos,ndiff*i)-pos;
+			A_SpawnParticle(shadecol,0,40,20.*scale.x*FRandom[Blood](.6,1.4),0,ppos.x,ppos.y,ppos.z,vel.x*.1+FRandom[Blood](-1.,1.),vel.y*.1+FRandom[Blood](-1.,1.),vel.z*.1+FRandom[Blood](-1.,1.),0,0,-.25,.5*alpha,-1,-.5*scale.x);
+		}
+		if ( !Random[Blood](0,2) )
+		{
+			let s = Spawn("mkBloodSmoke",pos);
+			s.SetShade(shadecol);
+			s.special1 += Random[Gibs](1,2);
+		}
+	}
+
+	override bool CanCollideWith(Actor other, bool passive)
+	{
+		if ( other == master ) return false;
+		return true;
+	}
+
+	action void A_Bleed()
+	{
+		if ( vel.length() < .5 ) ExplodeMissile(null,null);
+		else
+		{
+			Vector3 dir = vel;
+			double spd = dir.length();
+			dir /= spd;
+			dir = (dir+(FRandom[Blood](-.3,.3),FRandom[Blood](-.3,.3),FRandom[Blood](-.3,.3))).unit();
+			vel = dir*spd;
+		}
+		invoker.rollvel = FRandom[Gibs](10,50)*RandomPick[Gibs](-1,1)*clamp(vel.length()/10.,.25,4.);
+		if ( invoker.lastbleed > level.maptime ) return;
+		invoker.lastbleed = level.maptime+5;
+		double ang;
+		double pt;
+		Vector3 dir;
+		int numpt = Random[Blood](2,4);
+		for ( int i=0; i<numpt; i++ )
+		{
+			let b = Spawn("mkBloodDrop",pos);
+			ang = FRandom[Gibs](0,360);
+			pt = FRandom[Gibs](-60,30);
+			dir = (cos(pt)*cos(ang),cos(pt)*sin(ang),sin(-pt));
+			b.vel = dir*FRandom[Gibs](0.3,2.2)*vel.length();
+			b.scale *= 2.0;
+			b.SetShade(invoker.shadecol);
+		}
+		TraceBleedAngle(int(vel.length()),angle+180,-pitch);
+	}
+
+	Default
+	{
+		Radius 4;
+		Height 4;
+		Mass 10;
+		Scale .75;
+		Gravity .5;
+		BounceType "Doom";
+		BounceFactor .2;
+		+MISSILE;
+		+DROPOFF;
+		+NOBLOCKMAP;
+		+USEBOUNCESTATE;
+		+CANBOUNCEWATER;
+		-BOUNCEAUTOOFF;
+		+MOVEWITHSECTOR;
+		+THRUACTORS;
+		+NOTELEPORT;
+		+ROLLSPRITE;
+		+ROLLCENTER;
+		+INTERPOLATEANGLES;
+	}
+	States
+	{
+	Spawn:
+		SGIB # 1;
+		Wait;
+	Bounce:
+		SGIB # 0
+		{
+			A_Bleed();
+			A_StartSound("misc/gibhit",CHAN_BODY,CHANF_OVERLAP);
+			// gib stuck!
+			if ( (floorz >= ceilingz) || !level.IsPointInLevel(pos) )
+				Destroy();
+		}
+		Goto Spawn;
+	Death:
+		SGIB # 1 A_JumpIf(pos.z<=floorz,"Death2");
+		Wait;
+	Death2:
+		SGIB # -1
+		{
+			A_StartSound("misc/gibhit",CHAN_BODY,CHANF_OVERLAP);
+			pitch = Random[Gibs](-5,5);
+			if ( abs(roll) < abs(180-roll) ) roll = Random[Gibs](-5,5);
+			else roll = Random[Gibs](175,185);
+			A_Stop();
+		}
+		Stop;
+	}
+}
+
+// Manually added gibbing
+Class mkGibber : Actor
+{
+	Actor Gibbed;
+	int gibcount, gibsize;
+	int delay;
+	color shadecol;
+	Class<Actor> gibtype;	// allow custom gib types (will be used for monster pack)
+	bool psnd;
+
+	Property GibType: gibtype;
+
+	virtual void BurstGibs()
+	{
+		Actor a;
+		double ang, pt;
+		Vector3 dir;
+		bool dummy;
+		for ( int i=0; i<gibsize; i++ )
+		{
+			a = Spawn("mkBloodSmoke2",pos+(FRandom[Gibs](-.8,.8)*radius,FRandom[Gibs](-.8,.8)*radius,FRandom[Gibs](0.,.9)*height));
+			ang = FRandom[Gibs](0,360);
+			pt = FRandom[Gibs](-90,90);
+			dir = (cos(pt)*cos(ang),cos(pt)*sin(ang),sin(-pt));
+			a.vel = vel*.1;
+			if ( a.vel.length() > 2. ) a.vel = a.vel.unit()*2.;
+			a.vel += dir*FRandom[Gibs](.2,.8);
+			a.SetShade(shadecol);
+			a.special1 += Random[Gibs](1,3);
+		}
+		for ( int i=0; i<gibsize; i++ )
+		{
+			[dummy, a] = A_SpawnItemEx(gibtype,FRandom[Gibs](-.5,.5)*radius,FRandom[Gibs](-.5,.5)*radius,FRandom[Gibs](.1,.9)*height,flags:SXF_ABSOLUTEANGLE|SXF_USEBLOODCOLOR);
+			a.translation = translation;
+			a.CopyBloodColor(self);
+			a.scale *= scale.x;
+			a.master = gibbed;
+			if ( special1 )
+			{
+				ang = FRandom[Gibs](0,360);
+				pt = FRandom[Gibs](-90,90);
+				dir = (cos(pt)*cos(ang),cos(pt)*sin(ang),sin(-pt));
+				a.vel += dir*FRandom[Gibs](4.,8.);
+				a.vel.z += 16.;
+			}
+		}
+		for ( int i=0; i<gibsize; i++ )
+		{
+			[dummy, a] = A_SpawnItemEx("mkBloodDrop",FRandom[Gibs](-.8,.8)*radius,FRandom[Gibs](-.8,.8)*radius,FRandom[Gibs](0.,.9)*height,flags:SXF_ABSOLUTEANGLE|SXF_USEBLOODCOLOR);
+			ang = FRandom[Gibs](0,360);
+			pt = FRandom[Gibs](-90,90);
+			dir = (cos(pt)*cos(ang),cos(pt)*sin(ang),sin(-pt));
+			a.vel = dir*FRandom[Gibs](8.,24.);
+			a.vel += vel*.1;
+			a.scale *= 2.+FRandom[Gibs](.3,1.6);
+			a.SetShade(shadecol);
+			a.CopyBloodColor(self);
+		}
+		reactiontime--;
+	}
+
+	override void PostBeginPlay()
+	{
+		gibsize = int(min(max(radius,height)/8,12));
+		reactiontime = int(min(max(radius,height)/10,8));
+		if ( gibbed && gibbed.bloodcolor ) shadecol = Color(gibbed.bloodcolor.r/2,gibbed.bloodcolor.g/2,gibbed.bloodcolor.b/2);
+		else shadecol = Color(80,0,0);
+		if ( gibbed ) CopyBloodColor(gibbed);
+	}
+
+	override void Tick()
+	{
+		if ( isFrozen() ) return;
+		if ( !gibbed )
+		{
+			SetOrigin(level.Vec3Offset(pos,vel),false);
+			return;
+		}
+		SetOrigin(gibbed.pos,false);
+		scale = gibbed.scale;
+		vel = gibbed.vel;
+		if ( delay > 0 )
+		{
+			delay--;
+			return;
+		}
+		if ( !psnd )
+		{
+			A_StartSound("misc/gibber",CHAN_VOICE,CHANF_OVERLAP);
+			psnd = true;
+		}
+		BurstGibs();
+		if ( reactiontime <= 0 )
+			Destroy();
+	}
+
+	Default
+	{
+		+NOBLOCKMAP;
+		+NOGRAVITY;
+		+NOTELEPORT;
+		+DONTSPLASH;
+		+NOINTERACTION;
+		Radius 32;
+		Height 16;
+		mkGibber.GibType "mkFlyingGib";
+	}
+}
+
+// bare actors used for copying blood color to vanilla monsters
+Class GreenBloodReference : Actor
+{
+	Default
+	{
+		BloodColor "Green";
+	}
+}
+Class BlueBloodReference : Actor
+{
+	Default
+	{
+		BloodColor "Blue";
+	}
+}
+Class PurpleBloodReference : Actor
+{
+	Default
+	{
+		BloodColor "Purple";
+	}
+}
+
+// bare actor used for extra gib deaths
+Class ExtraGibDeaths : Actor
+{
+	StateLabel gibstate;
+
+	static void GibThis( Actor a, Statelabel st )
+	{
+		if ( !a ) return;
+		let g = ExtraGibDeaths(Spawn("ExtraGibDeaths"));
+		g.master = a;
+		g.gibstate = st;
+	}
+
+	void A_DoGib()
+	{
+		if ( !master ) return;
+		master.SetState(FindState(gibstate));
+	}
+
+	States
+	{
+	Spawn:
+		TNT1 A 1 NoDelay;
+		TNT1 A 1 A_DoGib();
+		Stop;
+	DemonXDeath:
+		SARX A 5;
+		SARX B 5 A_XScream();
+		SARX C 5 A_NoBlocking();
+		SARX DEF 5;
+		SARX G -1;
+		Stop;
+	KnightXDeath:
+		BO2X A 5;
+		BO2X B 5 A_XScream();
+		BO2X C 5;
+		BO2X D 5 A_NoBlocking();
+		BO2X EFGH 5;
+		BO2X I -1;
+		Stop;
+	BaronXDeath:
+		BOSX A 5;
+		BOSX B 5 A_XScream();
+		BOSX C 5;
+		BOSX D 5 A_NoBlocking();
+		BOSX EFGH 5;
+		BOSX I -1 A_BossDeath();
+		Stop;
+	CacoXDeath:
+		CACX A 5;
+		CACX B 5 A_XScream();
+		CACX C 5 A_NoBlocking();
+		CACX D 4;
+		CACX E 3;
+		CACX F 4;
+		CACX G 5;
+		CACX H -1;
+		Stop;
+	BonerXDeath:
+		REVX A 3;
+		REVX B 4 A_XScream();
+		REVX C 5 A_NoBlocking();
+		REVX DE 5;
+		REVX F -1;
+		Stop;
+	VileXDeath:
+		VILX A 5;
+		VILX B 5 A_XScream();
+		VILX C 5 A_NoBlocking();
+		VILX DEF 5;
+		VILX G -1;
+		Stop;
+	ArachXDeath:
+		BSPX A 5;
+		BSPX A 5 A_XScream();
+		BSPX B 8 A_NoBlocking();
+		BSPX C 6;
+		BSPX DE 6 BRIGHT;
+		BSPX F 5 BRIGHT;
+		BSPX GH 4 BRIGHT;
+		BSPX I -1 A_BossDeath();
+		Stop;
+	FatsoXDeath:
+		FATX A 5;
+		FATX B 5 A_XScream();
+		FATX C 5 A_NoBlocking();
+		FATX DE 5;
+		FATX F -1 A_BossDeath();
+		Stop;
+	}
+}
+
+// corpse thump handler
+Class CorpseFallTracker : Thinker
+{
+	Actor mybody;
+	double lastvelz;
+	bool wasflying;
+
+	static void TrackBody( Actor b )
+	{
+		if ( !b ) return;
+		let cft = new("CorpseFallTracker");
+		cft.ChangeStatNum(STAT_USER);
+		cft.mybody = b;
+		cft.lastvelz = b.vel.z;
+		cft.wasflying = ((b.pos.z>b.floorz)&&b.TestMobjZ());
+	}
+	override void Tick()
+	{
+		if ( !mybody )
+		{
+			Destroy();
+			return;
+		}
+		// play fall thumps
+		bool isflying = ((mybody.pos.z>mybody.floorz)&&mybody.TestMobjZ());
+		if ( wasflying && !isflying && (lastvelz < -10) )
+			mybody.A_StartSound("misc/bodythump",CHAN_DAMAGE,CHANF_OVERLAP);
+		wasflying = isflying;
+		lastvelz = mybody.vel.z;
+		// wait until body is dead on floor and at the last state of animation
+		if ( (mybody.Health > 0) || isflying || (mybody.tics != -1) || (mybody.vel.length() > 0) )
+			return;
+		Destroy();
+	}
+}

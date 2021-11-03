@@ -1,0 +1,99 @@
+// declare this one in your mod's own gldefs, with the right define
+/*HardwareShader Texture "graphics/tempbg.png"
+{
+	Shader "shaders/glsl/Fuzz.fp"
+	Texture "noisetex" "textures/graynoise.png"
+	//Define "ONICOLORS"
+	//Define "SAYACOLORS"
+	//Define "KIRINCOLORS"
+}*/
+HardwareShader Sprite "MBRNB0"
+{
+	Shader "shaders/glsl/Whew.fp"
+}
+Brightmap Texture "models/Embiggener.png"
+{
+	map "models/Embiggener_bright.png"
+}
+Brightmap Texture "models/Embiggener_Tier2.png"
+{
+	map "models/Embiggener_bright.png"
+}
+Brightmap Texture "models/Embiggener_Tier3.png"
+{
+	map "models/Embiggener_bright.png"
+}
+Brightmap Texture "models/Embiggener_Tier4.png"
+{
+	map "models/Embiggener_bright.png"
+}
+Brightmap Texture "models/Embiggener_Tier5.png"
+{
+	map "models/Embiggener_bright.png"
+}
+HardwareShader Texture "models/Embiggener.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/Embiggener_mask.png"
+	Texture "envtex" "models/matcap/redmap.png"
+}
+HardwareShader Texture "models/Embiggener_Tier2.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/Embiggener_mask.png"
+	Texture "envtex" "models/matcap/greenmap.png"
+}
+HardwareShader Texture "models/Embiggener_Tier3.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/Embiggener_mask.png"
+	Texture "envtex" "models/matcap/blumap.png"
+}
+HardwareShader Texture "models/Embiggener_Tier4.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/Embiggener_mask.png"
+	Texture "envtex" "models/matcap/purpmap.png"
+}
+HardwareShader Texture "models/Embiggener_Tier5.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/Embiggener_mask.png"
+	Texture "envtex" "models/matcap/glassmap.png"
+}
+
+HardwareShader Texture "models/matcap/errormap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+	Define "AMBIENT_GLOW"
+}
+HardwareShader PostProcess beforebloom
+{
+	Name "WaterWarp"
+	Shader "shaders/pp/WaterWarp.fp" 330
+	Texture warptex "textures/warptex.png"
+	Texture fluidtex "textures/wetwarp.png"
+	Uniform float dfact
+	Uniform float timer
+	Uniform vec3 lightcol
+}
+HardwareShader PostProcess beforebloom
+{
+	Name "LavaWarp"
+	Shader "shaders/pp/LavaWarp.fp" 330
+	Texture warptex "textures/warptex.png"
+	Texture fluidtex "textures/lavawarp.png"
+	Uniform float dfact
+	Uniform float timer
+	Uniform vec3 lightcol
+}
+HardwareShader PostProcess beforebloom
+{
+	Name "SlimeWarp"
+	Shader "shaders/pp/SlimeWarp.fp" 330
+	Texture warptex "textures/warptex.png"
+	Texture fluidtex "textures/slimewarp.png"
+	Uniform float dfact
+	Uniform float timer
+	Uniform vec3 lightcol
+}

@@ -1,0 +1,147 @@
+// TODO Shared player class code
+Class SWWMPlayer : PlayerPawn
+{
+	enum EUnderType
+	{
+		UNDER_NONE,
+		UNDER_WATER,
+		UNDER_SLIME,
+		UNDER_LAVA
+	};
+
+	int lastunder;
+	Color undercol;
+
+	transient int bumptic;
+	transient double lastbump;
+	transient CVar bumpstr;
+
+	void CheckUnderwaterAmb( bool restore = false )
+	{
+		Vector3 headpos = Vec3Offset(0,0,player.viewheight);
+		Vector3 centerpos = Vec3Offset(0,0,height/2);
+		Sector headregion = null;
+		if ( CurSector.moreflags&Sector.SECMF_UNDERWATER ) // check underwater sector
+			headregion = CurSector;
+		else if ( CurSector.heightsec && (Cursector.heightsec.moreflags&Sector.SECMF_UNDERWATER) ) // check height transfer
+		{
+			let hsec = CurSector.heightsec;
+			double fh = hsec.floorplane.ZAtPoint(pos.xy);
+			if ( pos.z < fh )
+			{
+				if ( headpos.z <= fh )
+					headregion = hsec;
+			}
+			else if ( !(hsec.moreflags&Sector.SECMF_FAKEFLOORONLY) && (headpos.z > hsec.ceilingplane.ZAtPoint(pos.xy)) )
+				headregion = hsec;
+		}
+		else // check 3D floors
+		{
+			for ( int i=0; i<CurSector.Get3DFloorCount(); i++ )
+			{
+				let ff = CurSector.Get3DFloor(i);
+				if ( !(ff.flags&F3DFloor.FF_EXISTS) || (ff.flags&F3DFloor.FF_SOLID) || (!(ff.flags&F3DFloor.FF_SWIMMABLE) && (ff.alpha == 0)) ) continue;
+				double ff_bottom = ff.bottom.ZAtPoint(pos.xy);
+				double ff_top = ff.top.ZAtPoint(pos.xy);
+				if ( (ff_top <= pos.z) || (ff_bottom > centerpos.z) ) continue;
+				if ( headpos.z <= ff_top )
+					headregion = ff.model;
+				break;
+			}
+		}
+		int curunder = UNDER_NONE;
+		if ( headregion )
+		{
+			switch ( headregion.damagetype )
+			{
+			case 'Fire':
+			case 'Lava':
+				curunder = UNDER_LAVA;
+				break;
+			case 'Slime':
+			case 'Poison':
+			case 'PoisonCloud':
+				curunder = UNDER_SLIME;
+				break;
+			case 'Ice':
+			case 'Drowning':
+			default:
+				curunder = UNDER_WATER;
+				break;
+			}
+			undercol = headregion.ColorMap.LightColor;
+		}
+		if ( (curunder != lastunder) || restore )
+		{
+			static const string undersnd[] = {"","misc/underwater","misc/underslime","misc/underlava"};
+			static const string entersnd[] = {"","misc/waterenter","misc/slimeenter","misc/lavaenter"};
+			static const string exitsnd[] = {"","misc/waterexit","misc/slimeexit","misc/lavaexit"};
+			A_StopSound(CHAN_AMBEXTRA);
+			if ( curunder > UNDER_NONE )
+			{
+				A_StartSound(undersnd[curunder],CHAN_AMBEXTRA,CHANF_LOOP|CHANF_UI);
+				if ( !restore && (players[consoleplayer].Camera == self) )
+					A_StartSound(entersnd[curunder],CHAN_FOOTSTEP,CHANF_OVERLAP|CHANF_UI);
+			}
+			if ( !restore && (lastunder > UNDER_NONE) && (players[consoleplayer].Camera == self) )
+				A_StartSound(exitsnd[lastunder],CHAN_FOOTSTEP,CHANF_OVERLAP|CHANF_UI);
+		}
+		if ( curunder > UNDER_NONE )
+			A_SoundVolume(CHAN_AMBEXTRA,(players[consoleplayer].Camera==self)?1.:0.);
+		lastunder = curunder;
+	}
+
+	override void CheckFOV()
+	{
+		if ( !player ) return;
+		float desired = player.desiredfov;
+		// adjust fov from weapon (abs due to special use of negative
+		// to prevent it from scaling look sensitivity)
+		if ( (player.playerstate != PST_DEAD) && player.readyweapon
+			&& player.readyweapon.fovscale )
+			desired *= abs(player.readyweapon.fovscale);
+		// additional fov bump from various effects
+		// akin to the old A_ZoomFactor trick, but not limited to weapons and can stack
+		if ( lastbump <= 0. ) lastbump = 1.;
+		if ( lastbump != 1. )
+		{
+			if ( !bumpstr ) bumpstr = CVar.GetCVar(SWWMMODPREFIX.."_bumpstrength",player);
+			double str = bumpstr.GetFloat();
+			player.fov *= lastbump*str+1.-str;
+			lastbump = 1.;
+		}
+		if ( player.fov == desired ) return;
+		// interpolate towards desired fov
+		if ( abs(player.fov-desired) < .1 ) player.fov = desired;
+		else
+		{
+			float zoom = max(.1,abs(player.fov-desired)*.35);
+			if ( player.fov > desired ) player.fov -= zoom;
+			else player.fov += zoom;
+		}
+	}
+
+	override void Tick()
+	{
+		Super.Tick();
+		if ( gamestate != GS_LEVEL ) return;
+		if ( !player || (player.mo != self) ) return;
+		CheckUnderwaterAmb();
+	}
+
+	virtual void PlayFire()
+	{
+	}
+
+	virtual void PlayMelee()
+	{
+	}
+
+	virtual void PlayReload()
+	{
+	}
+
+	virtual void PlayCheckGun()
+	{
+	}
+}

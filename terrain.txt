@@ -1,0 +1,702 @@
+// terrain/splash definitions
+splash Water
+{
+	smallclass		SWWMWaterSplash2
+	smallclip		12
+	smallsound		world/watersplash2
+
+	baseclass		SWWMWaterSplash
+	chunkclass		none
+	chunkxvelshift	8
+	chunkyvelshift	8
+	chunkzvelshift	8
+	chunkbasezvel	2
+	sound			world/watersplash
+}
+
+splash Sludge
+{
+	smallclass		SWWMSludgeSplash2
+	smallclip		12
+	smallsound		world/sludgegloop2
+
+	baseclass		SWWMSludgeSplash
+	chunkclass		none
+	chunkxvelshift	8
+	chunkyvelshift	8
+	chunkzvelshift	8
+	chunkbasezvel	1
+	sound			world/sludgegloop
+}
+
+splash Lava
+{
+	smallclass		SWWMLavaSplash2
+	smallclip		12
+	smallsound		world/lavasizzle2
+
+	baseclass		SWWMLavaSplash
+	chunkclass		none
+	chunkxvelshift	-1
+	chunkyvelshift	-1
+	chunkzvelshift	7
+	chunkbasezvel	1
+	sound			world/lavasizzle
+}
+
+splash Sizzle
+{
+	smallclass		SWWMSizzleSmoke2
+	smallclip		0
+	smallsound		world/lavasizzle2
+
+	baseclass		SWWMSizzleSmoke
+	chunkclass		none
+	chunkxvelshift	-1
+	chunkyvelshift	-1
+	chunkzvelshift	7
+	chunkbasezvel	1
+	sound			world/lavasizzle
+}
+
+splash Blood
+{
+	smallclass		SWWMBloodSplash2
+	smallclip		12
+	smallsound		world/watersplash2
+
+	baseclass		SWWMBloodSplash
+	chunkclass		none
+	chunkxvelshift	8
+	chunkyvelshift	8
+	chunkzvelshift	8
+	chunkbasezvel	2
+	sound			world/watersplash
+}
+
+splash Slime
+{
+	smallclass		SWWMSlimeSplash2
+	smallclip		12
+	smallsound		world/sludgegloop2
+
+	baseclass		SWWMSlimeSplash
+	chunkclass		none
+	chunkxvelshift 	8
+	chunkyvelshift	8
+	chunkzvelshift	8
+	chunkbasezvel	1
+	sound			world/sludgegloop
+}
+
+splash Mud
+{
+	smallclass		SWWMMudSplash2
+	smallclip		12
+	smallsound		world/sludgegloop2
+
+	baseclass		SWWMMudSplash
+	chunkclass		none
+	chunkxvelshift	8
+	chunkyvelshift	8
+	chunkzvelshift	8
+	chunkbasezvel	1
+	sound			world/sludgegloop
+}
+
+terrain Sizzle
+{
+	splash Sizzle
+}
+
+terrain Blood
+{
+	splash Blood
+	footclip 10
+	liquid
+}
+
+terrain Slime
+{
+	splash Slime
+	footclip 10
+	liquid
+}
+
+terrain Mud
+{
+	splash Mud
+	footclip 10
+	liquid
+}
+
+// lava terrain is not defined for doom in gzdoom.pk3
+ifdoom
+terrain Lava
+{
+	splash Lava
+	footclip 10
+	liquid
+}
+endif
+
+floor optional fwater1 Water
+floor optional fwater2 Water
+floor optional fwater3 Water
+floor optional fwater4 Water
+
+floor optional lava1 Lava
+floor optional lava2 Lava
+floor optional lava3 Lava
+floor optional lava4 Lava
+
+floor optional blood1 Blood
+floor optional blood2 Blood
+floor optional blood3 Blood
+
+floor optional nukage1 Slime
+floor optional nukage2 Slime
+floor optional nukage3 Slime
+
+floor optional slime01 Mud
+floor optional slime02 Mud
+floor optional slime03 Mud
+floor optional slime04 Mud
+floor optional slime05 Mud
+floor optional slime06 Mud
+floor optional slime07 Mud
+floor optional slime08 Mud
+
+floor optional rrock01 Sizzle
+floor optional rrock02 Sizzle
+floor optional rrock05 Sizzle
+floor optional rrock06 Sizzle
+floor optional rrock07 Sizzle
+floor optional rrock08 Sizzle
+floor optional slime09 Sizzle
+floor optional slime10 Sizzle
+floor optional slime11 Sizzle
+floor optional slime12 Sizzle
+
+// [MK] terrain defs for Ancient Aliens
+floor optional GRAYSLM1 Mud
+floor optional GRAYSLM2 Mud
+floor optional GRAYSLM3 Mud
+floor optional GRAYSLM4 Mud
+
+floor optional RROCK21 Sizzle
+floor optional RROCK22 Sizzle
+floor optional RROCK23 Sizzle
+floor optional RROCK24 Sizzle
+floor optional RROCK25 Sizzle
+floor optional RROCK26 Sizzle
+
+floor optional PURPW1 Water
+floor optional PURPW2 Water
+floor optional PURPW3 Water
+floor optional PURPW4 Water
+
+floor optional PLOOD1 Blood
+floor optional PLOOD2 Blood
+floor optional PLOOD3 Blood
+
+floor optional ZO1_01 Lava
+floor optional ZO1_02 Lava
+floor optional ZO1_03 Lava
+floor optional ZO1_99 Lava
+
+floor optional MLAVA1 Lava
+floor optional MLAVA2 Lava
+floor optional MLAVA3 Lava
+floor optional MLAVA4 Lava
+
+// [MK] terrain defs for BTSX
+floor optional FWATER02 Water
+floor optional FWATER03 Water
+floor optional FWATER04 Water
+floor optional FWATER05 Water
+floor optional FWATER06 Water
+floor optional FWATER07 Water
+floor optional FWATER08 Water
+floor optional FWATER09 Water
+floor optional FWATER10 Water
+floor optional FWATER11 Water
+floor optional FWATER12 Water
+floor optional FWATER13 Water
+floor optional FWATER14 Water
+floor optional FWATER15 Water
+floor optional FWATER16 Water
+floor optional FWATER17 Water
+floor optional FWATER18 Water
+floor optional FWATER19 Water
+floor optional FWATER20 Water
+floor optional FWATER21 Water
+floor optional FWATER22 Water
+floor optional FWATER23 Water
+floor optional FWATER24 Water
+floor optional FWATER25 Water
+floor optional FWATER26 Water
+floor optional FWATER27 Water
+floor optional FWATER28 Water
+floor optional FWATER29 Water
+floor optional FWATER30 Water
+floor optional FWATER31 Water
+
+floor optional LAVA02 Lava
+floor optional LAVA03 Lava
+floor optional LAVA04 Lava
+floor optional LAVA05 Lava
+floor optional LAVA06 Lava
+floor optional LAVA07 Lava
+floor optional LAVA08 Lava
+floor optional LAVA09 Lava
+floor optional LAVA10 Lava
+floor optional LAVA11 Lava
+floor optional LAVA12 Lava
+floor optional LAVA13 Lava
+floor optional LAVA14 Lava
+floor optional LAVA15 Lava
+floor optional LAVA16 Lava
+floor optional LAVA17 Lava
+floor optional LAVA18 Lava
+floor optional LAVA19 Lava
+floor optional LAVA20 Lava
+floor optional LAVA21 Lava
+floor optional LAVA22 Lava
+floor optional LAVA23 Lava
+floor optional LAVA24 Lava
+floor optional LAVA25 Lava
+floor optional LAVA26 Lava
+floor optional LAVA27 Lava
+floor optional LAVA28 Lava
+floor optional LAVA29 Lava
+floor optional LAVA30 Lava
+floor optional LAVA31 Lava
+
+floor optional NUKE02 Slime
+floor optional NUKE03 Slime
+floor optional NUKE04 Slime
+floor optional NUKE05 Slime
+floor optional NUKE06 Slime
+floor optional NUKE07 Slime
+floor optional NUKE08 Slime
+floor optional NUKE09 Slime
+floor optional NUKE10 Slime
+floor optional NUKE11 Slime
+floor optional NUKE12 Slime
+floor optional NUKE13 Slime
+floor optional NUKE14 Slime
+floor optional NUKE15 Slime
+floor optional NUKE16 Slime
+floor optional NUKE17 Slime
+floor optional NUKE18 Slime
+floor optional NUKE19 Slime
+floor optional NUKE20 Slime
+floor optional NUKE21 Slime
+floor optional NUKE22 Slime
+floor optional NUKE23 Slime
+floor optional NUKE24 Slime
+floor optional NUKE25 Slime
+floor optional NUKE26 Slime
+floor optional NUKE27 Slime
+floor optional NUKE28 Slime
+floor optional NUKE29 Slime
+floor optional NUKE30 Slime
+floor optional NUKE31 Slime
+
+floor optional SLUDG02 Mud
+floor optional SLUDG03 Mud
+floor optional SLUDG04 Mud
+floor optional SLUDG05 Mud
+floor optional SLUDG06 Mud
+floor optional SLUDG07 Mud
+floor optional SLUDG08 Mud
+floor optional SLUDG09 Mud
+floor optional SLUDG10 Mud
+floor optional SLUDG11 Mud
+floor optional SLUDG12 Mud
+floor optional SLUDG13 Mud
+floor optional SLUDG14 Mud
+floor optional SLUDG15 Mud
+floor optional SLUDG16 Mud
+floor optional SLUDG17 Mud
+floor optional SLUDG18 Mud
+floor optional SLUDG19 Mud
+floor optional SLUDG20 Mud
+floor optional SLUDG21 Mud
+floor optional SLUDG22 Mud
+floor optional SLUDG23 Mud
+floor optional SLUDG24 Mud
+floor optional SLUDG25 Mud
+floor optional SLUDG26 Mud
+floor optional SLUDG27 Mud
+floor optional SLUDG28 Mud
+floor optional SLUDG29 Mud
+floor optional SLUDG30 Mud
+floor optional SLUDG31 Mud
+
+floor optional SWATER1 Water
+floor optional COOLNT02 Water
+floor optional COOLNT03 Water
+floor optional COOLNT04 Water
+floor optional COOLNT05 Water
+floor optional COOLNT06 Water
+floor optional COOLNT07 Water
+floor optional COOLNT08 Water
+floor optional COOLNT09 Water
+floor optional COOLNT10 Water
+floor optional COOLNT11 Water
+floor optional COOLNT12 Water
+floor optional COOLNT13 Water
+floor optional COOLNT14 Water
+floor optional COOLNT15 Water
+floor optional COOLNT16 Water
+floor optional COOLNT17 Water
+floor optional COOLNT18 Water
+floor optional COOLNT19 Water
+floor optional COOLNT20 Water
+floor optional COOLNT21 Water
+floor optional COOLNT22 Water
+floor optional COOLNT23 Water
+floor optional COOLNT24 Water
+floor optional COOLNT25 Water
+floor optional COOLNT26 Water
+floor optional COOLNT27 Water
+floor optional COOLNT28 Water
+floor optional COOLNT29 Water
+floor optional COOLNT30 Water
+floor optional COOLNT31 Water
+floor optional SWATER4 Water
+
+floor optional BLOOD02 Blood
+floor optional BLOOD03 Blood
+floor optional BLOOD04 Blood
+floor optional BLOOD05 Blood
+floor optional BLOOD06 Blood
+floor optional BLOOD07 Blood
+floor optional BLOOD08 Blood
+floor optional BLOOD09 Blood
+floor optional BLOOD10 Blood
+floor optional BLOOD11 Blood
+floor optional BLOOD12 Blood
+floor optional BLOOD13 Blood
+floor optional BLOOD14 Blood
+floor optional BLOOD15 Blood
+floor optional BLOOD16 Blood
+floor optional BLOOD17 Blood
+floor optional BLOOD18 Blood
+floor optional BLOOD19 Blood
+floor optional BLOOD20 Blood
+floor optional BLOOD21 Blood
+floor optional BLOOD22 Blood
+floor optional BLOOD23 Blood
+floor optional BLOOD24 Blood
+floor optional BLOOD25 Blood
+floor optional BLOOD26 Blood
+floor optional BLOOD27 Blood
+floor optional BLOOD28 Blood
+floor optional BLOOD29 Blood
+floor optional BLOOD30 Blood
+floor optional BLOOD31 Blood
+
+// [MK] terrain defs for Eviternity and other OTEX-using maps
+floor optional OBLODA01 Blood
+floor optional OBLODA02 Blood
+floor optional OBLODA03 Blood
+floor optional OBLODA04 Blood
+floor optional OBLODA05 Blood
+floor optional OBLODA06 Blood
+floor optional OBLODA07 Blood
+floor optional OBLODA08 Blood
+
+// hotfix for Bastion of Chaos (damn you bridgeburner)
+floor optional 0BLODA01 Blood
+floor optional 0BLODA02 Blood
+floor optional 0BLODA03 Blood
+floor optional 0BLODA04 Blood
+floor optional 0BLODA05 Blood
+floor optional 0BLODA06 Blood
+floor optional 0BLODA07 Blood
+floor optional 0BLODA08 Blood
+
+floor optional OGOOPY01 Water
+floor optional OGOOPY02 Water
+floor optional OGOOPY03 Water
+floor optional OGOOPY04 Water
+floor optional OGOOPY05 Water
+floor optional OGOOPY06 Water
+floor optional OGOOPY07 Water
+floor optional OGOOPY08 Water
+
+floor optional OICYWA01 Water
+floor optional OICYWA02 Water
+floor optional OICYWA03 Water
+floor optional OICYWA04 Water
+floor optional OICYWA05 Water
+floor optional OICYWA06 Water
+floor optional OICYWA07 Water
+floor optional OICYWA08 Water
+
+floor optional OLAVAA01 Sizzle
+floor optional OLAVAA02 Sizzle
+floor optional OLAVAB01 Sizzle
+floor optional OLAVAC01 Lava
+floor optional OLAVAC02 Lava
+floor optional OLAVAC03 Lava
+floor optional OLAVAC04 Lava
+floor optional OLAVAC05 Lava
+floor optional OLAVAC06 Lava
+floor optional OLAVAC07 Lava
+floor optional OLAVAC08 Lava
+floor optional OLAVAD01 Lava
+floor optional OLAVAD02 Lava
+floor optional OLAVAD03 Lava
+floor optional OLAVAD04 Lava
+floor optional OLAVAD05 Lava
+floor optional OLAVAD06 Lava
+floor optional OLAVAD07 Lava
+floor optional OLAVAD08 Lava
+floor optional OLAVAE01 Lava
+floor optional OLAVAE02 Lava
+floor optional OLAVAE03 Lava
+floor optional OLAVAE04 Lava
+floor optional OLAVAE05 Lava
+floor optional OLAVAE06 Lava
+floor optional OLAVAE07 Lava
+floor optional OLAVAE08 Lava
+floor optional OLAVAF01 Lava
+floor optional OLAVAF02 Lava
+floor optional OLAVAF03 Lava
+floor optional OLAVAF04 Lava
+floor optional OLAVAF05 Lava
+floor optional OLAVAF06 Lava
+floor optional OLAVAF07 Lava
+floor optional OLAVAF08 Lava
+floor optional OLAVAF09 Lava
+floor optional OLAVAF10 Lava
+
+floor optional ONUKEA01 Slime
+floor optional ONUKEA02 Slime
+floor optional ONUKEA03 Slime
+floor optional ONUKEA04 Slime
+floor optional ONUKEA05 Slime
+floor optional ONUKEA06 Slime
+floor optional ONUKEA07 Slime
+floor optional ONUKEA08 Slime
+
+floor optional OPOOPY01 Mud
+floor optional OPOOPY02 Mud
+floor optional OPOOPY03 Mud
+floor optional OPOOPY04 Mud
+floor optional OPOOPY05 Mud
+floor optional OPOOPY06 Mud
+floor optional OPOOPY07 Mud
+floor optional OPOOPY08 Mud
+
+floor optional OSLUDG01 Mud
+floor optional OSLUDG02 Mud
+floor optional OSLUDG03 Mud
+floor optional OSLUDG04 Mud
+floor optional OSLUDG05 Mud
+floor optional OSLUDG06 Mud
+floor optional OSLUDG07 Mud
+floor optional OSLUDG08 Mud
+
+floor optional OTAR__01 Mud
+floor optional OTAR__02 Mud
+floor optional OTAR__03 Mud
+floor optional OTAR__04 Mud
+floor optional OTAR__05 Mud
+floor optional OTAR__06 Mud
+floor optional OTAR__07 Mud
+floor optional OTAR__08 Mud
+
+floor optional OWATER01 Water
+floor optional OWATER02 Water
+floor optional OWATER03 Water
+floor optional OWATER04 Water
+floor optional OWATER05 Water
+floor optional OWATER06 Water
+floor optional OWATER07 Water
+floor optional OWATER08 Water
+
+// [MK] terrain defs for Refracted Reality
+floor optional BLDNUKE1 Blood
+floor optional BLDNUKE2 Blood
+floor optional BLDNUKE3 Blood
+floor optional BLDNUKE4 Blood
+
+floor optional BLOOD2A Blood
+floor optional BLOOD2B Blood
+floor optional BLOOD4 Blood
+floor optional BLOOD5 Blood
+floor optional BLOOD6 Blood
+
+floor optional CYWATR1 Water
+floor optional CYWATR2 Water
+floor optional CYWATR3 Water
+floor optional CYWATR4 Water
+
+floor optional EGSLIME1 Mud
+floor optional EGSLIME2 Mud
+floor optional EGSLIME3 Mud
+floor optional EGSLIME4 Mud
+
+floor optional EQSLIME1 Mud
+floor optional EQSLIME2 Mud
+floor optional EQSLIME3 Mud
+floor optional EQSLIME4 Mud
+
+floor optional FWATER5 Water
+floor optional FWATER6 Water
+floor optional FWATER7 Water
+floor optional FWATER8 Water
+
+floor optional GOLDSLM1 Lava
+floor optional GOLDSLM2 Lava
+floor optional GOLDSLM3 Lava
+
+floor optional NUKAGE2A Slime
+floor optional NUKAGE2B Slime
+
+floor optional PURPCRACK Sizzle
+
+floor optional RACRAK01 Sizzle
+floor optional RACRAK02 Sizzle
+floor optional RACRAK03 Sizzle
+floor optional RACRAK04 Sizzle
+floor optional RACRAK05 Sizzle
+floor optional RACRAK06 Sizzle
+floor optional RACRAK07 Sizzle
+floor optional RACRAK08 Sizzle
+floor optional RACRAK09 Sizzle
+floor optional RACRAK10 Sizzle
+floor optional RACRAK11 Sizzle
+floor optional RACRAK12 Sizzle
+floor optional RACRAK13 Sizzle
+floor optional RACRAK14 Sizzle
+floor optional RACRAK15 Sizzle
+floor optional RACRAK16 Sizzle
+floor optional RACRAK17 Sizzle
+floor optional RACRAK18 Sizzle
+floor optional RACRAK19 Sizzle
+floor optional RACRAK20 Sizzle
+floor optional RACRAK21 Sizzle
+floor optional RACRAK22 Sizzle
+floor optional RACRAK23 Sizzle
+floor optional RACRAK24 Sizzle
+
+floor optional SEWAGE1 Slime
+floor optional SEWAGE2 Slime
+floor optional SEWAGE3 Slime
+
+floor optional SLIMAGE1 Mud
+floor optional SLIMAGE2 Mud
+floor optional SLIMAGE3 Mud
+floor optional SLIMAGE4 Mud
+
+floor optional ZFBCROK1 Sizzle
+floor optional ZFBCROK2 Sizzle
+floor optional ZFBCROK3 Sizzle
+floor optional ZFBCROK4 Sizzle
+
+floor optional ZFBLAVA1 Lava
+floor optional ZFBLAVA2 Lava
+floor optional ZFBLAVA3 Lava
+floor optional ZFBLAVA4 Lava
+
+floor optional ZFBWATR1 Water
+floor optional ZFBWATR2 Water
+floor optional ZFBWATR3 Water
+floor optional ZFBWATR4 Water
+
+floor optional ZFGCROK1 Sizzle
+floor optional ZFGCROK2 Sizzle
+floor optional ZFGCROK3 Sizzle
+floor optional ZFGCROK4 Sizzle
+
+floor optional ZFGLAVA1 Lava
+floor optional ZFGLAVA2 Lava
+floor optional ZFGLAVA3 Lava
+floor optional ZFGLAVA4 Lava
+
+floor optional ZFGWATR1 Water
+floor optional ZFGWATR2 Water
+floor optional ZFGWATR3 Water
+floor optional ZFGWATR4 Water
+
+floor optional ZFILAVA1 Lava
+floor optional ZFILAVA2 Lava
+floor optional ZFILAVA3 Lava
+floor optional ZFILAVA4 Lava
+
+floor optional ZFIWATR1 Water
+floor optional ZFIWATR2 Water
+floor optional ZFIWATR3 Water
+floor optional ZFIWATR4 Water
+
+floor optional ZFKLAVA1 Lava
+floor optional ZFKLAVA2 Lava
+floor optional ZFKLAVA3 Lava
+floor optional ZFKLAVA4 Lava
+
+floor optional ZFKWATR1 Water
+floor optional ZFKWATR2 Water
+floor optional ZFKWATR3 Water
+floor optional ZFKWATR4 Water
+
+floor optional ZFPWATR1 Water
+floor optional ZFPWATR2 Water
+floor optional ZFPWATR3 Water
+floor optional ZFPWATR4 Water
+
+floor optional ZFRLAVA1 Lava
+floor optional ZFRLAVA2 Lava
+floor optional ZFRLAVA3 Lava
+floor optional ZFRLAVA4 Lava
+
+floor optional ZFWCROK1 Sizzle
+floor optional ZFWCROK2 Sizzle
+floor optional ZFWCROK3 Sizzle
+floor optional ZFWCROK4 Sizzle
+
+floor optional ZFWWATR1 Water
+floor optional ZFWWATR2 Water
+floor optional ZFWWATR3 Water
+floor optional ZFWWATR4 Water
+
+floor optional ZFYCROK1 Sizzle
+floor optional ZFYCROK2 Sizzle
+floor optional ZFYCROK3 Sizzle
+floor optional ZFYCROK4 Sizzle
+
+floor optional ZFYWATR1 Water
+floor optional ZFYWATR2 Water
+floor optional ZFYWATR3 Water
+floor optional ZFYWATR4 Water
+
+floor optional ZFOCROK1 Sizzle
+floor optional ZFOCROK2 Sizzle
+floor optional ZFOCROK3 Sizzle
+floor optional ZFOCROK4 Sizzle
+
+floor optional ZFOWATR1 Water
+floor optional ZFOWATR2 Water
+floor optional ZFOWATR3 Water
+floor optional ZFOWATR4 Water
+
+floor optional ZFLCROK1 Sizzle
+floor optional ZFLCROK2 Sizzle
+floor optional ZFLCROK3 Sizzle
+floor optional ZFLCROK4 Sizzle
+
+floor optional ZFLWATR1 Water
+floor optional ZFLWATR2 Water
+floor optional ZFLWATR3 Water
+floor optional ZFLWATR4 Water
+
+// [MK] Equinox slime
+floor optional EQNXSL01 Mud
+floor optional EQNXSL02 Mud
+floor optional EQNXSL03 Mud
+floor optional EQNXSL04 Mud

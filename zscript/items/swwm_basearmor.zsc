@@ -1,0 +1,118 @@
+// Base class for all SWWM Armors
+Class SWWMArmor : Armor abstract
+{
+	int priority;
+	String drainmsg;
+	private int SArmorFlags;
+
+	Property ArmorPriority : priority;
+	Property DrainMessage : drainmsg;
+
+	FlagDef NoHitFlash : SArmorFlags, 0;	// doesn't flash when taking damage
+	FlagDef NoHitSound : SArmorFlags, 1;	// doesn't play a sound when taking damage
+
+	Default
+	{
+		+INVENTORY.AUTOACTIVATE;
+		+INVENTORY.UNTOSSABLE;
+		+INVENTORY.UNDROPPABLE;
+		+INVENTORY.KEEPDEPLETED;
+		+INVENTORY.ALWAYSPICKUP;
+	}
+	override void AttachToOwner( Actor other )
+	{
+		Super.AttachToOwner(other);
+		// find last armor that's better than us
+		Inventory found = null;
+		for ( Inventory i=other.Inv; i; i=i.Inv )
+		{
+			if ( !(i is 'SWWMArmor') || (i == self) || (SWWMArmor(i).priority < priority) ) continue;
+			found = i;
+		}
+		if ( !found )
+		{
+			// find first item with an armor worse than us after it
+			for ( Inventory i=other.Inv; i; i=i.Inv )
+			{
+				if ( (i == self) || !(i.Inv is 'SWWMArmor') ) continue;
+				if ( SWWMArmor(i.Inv).priority > priority ) continue;
+				found = i;
+				break;
+			}
+		}
+		if ( !found ) return;
+		// place ourselves right after it
+		Inventory saved = found.Inv;
+		found.Inv = self;
+		other.Inv = Inv;
+		Inv = saved;
+	}
+	// for subclasses
+	virtual int HandleDamage( int damage, Name damageType, int flags )
+	{
+		return damage;
+	}
+	override void AbsorbDamage( int damage, Name damageType, out int newdamage, Actor inflictor, Actor source, int flags )
+	{
+		int saved;
+		if ( (amount <= 0) || DamageTypeDefinition.IgnoreArmor(damageType) || (damage <= 0) )
+			return;
+		if ( !bNOHITFLASH ) SWWMHandler.DoFlash(Owner,Color(int(clamp(damage*.15,1,16)),255,224,192),3);
+		if ( !bNOHITSOUND ) Owner.A_StartSound("armor/hit",CHAN_DAMAGE,CHANF_OVERLAP,clamp(damage*.03,0.,1.),2.5);
+		saved = HandleDamage(damage,damageType,flags);
+		int healed = max(0,saved-damage);
+		saved = min(saved,damage);
+		if ( amount <= saved ) saved = amount;
+		newdamage -= saved;
+		if ( healed > 0 ) Owner.GiveBody(healed);
+		amount -= saved;
+		damage = newdamage;
+		if ( amount <= 0 )
+		{
+			if ( Owner.CheckLocalView() && (drainmsg != "") ) Console.Printf(StringTable.Localize(drainmsg));
+			DepleteOrDestroy();
+			return;
+		}
+	}
+}
+
+// gives armor when used
+Class SWWMSpareArmor : Inventory abstract
+{
+	Mixin SWWMAutoUseFix;
+	Mixin SWWMUseToPickup;
+	Mixin SWWMOverlapPickupSound;
+	Mixin SWWMRespawn;
+	Mixin SWWMPickupGlow;
+
+	Class<SWWMArmor> giveme;
+	int giveamt;
+
+	Property GiveArmor : giveme;
+	Property GiveAmount : giveamt;
+
+	override bool Use( bool pickup )
+	{
+		let cur = Owner.FindInventory(giveme);
+		if ( !cur || (!pickup && (cur.Amount < cur.MaxAmount)) || (giveamt+cur.Amount <= cur.MaxAmount) )
+		{
+			if ( pickup && ((Owner.player == players[consoleplayer]) || bBigPowerup) ) Owner.A_StartSound(UseSound,CHAN_ITEMEXTRA,CHANF_OVERLAP);
+			Owner.GiveInventory(giveme,giveamt);
+			SWWMHandler.ArmorFlash(Owner.PlayerNumber());
+			return true;
+		}
+		return false;
+	}
+
+	Default
+	{
+		+INVENTORY.INVBAR;
+		+INVENTORY.ISARMOR;
+		+INVENTORY.AUTOACTIVATE;
+		Inventory.MaxAmount 5;
+		Inventory.InterHubAmount 5;
+		Inventory.PickupFlash "SWWMGreenPickupFlash";
+		+FLOATBOB;
+		FloatBobStrength 0.25;
+	}
+}

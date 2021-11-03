@@ -1,0 +1,491 @@
+decal WallCrack1
+{
+	pic WallCrk1
+	translucent 0.75
+	shade "00 00 00"
+	x-scale 0.25
+	y-scale 0.25
+	randomflipx
+	randomflipy
+}
+decal WallCrack2
+{
+	pic WallCrk2
+	translucent 0.75
+	shade "00 00 00"
+	x-scale 0.25
+	y-scale 0.25
+	randomflipx
+	randomflipy
+}
+
+decalgroup WallCrack
+{
+	WallCrack1	1
+	WallCrack2	1
+}
+
+decal BigWallCrack1
+{
+	pic WallCrk1
+	translucent 0.75
+	shade "00 00 00"
+	x-scale 1.1
+	y-scale 1.1
+	randomflipx
+	randomflipy
+}
+decal BigWallCrack2
+{
+	pic WallCrk2
+	translucent 0.75
+	shade "00 00 00"
+	x-scale 1.1
+	y-scale 1.1
+	randomflipx
+	randomflipy
+}
+
+decalgroup BigWallCrack
+{
+	BigWallCrack1	1
+	BigWallCrack2	1
+}
+
+decal HugeWallCrack1
+{
+	pic WallCrk1
+	translucent 0.9
+	shade "00 00 00"
+	x-scale 1.5
+	y-scale 1.5
+	randomflipx
+	randomflipy
+}
+decal HugeWallCrack2
+{
+	pic WallCrk2
+	translucent 0.9
+	shade "00 00 00"
+	x-scale 1.5
+	y-scale 1.5
+	randomflipx
+	randomflipy
+}
+
+decalgroup HugeWallCrack
+{
+	HugeWallCrack1	1
+	HugeWallCrack2	1
+}
+
+decal ShockMarkSmall1
+{
+	pic shockmrk
+	shade "00 00 00"
+	randomflipx
+	randomflipy
+	x-scale 0.3
+	y-scale 0.3
+}
+decal ShockMarkSmall2
+{
+	pic shockmk2
+	shade "00 00 00"
+	randomflipx
+	randomflipy
+	x-scale 0.3
+	y-scale 0.3
+}
+decal ShockMarkSmall3
+{
+	pic shockmk3
+	shade "00 00 00"
+	randomflipx
+	randomflipy
+	x-scale 0.3
+	y-scale 0.3
+}
+decal ShockMarkSmall4
+{
+	pic shockmk4
+	shade "00 00 00"
+	randomflipx
+	randomflipy
+	x-scale 0.3
+	y-scale 0.3
+}
+decal ShockMarkSmall5
+{
+	pic shockmk5
+	shade "00 00 00"
+	randomflipx
+	randomflipy
+	x-scale 0.3
+	y-scale 0.3
+}
+decalgroup ShockMarkSmall
+{
+	ShockMarkSmall1	1
+	ShockMarkSmall2	1
+	ShockMarkSmall3	1
+	ShockMarkSmall4	1
+	ShockMarkSmall5	1
+}
+
+decal ShockMark1
+{
+	pic shockmrk
+	shade "00 00 00"
+	randomflipx
+	randomflipy
+	x-scale 0.6
+	y-scale 0.6
+}
+decal ShockMark2
+{
+	pic shockmk2
+	shade "00 00 00"
+	randomflipx
+	randomflipy
+	x-scale 0.6
+	y-scale 0.6
+}
+decal ShockMark3
+{
+	pic shockmk3
+	shade "00 00 00"
+	randomflipx
+	randomflipy
+	x-scale 0.6
+	y-scale 0.6
+}
+decal ShockMark4
+{
+	pic shockmk4
+	shade "00 00 00"
+	randomflipx
+	randomflipy
+	x-scale 0.6
+	y-scale 0.6
+}
+decal ShockMark5
+{
+	pic shockmk5
+	shade "00 00 00"
+	randomflipx
+	randomflipy
+	x-scale 0.6
+	y-scale 0.6
+}
+decalgroup ShockMark
+{
+	ShockMark1	1
+	ShockMark2	1
+	ShockMark3	1
+	ShockMark4	1
+	ShockMark5	1
+}
+
+decal ShockMarkBig1
+{
+	pic shockmrk
+	shade "00 00 00"
+	randomflipx
+	randomflipy
+	x-scale 1.5
+	y-scale 1.5
+}
+decal ShockMarkBig2
+{
+	pic shockmk2
+	shade "00 00 00"
+	randomflipx
+	randomflipy
+	x-scale 1.5
+	y-scale 1.5
+}
+decal ShockMarkBig3
+{
+	pic shockmk3
+	shade "00 00 00"
+	randomflipx
+	randomflipy
+	x-scale 1.5
+	y-scale 1.5
+}
+decal ShockMarkBig4
+{
+	pic shockmk4
+	shade "00 00 00"
+	randomflipx
+	randomflipy
+	x-scale 1.5
+	y-scale 1.5
+}
+decal ShockMarkBig5
+{
+	pic shockmk5
+	shade "00 00 00"
+	randomflipx
+	randomflipy
+	x-scale 1.5
+	y-scale 1.5
+}
+decalgroup ShockMarkBig
+{
+	ShockMarkBig1	1
+	ShockMarkBig2	1
+	ShockMarkBig3	1
+	ShockMarkBig4	1
+	ShockMarkBig5	1
+}
+
+decal BigBlast
+{
+	pic bigblast
+	shade "00 00 00"
+	randomflipx
+	randomflipy
+	x-scale 1.5
+	y-scale 1.5
+}
+
+decal RipBlast
+{
+	pic ripblast
+	shade "00 00 00"
+	randomflipx
+	randomflipy
+	x-scale 0.45
+	y-scale 0.45
+}
+
+decal RocketBlast
+{
+	pic rktblast
+	shade "00 00 00"
+	x-scale 0.4
+	y-scale 0.4
+	randomflipx
+	randomflipy
+}
+decal BigRocketBlast
+{
+	pic rktblast
+	shade "00 00 00"
+	x-scale 0.8
+	y-scale 0.8
+	randomflipx
+	randomflipy
+}
+decal HugeRocketBlast
+{
+	pic rktblast
+	shade "00 00 00"
+	x-scale 1.25
+	y-scale 1.25
+	randomflipx
+	randomflipy
+}
+decal WumboRocketBlast
+{
+	pic rktblast
+	shade "00 00 00"
+	x-scale 1.75
+	y-scale 1.75
+	randomflipx
+	randomflipy
+}
+
+decal Pock0
+{
+	pic pock0
+	translucent 0.85
+	shade "00 00 00"
+	x-scale 0.12
+	y-scale 0.12
+	randomflipx
+}
+decal Pock1
+{
+	pic pock1
+	translucent 0.85
+	shade "00 00 00"
+	x-scale 0.12
+	y-scale 0.12
+	randomflipx
+}
+decal Pock2
+{
+	pic pock2
+	translucent 0.85
+	shade "00 00 00"
+	x-scale 0.12
+	y-scale 0.12
+	randomflipx
+}
+decal Pock3
+{
+	pic pock3
+	translucent 0.85
+	shade "00 00 00"
+	x-scale 0.12
+	y-scale 0.12
+	randomflipx
+}
+decal Pock4
+{
+	pic pock4
+	translucent 0.85
+	shade "00 00 00"
+	x-scale 0.12
+	y-scale 0.12
+	randomflipx
+}
+decal Pock5
+{
+	pic pock5
+	translucent 0.85
+	shade "00 00 00"
+	x-scale 0.12
+	y-scale 0.12
+	randomflipx
+}
+decalgroup Pock
+{
+	Pock0	1
+	Pock1	1
+	Pock2	1
+	Pock3	1
+	Pock4	1
+	Pock5	1
+}
+
+decal TinyPock0
+{
+	pic pock0
+	translucent 0.85
+	shade "00 00 00"
+	x-scale 0.05
+	y-scale 0.05
+	randomflipx
+}
+decal TinyPock1
+{
+	pic pock1
+	translucent 0.85
+	shade "00 00 00"
+	x-scale 0.05
+	y-scale 0.05
+	randomflipx
+}
+decal TinyPock2
+{
+	pic pock2
+	translucent 0.85
+	shade "00 00 00"
+	x-scale 0.05
+	y-scale 0.05
+	randomflipx
+}
+decal TinyPock3
+{
+	pic pock3
+	translucent 0.85
+	shade "00 00 00"
+	x-scale 0.05
+	y-scale 0.05
+	randomflipx
+}
+decal TinyPock4
+{
+	pic pock4
+	translucent 0.85
+	shade "00 00 00"
+	x-scale 0.05
+	y-scale 0.05
+	randomflipx
+}
+decal TinyPock5
+{
+	pic pock5
+	translucent 0.85
+	shade "00 00 00"
+	x-scale 0.05
+	y-scale 0.05
+	randomflipx
+}
+decalgroup TinyPock
+{
+	TinyPock0	1
+	TinyPock1	1
+	TinyPock2	1
+	TinyPock3	1
+	TinyPock4	1
+	TinyPock5	1
+}
+
+decal BigPock0
+{
+	pic pock0
+	translucent 0.85
+	shade "00 00 00"
+	x-scale 0.25
+	y-scale 0.25
+	randomflipx
+}
+decal BigPock1
+{
+	pic pock1
+	translucent 0.85
+	shade "00 00 00"
+	x-scale 0.25
+	y-scale 0.25
+	randomflipx
+}
+decal BigPock2
+{
+	pic pock2
+	translucent 0.85
+	shade "00 00 00"
+	x-scale 0.25
+	y-scale 0.25
+	randomflipx
+}
+decal BigPock3
+{
+	pic pock3
+	translucent 0.85
+	shade "00 00 00"
+	x-scale 0.25
+	y-scale 0.25
+	randomflipx
+}
+decal BigPock4
+{
+	pic pock4
+	translucent 0.85
+	shade "00 00 00"
+	x-scale 0.25
+	y-scale 0.25
+	randomflipx
+}
+decal BigPock5
+{
+	pic pock5
+	translucent 0.85
+	shade "00 00 00"
+	x-scale 0.25
+	y-scale 0.25
+	randomflipx
+}
+decalgroup BigPock
+{
+	BigPock0	1
+	BigPock1	1
+	BigPock2	1
+	BigPock3	1
+	BigPock4	1
+	BigPock5	1
+}

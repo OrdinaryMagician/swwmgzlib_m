@@ -1,0 +1,1613 @@
+// basic effects
+
+// imitates UE1 light type LT_TexturePaletteOnce/LT_TexturePaletteLoop
+Class PaletteLight : PointLight
+{
+	Color pal[256];
+	bool IsLooping;
+	int InitialReactionTime;
+
+	Default
+	{
+		Tag "Explosion";
+		Args 0,0,0,80;
+		ReactionTime 15;
+	}
+	private void UpdateLight()
+	{
+		int index = clamp(255-((255*ReactionTime)/abs(InitialReactionTime)),0,255);
+		args[LIGHT_RED] = pal[index].r;
+		args[LIGHT_GREEN] = pal[index].g;
+		args[LIGHT_BLUE] = pal[index].b;
+	}
+	override void PostBeginPlay()
+	{
+		Super.PostBeginPlay();
+		InitialReactionTime = ReactionTime;
+		String palname = GetTag();
+		int sep = palname.IndexOf(",");
+		int palnum = 0;
+		if ( sep != -1 )
+		{
+			String palnumstr = palname.Mid(sep+1);
+			palnum = palnumstr.ToInt()*768;
+			palname.Truncate(sep);
+		}
+		int lump = Wads.CheckNumForFullname(String.Format("palettes/%s.pal",palname));
+		String paldat = Wads.ReadLump(lump);
+		for ( int i=0; i<256; i++ )
+		{
+			pal[i].r = paldat.ByteAt(palnum++);
+			pal[i].g = paldat.ByteAt(palnum++);
+			pal[i].b = paldat.ByteAt(palnum++);
+		}
+		if ( ReactionTime < 0 )
+		{
+			ReactionTime = -ReactionTime;
+			IsLooping = true;
+		}
+		UpdateLight();
+	}
+	override void Tick()
+	{
+		Super.Tick();
+		if ( isFrozen() ) return;
+		ReactionTime--;
+		if ( ReactionTime < 0 )
+		{
+			if ( !IsLooping )
+			{
+				Destroy();
+				return;
+			}
+			else ReactionTime = abs(InitialReactionTime);
+		}
+		if ( target ) SetOrigin(target.pos,true);
+		UpdateLight();
+	}
+}
+
+// Generic smoke, lightweight tick
+Class SWWMSmoke : Actor
+{
+	Default
+	{
+		RenderStyle "Shaded";
+		StencilColor "FFFFFF";
+		Radius .1;
+		Height 0;
+		Speed 1;
+		+NOBLOCKMAP;
+		+NOGRAVITY;
+		+DONTSPLASH;
+		+FORCEXYBILLBOARD;
+		+ROLLSPRITE;
+		+ROLLCENTER;
+		+THRUACTORS;
+		+NOTELEPORT;
+		+NOINTERACTION;
+		Scale .3;
+		FloatBobPhase 0;
+	}
+
+	override void PostBeginPlay()
+	{
+		double ang, pt;
+		scale *= FRandom[Puff](.5,1.5);
+		alpha = min(1.,alpha*FRandom[Puff](.5,1.5));
+		ang = FRandom[Puff](0,360);
+		pt = FRandom[Puff](-90,90);
+		vel += (cos(pt)*cos(ang),cos(pt)*sin(ang),-sin(pt))*FRandom[Puff](.2,.8)*speed;
+		roll = Frandom[Puff](0,360);
+		scale.x *= RandomPick[Puff](-1,1);
+		scale.y *= RandomPick[Puff](-1,1);
+	}
+	override void Tick()
+	{
+		prev = pos;	// for interpolation
+		if ( isFrozen() ) return;
+		vel *= .96;
+		vel.z += .01;
+		// linetrace-based movement (hopefully more reliable than traditional methods)
+		Vector3 dir = vel;
+		double spd = vel.length();
+		dir /= spd;
+		double dist = spd;
+		FLineTraceData d;
+		Vector3 newpos = pos;
+		newpos.z = clamp(newpos.z,floorz,ceilingz);
+		int nstep = 0;
+		while ( dist > 0 )
+		{
+			// safeguard, too many bounces
+			if ( nstep > MAXBOUNCEPERTIC )
+			{
+				Destroy();
+				return;
+			}
+			double ang = atan2(dir.y,dir.x);
+			double pt = asin(-dir.z);
+			LineTrace(ang,dist,pt,TRF_THRUACTORS|TRF_THRUHITSCAN|TRF_ABSPOSITION,newpos.z,newpos.x,newpos.y,d);
+			Vector3 hitnormal = -d.HitDir;
+			if ( d.HitType == TRACE_HitFloor )
+			{
+				if ( d.Hit3DFloor ) hitnormal = -d.Hit3DFloor.top.Normal;
+				else hitnormal = d.HitSector.floorplane.Normal;
+			}
+			else if ( d.HitType == TRACE_HitCeiling )
+			{
+				if ( d.Hit3DFloor ) hitnormal = -d.Hit3DFloor.bottom.Normal;
+				else hitnormal = d.HitSector.ceilingplane.Normal;
+			}
+			else if ( d.HitType == TRACE_HitWall )
+			{
+				hitnormal = (-d.HitLine.delta.y,d.HitLine.delta.x,0).unit();
+				if ( !d.LineSide ) hitnormal *= -1;
+			}
+			if ( d.HitType != TRACE_HitNone )
+			{
+				dist -= d.Distance;
+				// should only happen if we bounced
+				dir = d.HitDir-(FRandom[Puff](1.,1.2)*hitnormal*(d.HitDir dot hitnormal));
+				vel = dir*spd;
+				newpos = d.HitLocation+dir;
+			}
+			else
+			{
+				dist = 0.;
+				newpos = level.Vec3Offset(newpos,dir*spd);
+			}
+			nstep++;
+		}
+		newpos.z = clamp(newpos.z,floorz,ceilingz);
+		SetOrigin(newpos,true);
+		UpdateWaterLevel();
+		if ( (waterlevel > 0) && !bAMBUSH )
+		{
+			let b = Spawn("SWWMBubble",pos);
+			b.scale *= abs(scale.x);
+			b.vel = vel;
+			Destroy();
+			return;
+		}
+		if ( tics > 0 ) tics--;
+		while ( !tics )
+		{
+			if ( !SetState(CurState.NextState) )
+				return;
+		}
+	}
+
+	States
+	{
+	Spawn:
+		XSMK ABCDEFGHIJKLMNOPQRST 1 A_SetTics(1+special1);
+		Stop;
+	}
+}
+
+// strictly non-interacting smoke, much lighter tick, used for heavier effects
+Class SWWMHalfSmoke : Actor
+{
+	Default
+	{
+		RenderStyle "Shaded";
+		StencilColor "FFFFFF";
+		Radius .1;
+		Height 0;
+		Speed 1;
+		+NOBLOCKMAP;
+		+NOGRAVITY;
+		+DONTSPLASH;
+		+FORCEXYBILLBOARD;
+		+ROLLSPRITE;
+		+ROLLCENTER;
+		+NOTELEPORT;
+		+NOINTERACTION;
+		Scale 0.3;
+		FloatBobPhase 0;
+	}
+	override void PostBeginPlay()
+	{
+		double ang, pt;
+		scale *= FRandom[Puff](0.5,1.5);
+		alpha *= FRandom[Puff](0.5,1.5);
+		ang = FRandom[Puff](0,360);
+		pt = FRandom[Puff](-90,90);
+		vel += (cos(pt)*cos(ang),cos(pt)*sin(ang),-sin(pt))*FRandom[Puff](0.2,0.8)*speed;
+		roll = Frandom[Puff](0,360);
+		scale.x *= RandomPick[Puff](-1,1);
+		scale.y *= RandomPick[Puff](-1,1);
+	}
+	override void Tick()
+	{
+		prev = pos;	// for interpolation
+		if ( isFrozen() ) return;
+		vel *= 0.96;
+		vel.z += 0.01;
+		SetOrigin(level.Vec3Offset(pos,vel),true);
+		UpdateWaterLevel();
+		if ( (waterlevel > 0) && !bAMBUSH )
+		{
+			let b = Spawn("SWWMBubble",pos);
+			b.scale *= abs(scale.x);
+			b.vel = vel;
+			Destroy();
+			return;
+		}
+		if ( tics > 0 ) tics--;
+		while ( !tics )
+		{
+			if ( !SetState(CurState.NextState) )
+				return;
+		}
+	}
+
+	States
+	{
+	Spawn:
+		XSMK ABCDEFGHIJKLMNOPQRST 1 A_SetTics(1+special1);
+		Stop;
+	}
+}
+
+Class SWWMSmallSmoke : SWWMHalfSmoke
+{
+	override void PostBeginPlay()
+	{
+		double ang, pt;
+		scale *= FRandom[Puff](0.1,0.3);
+		alpha *= FRandom[Puff](0.5,1.5);
+		ang = FRandom[Puff](0,360);
+		pt = FRandom[Puff](-90,90);
+		vel += (cos(pt)*cos(ang),cos(pt)*sin(ang),-sin(pt))*FRandom[Puff](0.04,0.16);
+		roll = Frandom[Puff](0,360);
+		scale.x *= RandomPick[Puff](-1,1);
+		scale.y *= RandomPick[Puff](-1,1);
+	}
+
+	States
+	{
+	Spawn:
+		QSM6 ABCDEFGHIJKLMNOPQR 1 A_SetTics(1+special1);
+		Stop;
+	}
+}
+
+Class SWWMBubble : Actor
+{
+	Default
+	{
+		RenderStyle "Add";
+		Radius .1;
+		Height 0;
+		+NOBLOCKMAP;
+		+NOGRAVITY;
+		+DONTSPLASH;
+		+FORCEXYBILLBOARD;
+		+NOTELEPORT;
+		+THRUACTORS;
+		+NOINTERACTION;
+		Scale 0.5;
+		FloatBobPhase 0;
+	}
+	override void PostBeginPlay()
+	{
+		double ang, pt;
+		scale *= FRandom[Puff](0.5,1.5);
+		ang = FRandom[Puff](0,360);
+		pt = FRandom[Puff](-90,90);
+		vel += (cos(pt)*cos(ang),cos(pt)*sin(ang),-sin(pt))*FRandom[Puff](0.2,0.8);
+		if ( waterlevel <= 0 ) Destroy();
+		SetState(ResolveState("Spawn")+Random[Puff](0,19));
+	}
+	override void Tick()
+	{
+		prev = pos;
+		if ( isFrozen() ) return;
+		vel *= 0.96;
+		vel.z += 0.05;
+		// linetrace-based movement (hopefully more reliable than traditional methods)
+		Vector3 dir = vel;
+		double spd = vel.length();
+		dir /= spd;
+		double dist = spd;
+		FLineTraceData d;
+		Vector3 newpos = pos;
+		newpos.z = clamp(newpos.z,floorz,ceilingz);
+		int nstep = 0;
+		while ( dist > 0 )
+		{
+			// safeguard, too many bounces
+			if ( nstep > MAXBOUNCEPERTIC )
+			{
+				Destroy();
+				return;
+			}
+			double ang = atan2(dir.y,dir.x);
+			double pt = asin(-dir.z);
+			LineTrace(ang,dist,pt,TRF_THRUACTORS|TRF_THRUHITSCAN|TRF_ABSPOSITION,newpos.z,newpos.x,newpos.y,d);
+			Vector3 hitnormal = -d.HitDir;
+			if ( d.HitType == TRACE_HitFloor )
+			{
+				if ( d.Hit3DFloor ) hitnormal = -d.Hit3DFloor.top.Normal;
+				else hitnormal = d.HitSector.floorplane.Normal;
+			}
+			else if ( d.HitType == TRACE_HitCeiling )
+			{
+				if ( d.Hit3DFloor ) hitnormal = -d.Hit3DFloor.bottom.Normal;
+				else hitnormal = d.HitSector.ceilingplane.Normal;
+			}
+			else if ( d.HitType == TRACE_HitWall )
+			{
+				hitnormal = (-d.HitLine.delta.y,d.HitLine.delta.x,0).unit();
+				if ( !d.LineSide ) hitnormal *= -1;
+			}
+			if ( d.HitType != TRACE_HitNone )
+			{
+				dist -= d.Distance;
+				// should only happen if we bounced
+				dir = d.HitDir-(FRandom[Puff](1.,1.2)*hitnormal*(d.HitDir dot hitnormal));
+				vel = dir*spd;
+				newpos = d.HitLocation+dir;
+			}
+			else
+			{
+				dist = 0.;
+				newpos = level.Vec3Offset(newpos,dir*spd);
+			}
+			nstep++;
+		}
+		newpos.z = clamp(newpos.z,floorz,ceilingz);
+		SetOrigin(newpos,true);
+		UpdateWaterLevel();
+		if ( (waterlevel <= 0) || !Random[Puff](0,100) ) Destroy();
+		if ( tics > 0 ) tics--;
+		while ( !tics )
+		{
+			if ( !SetState(CurState.NextState) )
+				return;
+		}
+	}
+	States
+	{
+	Spawn:
+		XBUB ABCDEFGHIJKLMNOPQRST 1;
+		Loop;
+	}
+}
+
+Class SWWMSparkTrail : Actor
+{
+	Default
+	{
+		RenderStyle "Add";
+		Radius .1;
+		Height 0.;
+		+FORCEXYBILLBOARD;
+		+NOGRAVITY;
+		+NOBLOCKMAP;
+		+NOINTERACTION;
+		+DONTSPLASH;
+		+NOTELEPORT;
+	}
+	override void Tick()
+	{
+		if ( isFrozen() ) return;
+		A_SetScale(scale.x*.9,scale.y);
+		A_FadeOut(.06);
+	}
+	States
+	{
+	Spawn:
+		XZW1 A -1 Bright;
+		Stop;
+	}
+}
+
+Class SWWMSpark : Actor
+{
+	bool dead;
+	Sector tracksector;
+	int trackplane;
+
+	Default
+	{
+		RenderStyle "Add";
+		Radius .1;
+		Height 0;
+		+NOBLOCKMAP;
+		+FORCEXYBILLBOARD;
+		+THRUACTORS;
+		+NOTELEPORT;
+		+DONTSPLASH;
+		+NOINTERACTION;
+		Gravity 0.2;
+		Scale 0.05;
+		FloatBobPhase 0;
+	}
+	override void Tick()
+	{
+		prev = pos;
+		if ( isFrozen() ) return;
+		if ( dead )
+		{
+			// do nothing but follow floor movement
+			if ( tracksector )
+			{
+				double trackz;
+				if ( trackplane ) trackz = tracksector.ceilingplane.ZAtPoint(pos.xy);
+				else trackz = tracksector.floorplane.ZAtPoint(pos.xy);
+				if ( trackz != pos.z ) SetZ(trackz);
+			}
+		}
+		else
+		{
+			vel.z -= GetGravity();
+			// linetrace-based movement (hopefully more reliable than traditional methods)
+			Vector3 dir = vel;
+			double spd = vel.length();
+			dir /= spd;
+			double dist = spd;
+			FLineTraceData d;
+			Vector3 newpos = pos;
+			newpos.z = clamp(newpos.z,floorz,ceilingz);
+			int nstep = 0;
+			while ( dist > 0 )
+			{
+				Vector3 oldpos = newpos;
+				// safeguard, too many bounces
+				if ( nstep > MAXBOUNCEPERTIC )
+				{
+					Destroy();
+					return;
+				}
+				double ang = atan2(dir.y,dir.x);
+				double pt = asin(-dir.z);
+				LineTrace(ang,dist,pt,TRF_THRUACTORS|TRF_THRUHITSCAN|TRF_ABSPOSITION,newpos.z,newpos.x,newpos.y,d);
+				Vector3 hitnormal = -d.HitDir;
+				if ( d.HitType == TRACE_HitFloor )
+				{
+					if ( d.Hit3DFloor ) hitnormal = -d.Hit3DFloor.top.Normal;
+					else hitnormal = d.HitSector.floorplane.Normal;
+				}
+				else if ( d.HitType == TRACE_HitCeiling )
+				{
+					if ( d.Hit3DFloor ) hitnormal = -d.Hit3DFloor.bottom.Normal;
+					else hitnormal = d.HitSector.ceilingplane.Normal;
+				}
+				else if ( d.HitType == TRACE_HitWall )
+				{
+					hitnormal = (-d.HitLine.delta.y,d.HitLine.delta.x,0).unit();
+					if ( !d.LineSide ) hitnormal *= -1;
+				}
+				if ( d.HitType != TRACE_HitNone )
+				{
+					dist -= d.Distance;
+					// should only happen if we bounced
+					dir = d.HitDir-(2*hitnormal*(d.HitDir dot hitnormal));
+					spd *= .4;
+					dist *= .4;
+					vel = dir*spd;
+					newpos = d.HitLocation+dir;
+				}
+				else
+				{
+					dist = 0.;
+					newpos = level.Vec3Offset(newpos,dir*spd);
+				}
+				if ( ((spd < 1.) || (dir.z <= 0.)) && ((d.HitType == TRACE_HitFloor) || (newpos.z <= floorz)) )
+				{
+					// lose speed and die
+					if ( d.Hit3DFloor )
+					{
+						newpos.z = d.Hit3DFloor.top.ZAtPoint(newpos.xy);
+						tracksector = d.Hit3DFloor.model;
+						trackplane = 1;
+					}
+					else
+					{
+						// hacky workaround
+						if ( !d.HitSector ) d.HitSector = floorsector;
+						newpos.z = d.HitSector.floorplane.ZAtPoint(newpos.xy);
+						tracksector = d.HitSector;
+						trackplane = 0;
+					}
+					vel = (0,0,0);
+					pitch = 0;
+					roll = 0;
+					dead = true;
+					SetStateLabel("Death");
+					break;
+				}
+				nstep++;
+			}
+			newpos.z = clamp(newpos.z,floorz,ceilingz);
+			Vector3 taildir = level.Vec3Diff(newpos,pos);
+			double taillen = taildir.length();
+			if ( (taillen > 0.) && (alpha > .3) && (waterlevel <= 0) )
+			{
+				taildir /= taillen;
+				let t = Spawn("SWWMSparkTrail",newpos);
+				t.alpha = alpha*.3;
+				t.scale.y = taillen;
+				t.angle = atan2(taildir.y,taildir.x);
+				t.pitch = asin(-taildir.z)+90;
+			}
+			SetOrigin(newpos,true);
+			if ( (pos.z <= floorz) && GetFloorTerrain().IsLiquid )
+			{
+				Destroy();
+				return;
+			}
+		}
+		UpdateWaterLevel();
+		if ( waterlevel > 0 )
+		{
+			let b = Spawn("SWWMBubble",pos);
+			b.vel = vel;
+			b.scale *= 0.3;
+			Destroy();
+			return;
+		}
+		if ( tics > 0 ) tics--;
+		while ( !tics )
+		{
+			if ( !SetState(CurState.NextState) )
+				return;
+		}
+	}
+	States
+	{
+	Spawn:
+		BLPF A 1 Bright A_FadeOut(0.01);
+		Wait;
+	Death:
+		BLPF A 1 Bright A_FadeOut(0.05);
+		Wait;
+	}
+}
+
+Class SWWMChip : Actor
+{
+	SWWMChip prevchip, nextchip;
+	bool killme;
+	double anglevel, pitchvel, rollvel;
+	bool dead;
+	Sector tracksector;
+	int trackplane;
+
+	Default
+	{
+		Radius .1;
+		Height 0;
+		+NOBLOCKMAP;
+		+THRUACTORS;
+		+NOTELEPORT;
+		+DONTSPLASH;
+		+INTERPOLATEANGLES;
+		+ROLLSPRITE;
+		+ROLLCENTER;
+		+FORCEXYBILLBOARD;
+		+NOINTERACTION;
+		Gravity 0.35;
+		Scale 0.2;
+		FloatBobPhase 0;
+	}
+	override void PostBeginPlay()
+	{
+		anglevel = FRandom[Junk](10,30)*RandomPick[Junk](-1,1);
+		pitchvel = FRandom[Junk](10,30)*RandomPick[Junk](-1,1);
+		rollvel = FRandom[Junk](10,30)*RandomPick[Junk](-1,1);
+		frame = Random[Junk](0,7);
+		scale *= Frandom[Junk](0.8,1.2);
+		SWWMHandler.QueueChip(self);
+	}
+	override void OnDestroy()
+	{
+		SWWMHandler.DeQueueChip(self);
+		Super.OnDestroy();
+	}
+	override void Tick()
+	{
+		prev = pos;	// for interpolation
+		if ( isFrozen() ) return;
+		if ( dead )
+		{
+			// do nothing but follow floor movement
+			if ( tracksector )
+			{
+				double trackz;
+				if ( trackplane ) trackz = tracksector.ceilingplane.ZAtPoint(pos.xy);
+				else trackz = tracksector.floorplane.ZAtPoint(pos.xy);
+				if ( trackz != pos.z )
+				{
+					SetZ(trackz);
+					UpdateWaterLevel(false);
+				}
+			}
+		}
+		else
+		{
+			if ( waterlevel <= 0 ) vel.z -= GetGravity();
+			// linetrace-based movement (hopefully more reliable than traditional methods)
+			Vector3 dir = vel;
+			double spd = vel.length();
+			dir /= spd;
+			double dist = spd;
+			FLineTraceData d;
+			Vector3 newpos = pos;
+			newpos.z = clamp(newpos.z,floorz,ceilingz);
+			int nstep = 0;
+			while ( dist > 0 )
+			{
+				// safeguard, too many bounces
+				if ( nstep > MAXBOUNCEPERTIC )
+				{
+					Destroy();
+					return;
+				}
+				double ang = atan2(dir.y,dir.x);
+				double pt = asin(-dir.z);
+				LineTrace(ang,dist,pt,TRF_THRUACTORS|TRF_THRUHITSCAN|TRF_ABSPOSITION,newpos.z,newpos.x,newpos.y,d);
+				Vector3 hitnormal = -d.HitDir;
+				if ( d.HitType == TRACE_HitFloor )
+				{
+					if ( d.Hit3DFloor ) hitnormal = -d.Hit3DFloor.top.Normal;
+					else hitnormal = d.HitSector.floorplane.Normal;
+				}
+				else if ( d.HitType == TRACE_HitCeiling )
+				{
+					if ( d.Hit3DFloor ) hitnormal = -d.Hit3DFloor.bottom.Normal;
+					else hitnormal = d.HitSector.ceilingplane.Normal;
+				}
+				else if ( d.HitType == TRACE_HitWall )
+				{
+					hitnormal = (-d.HitLine.delta.y,d.HitLine.delta.x,0).unit();
+					if ( !d.LineSide ) hitnormal *= -1;
+				}
+				if ( d.HitType != TRACE_HitNone )
+				{
+					dist -= d.Distance;
+					// should only happen if we bounced
+					dir = d.HitDir-(2*hitnormal*(d.HitDir dot hitnormal));
+					spd *= .3;
+					dist *= .3;
+					vel = dir*spd;
+					newpos = d.HitLocation+dir;
+					SetStateLabel("Bounce");
+				}
+				else
+				{
+					dist = 0.;
+					newpos = level.Vec3Offset(newpos,dir*spd);
+				}
+				newpos.z = clamp(newpos.z,floorz,ceilingz);
+				if ( ((spd < 1.) || (dir.z <= 0.)) && ((d.HitType == TRACE_HitFloor) || (newpos.z <= floorz)) )
+				{
+					// lose speed and die
+					if ( d.Hit3DFloor )
+					{
+						newpos.z = d.Hit3DFloor.top.ZAtPoint(newpos.xy);
+						tracksector = d.Hit3DFloor.model;
+						trackplane = 1;
+					}
+					else
+					{
+						// hacky workaround
+						if ( !d.HitSector ) d.HitSector = floorsector;
+						newpos.z = d.HitSector.floorplane.ZAtPoint(newpos.xy);
+						tracksector = d.HitSector;
+						trackplane = 0;
+					}
+					vel = (0,0,0);
+					pitch = 0;
+					roll = 0;
+					dead = true;
+					SetStateLabel("Death");
+					break;
+				}
+				nstep++;
+			}
+			SetOrigin(newpos,true);
+			UpdateWaterLevel();
+			if ( (pos.z <= floorz) && GetFloorTerrain().IsLiquid )
+			{
+				Destroy();
+				return;
+			}
+		}
+		if ( killme ) A_FadeOut(.01);
+		if ( waterlevel > 0 )
+		{
+			vel *= .98;
+			anglevel *= .98;
+			pitchvel *= .98;
+			rollvel *= .98;
+		}
+		if ( !CheckNoDelay() || (tics == -1) ) return;
+		if ( tics > 0 ) tics--;
+		while ( !tics )
+		{
+			if ( !SetState(CurState.NextState) )
+				return;
+		}
+	}
+	States
+	{
+	Spawn:
+		XZW1 # 1
+		{
+			angle += anglevel;
+			pitch += pitchvel;
+			roll += rollvel;
+		}
+		Loop;
+	Bounce:
+		XZW1 # 0
+		{
+			anglevel = FRandom[Junk](10,30)*RandomPick[Junk](-1,1);
+			pitchvel = FRandom[Junk](10,30)*RandomPick[Junk](-1,1);
+			rollvel = FRandom[Junk](10,30)*RandomPick[Junk](-1,1);
+		}
+		Goto Spawn;
+	Death:
+		XZW2 # -1;
+		Stop;
+	}
+}
+
+Class PoofLight : PaletteLight
+{
+	Default
+	{
+		Tag "Yellow";
+		ReactionTime 5;
+		Args 0,0,0,60;
+	}
+}
+Class PoofLight2 : PaletteLight
+{
+	Default
+	{
+		Tag "Yellow";
+		ReactionTime 20;
+		Args 0,0,0,90;
+	}
+}
+
+Class SWWMItemFog : Actor
+{
+	Default
+	{
+		RenderStyle "Add";
+		Radius .1;
+		Height 0;
+		+NOGRAVITY;
+		+NOBLOCKMAP;
+		+DONTSPLASH;
+		+ROLLSPRITE;
+		+ROLLCENTER;
+		+NOINTERACTION;
+		+FORCEXYBILLBOARD;
+		FloatBobPhase 0;
+	}
+	States
+	{
+	Spawn:
+		BLPF A 2 Bright NoDelay
+		{
+			// offset up
+			SetOrigin(Vec3Offset(0,0,16),false);
+			roll = FRandom[ExploS](0,360);
+			scale *= FRandom[ExploS](0.9,1.1);
+			scale.x *= RandomPick[ExploS](-1,1);
+			scale.y *= RandomPick[ExploS](-1,1);
+			int numpt = Random[ExploS](8,12);
+			if ( bAMBUSH ) numpt *= 2;
+			for ( int i=0; i<numpt; i++ )
+			{
+				Vector3 pvel = (FRandom[ExploS](-1,1),FRandom[ExploS](-1,1),FRandom[ExploS](-1,1)).unit()*FRandom[ExploS](.3,8);
+				let s = Spawn(bAMBUSH?"SWWMSmoke":"SWWMSmallSmoke",pos);
+				s.vel = pvel;
+				s.SetShade(Color(3,2,1)*Random[ExploS](64,85));
+				s.A_SetRenderStyle(s.alpha,STYLE_AddShaded);
+				s.scale *= 3.;
+				s.alpha *= bAMBUSH?.4:.2;
+			}
+			Spawn(bAMBUSH?"PoofLight2":"PoofLight",pos);
+		}
+		BLPF A 1 Bright A_FadeOut(.3);
+		Wait;
+	}
+}
+
+Class TeleLight : PaletteLight
+{
+	Default
+	{
+		Tag "ImpactWav";
+		ReactionTime 10;
+		Args 0,0,0,150;
+	}
+}
+
+Class SWWMTeleportSparkle : Actor
+{
+	Default
+	{
+		RenderStyle "Add";
+		Scale 0.3;
+		Radius .1;
+		Height 0.;
+		+NOGRAVITY;
+		+NOBLOCKMAP;
+		+DONTSPLASH;
+		+ROLLSPRITE;
+		+ROLLCENTER;
+		+FORCEXYBILLBOARD;
+		+NOINTERACTION;
+		FloatBobPhase 0;
+	}
+	override void Tick()
+	{
+		if ( isFrozen() ) return;
+		A_SetScale(scale.x*specialf1);
+		A_FadeOut(specialf2);
+		if ( vel != (0,0,0) )
+		{
+			SetOrigin(level.Vec3Offset(pos,vel),true);
+			vel *= .98;
+		}
+	}
+	States
+	{
+	Spawn:
+		BLPF C -1 Bright;
+		Stop;
+	}
+}
+
+Class SWWMTeleportDest : Actor
+{
+	Default
+	{
+		+NOGRAVITY;
+		+NOBLOCKMAP;
+		+DONTSPLASH;
+		+NOINTERACTION;
+		Radius .1;
+		Height 0.;
+	}
+
+	override void PostBeginPlay()
+	{
+		special1 = Random[ExploS](0,10);
+	}
+
+	override void Tick()
+	{
+		if ( isFrozen() ) return;
+		if ( (level.maptime+special1)%10 ) return;
+		int numpt = Random[ExploS](0,2);
+		for ( int i=0; i<numpt; i++ )
+		{
+			double ang = FRandom[ExploS](0,360);
+			double pt = FRandom[ExploS](-90,90);
+			A_SpawnParticle("88 AA FF",SPF_FULLBRIGHT,Random[ExploS](120,240),FRandom[ExploS](2.,4.),0,0,0,28,FRandom[ExploS](-.8,.8),FRandom[ExploS](-.8,.8),FRandom[ExploS](-.8,.8),0,0,0,FRandom[ExploS](.15,.3),-1,FRandom[ExploS](-.02,-.01));
+		}
+	}
+}
+
+Class SWWMTeleportLine : Actor
+{
+	Line tline;
+
+	Default
+	{
+		+NOGRAVITY;
+		+NOBLOCKMAP;
+		+DONTSPLASH;
+		+NOINTERACTION;
+		Radius .1;
+		Height 0.;
+	}
+
+	override void PostBeginPlay()
+	{
+		special1 = Random[ExploS](0,5);
+	}
+
+	override void Tick()
+	{
+		if ( !tline )
+		{
+			Destroy();
+			return;
+		}
+		if ( isFrozen() ) return;
+		if ( (level.maptime+special1)%5 ) return;
+		Vector3 apos, bpos;
+		apos.xy = tline.v1.p;
+		bpos.xy = tline.v2.p;
+		apos.z = max(tline.frontsector.floorplane.ZAtPoint(apos.xy),tline.backsector.floorplane.ZAtPoint(apos.xy));
+		bpos.z = max(tline.frontsector.floorplane.ZAtPoint(bpos.xy),tline.backsector.floorplane.ZAtPoint(bpos.xy));
+		int numpt = Random[ExploS](0,2);
+		numpt *= int(clamp((apos-bpos).length()/32,1,8));
+		for ( int i=0; i<numpt; i++ )
+		{
+			double ang = FRandom[ExploS](0,360);
+			double pt = FRandom[ExploS](-90,90);
+			double d = FRandom[ExploS](0.,1.);
+			Vector3 ppos = bpos*d+apos*(1.-d)+(0,0,FRandom[ExploS](1,4));
+			Vector3 rpos = ppos-pos;
+			A_SpawnParticle("88 AA FF",SPF_FULLBRIGHT,Random[ExploS](120,240),FRandom[ExploS](2.,4.),0,rpos.x,rpos.y,rpos.z,FRandom[ExploS](-.3,.3),FRandom[ExploS](-.3,.3),FRandom[ExploS](-.3,.3),0,0,FRandom[ExploS](.05,.1),FRandom[ExploS](.15,.3),-1,FRandom[ExploS](-.02,-.01));
+		}
+	}
+}
+
+Class SWWMTeleportFog : Actor
+{
+	Default
+	{
+		RenderStyle "Add";
+		+NOGRAVITY;
+		+NOBLOCKMAP;
+		+DONTSPLASH;
+		+NOINTERACTION;
+		+FORCEXYBILLBOARD;
+		Radius .1;
+		Height 0.;
+		FloatBobPhase 0;
+	}
+	override void PostBeginPlay()
+	{
+		Super.PostBeginPlay();
+		A_StartSound("misc/teleport",CHAN_VOICE);
+		Spawn("TeleLight",pos);
+		if ( swwm_simplefog ) SetStateLabel("Simple");
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 1
+		{
+			int numpt = int(Random[ExploS](6,12)*alpha);
+			for ( int i=0; i<numpt; i++ )
+			{
+				Vector3 pvel = (FRandom[ExploS](-1,1),FRandom[ExploS](-1,1),FRandom[ExploS](-1,1)).unit()*FRandom[ExploS](.3,8)*alpha;
+				let s = Spawn("SWWMSmallSmoke",pos);
+				s.vel = pvel;
+				s.SetShade(Color(1,2,3)*int(Random[ExploS](64,85)*alpha));
+				s.A_SetRenderStyle(s.alpha,STYLE_AddShaded);
+				s.scale *= 3.*alpha;
+				s.alpha *= alpha;
+			}
+			numpt = int(Random[ExploS](4,8));
+			for ( int i=0; i<numpt; i++ )
+			{
+				double ang = FRandom[ExploS](0,360);
+				double pt = FRandom[ExploS](-90,90);
+				double dist = (FRandom[ExploS](5,10)+60*(1.-alpha));
+				if ( LineTrace(ang,dist,pt,TRF_THRUACTORS|TRF_THRUHITSCAN) ) continue;
+				Vector3 ofs = (cos(ang)*cos(pt),sin(ang)*cos(pt),-sin(pt))*dist;
+				Vector3 spos = level.Vec3Offset(pos,ofs);
+				let s = Spawn("SWWMTeleportSparkle",spos);
+				s.scale *= FRandom[ExploS](.8,1.2);
+				s.specialf1 = FRandom[ExploS](.93,.97);
+				s.specialf2 = FRandom[ExploS](.02,.04);
+				s.roll = FRandom[ExploS](0,360);
+			}
+			A_FadeOut(.07);
+		}
+		Wait;
+	Simple:
+		SPEX ABCDEFGHIJKLMNOPQRSTUVWXYZ[\] 1 Bright;
+		Stop;
+	}
+}
+
+Class SWWMPickupFlash : Actor
+{
+	Vector3 lastitempos;
+
+	Default
+	{
+		RenderStyle "Add";
+		Args 0,3,2,1;
+		Radius .1;
+		Height 0;
+		+NOGRAVITY;
+		+NOBLOCKMAP;
+		+DONTSPLASH;
+		+ROLLSPRITE;
+		+ROLLCENTER;
+		+NOINTERACTION;
+		+FORCEXYBILLBOARD;
+		FloatBobPhase 0;
+	}
+	override void PostBeginPlay()
+	{
+		Super.PostBeginPlay();
+		frame = Args[0];
+	}
+	action void A_Sparkle()
+	{
+		// offset up
+		SetOrigin(Vec3Offset(0,0,16),false);
+		roll = FRandom[ExploS](0,360);
+		scale *= FRandom[ExploS](.9,1.1);
+		scale.x *= RandomPick[ExploS](-1,1);
+		scale.y *= RandomPick[ExploS](-1,1);
+		int numpt = Random[ExploS](8,10);
+		for ( int i=0; i<numpt; i++ )
+		{
+			Vector3 pvel = (FRandom[ExploS](-1,1),FRandom[ExploS](-1,1),FRandom[ExploS](-1,1)).unit()*FRandom[ExploS](.3,8);
+			let s = Spawn("SWWMSmallSmoke",pos);
+			s.vel = pvel;
+			s.SetShade(Color(Args[1],Args[2],Args[3])*Random[ExploS](64,85));
+			s.A_SetRenderStyle(s.alpha,STYLE_AddShaded);
+			s.scale *= 3.;
+			s.alpha *= .5;
+		}
+	}
+	action void A_Shimmer()
+	{
+		if ( !target || Inventory(target).Owner )
+		{
+			Destroy();
+			return;
+		}
+		if ( target.bINVISIBLE )
+		{
+			bINVISIBLE = true;
+			return;
+		}
+		else if ( bINVISIBLE ) bINVISIBLE = false;
+		// try to reduce calls to SetOrigin as much as possible, for performance
+		if ( target.pos != invoker.lastitempos ) SetOrigin(target.Vec3Offset(0,0,16),true);
+		invoker.lastitempos = target.pos;
+		if ( target.bFLOATBOB && !bFLOATBOB )
+		{
+			bFLOATBOB = true;
+			FloatBobStrength = target.FloatBobStrength;
+			FloatBobPhase = target.FloatBobPhase;
+		}
+		else if ( !target.bFLOATBOB && bFLOATBOB ) bFLOATBOB = false;
+		A_SetScale(FRandom[ClientSparkles](.9,1.1)*(max(target.radius,target.height)/16.));
+		alpha = FRandom[ClientSparkles](.9,1.)*clamp((max(0,Distance3DSquared(players[consoleplayer].Camera)-40000.)/160000000.)**.25,0.,1.);
+	}
+	States
+	{
+	Spawn:
+		BLPF # 0 Bright;
+		BLPF # 1 Bright A_Sparkle();
+		BLPF # 1 Bright A_FadeOut(.2);
+		Wait;
+	Pickup:
+		BLPS # 1 Bright A_Shimmer();
+		Wait;
+	}
+}
+Class SWWMPinkPickupFlash : SWWMPickupFlash
+{
+	Default
+	{
+		Args 1,3,1,2;
+	}
+}
+Class SWWMCyanPickupFlash : SWWMPickupFlash
+{
+	Default
+	{
+		Args 2,1,2,3;
+	}
+}
+Class SWWMGreenPickupFlash : SWWMPickupFlash
+{
+	Default
+	{
+		Args 3,1,3,1;
+	}
+}
+Class SWWMBluePickupFlash : SWWMPickupFlash
+{
+	Default
+	{
+		Args 4,1,1,3;
+	}
+}
+Class SWWMPurplePickupFlash : SWWMPickupFlash
+{
+	Default
+	{
+		Args 5,2,1,3;
+	}
+}
+Class SWWMRedPickupFlash : SWWMPickupFlash
+{
+	Default
+	{
+		Args 6,3,1,1;
+	}
+}
+Class SWWMWhitePickupFlash : SWWMPickupFlash
+{
+	Default
+	{
+		Args 7,3,3,3;
+	}
+}
+
+// TODO very precise tiny fast projectiles using hitscan-based stepping (e.g.: bullets)
+Class SWWMLightProjectile : Actor abstract {}
+
+// Bullet trails from DT
+Class WaterHit
+{
+	Sector sect;
+	Vector3 hitpos;
+}
+
+Class InvisibleSplasher : Actor
+{
+	Default
+	{
+		Mass 100;
+		VSpeed -2;
+		Radius 2;
+		Height 4;
+		+NOBLOCKMAP;	// needed to prevent infinite loops with some 3D floor water (yes, you read that right)
+		FloatBobPhase 0;
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 2;
+		Stop;
+	}
+}
+Class SmolInvisibleSplasher : InvisibleSplasher
+{
+	Default
+	{
+		Mass 5;
+	}
+}
+
+Class SWWMBulletTrail : LineTracer
+{
+	Array<WaterHit> WaterHitList;
+	Array<Line> ShootThroughList;
+	Actor ignoreme;
+
+	static play void DoTrail( Actor target, Vector3 pos, Vector3 dir, double dist, int bubblechance, bool smoky = false )
+	{
+		let t = new("SWWMBulletTrail");
+		t.ignoreme = target;
+		t.WaterHitList.Clear();
+		t.ShootThroughList.Clear();
+		t.Trace(pos,level.PointInSector(pos.xy),dir,dist,0);
+		for ( int i=0; i<t.ShootThroughList.Size(); i++ )
+		{
+			// have to do both because WOW, HOW THE FUCK IS THIS INTENTIONAL???
+			t.ShootThroughList[i].Activate(target,0,SPAC_PCross);
+			t.ShootThroughList[i].Activate(target,0,SPAC_Impact);
+		}
+		for ( int i=0; i<t.WaterHitList.Size(); i++ )
+		{
+			let b = Actor.Spawn("InvisibleSplasher",t.WaterHitList[i].hitpos);
+			b.A_CheckTerrain();
+		}
+		for ( int i=5; i<t.Results.Distance; i+=10 )
+		{
+			if ( !Random[Boolet](0,bubblechance) ) continue;
+			let b = Actor.Spawn(smoky?"SWWMSmallSmoke":"SWWMBubble",level.Vec3Offset(pos,dir*i));
+			b.Scale *= FRandom[Boolet](.4,.6);
+		}
+		t.Destroy();
+	}
+
+	override ETraceStatus TraceCallback()
+	{
+		// liquid splashes
+		if ( Results.CrossedWater )
+		{
+			let hl = new("WaterHit");
+			hl.sect = Results.CrossedWater;
+			hl.hitpos = Results.CrossedWaterPos;
+			WaterHitList.Push(hl);
+		}
+		else if ( Results.Crossed3DWater )
+		{
+			let hl = new("WaterHit");
+			hl.sect = Results.Crossed3DWater;
+			hl.hitpos = Results.Crossed3DWaterPos;
+			WaterHitList.Push(hl);
+		}
+		if ( Results.HitType == TRACE_HitActor )
+		{
+			if ( Results.HitActor == ignoreme ) return TRACE_Skip;
+			if ( Results.HitActor.bSHOOTABLE ) return TRACE_Stop;
+			return TRACE_Skip;
+		}
+		else if ( (Results.HitType == TRACE_HitWall) && (Results.Tier == TIER_Middle) )
+		{
+			if ( !Results.HitLine.sidedef[1] || (Results.HitLine.Flags&(Line.ML_BlockHitscan|Line.ML_BlockEverything)) )
+				return TRACE_Stop;
+			ShootThroughList.Push(Results.HitLine);
+			return TRACE_Skip;
+		}
+		return TRACE_Stop;
+	}
+}
+
+// finds the first pickup-able item
+Class SWWMItemTracer : LineTracer
+{
+	override ETraceStatus TraceCallback()
+	{
+		if ( Results.HitType == TRACE_HitActor )
+		{
+			if ( (Results.HitActor is 'Inventory') && Results.HitActor.bSPECIAL ) return TRACE_Stop;
+			return TRACE_Skip;
+		}
+		else if ( (Results.HitType == TRACE_HitWall) && (Results.Tier == TIER_Middle) )
+		{
+			if ( !Results.HitLine.sidedef[1] || (Results.HitLine.Flags&(Line.ML_BlockUse|Line.ML_BlockEverything)) )
+				return TRACE_Stop;
+			return TRACE_Skip;
+		}
+		return TRACE_Stop;
+	}
+}
+
+// Blob shadows
+Class SWWMShadow : Actor
+{
+	Sector oldfloor;
+
+	static void Track( Actor other )
+	{
+		// prevent infinite recursion
+		if ( other is 'SWWMShadow' ) return;
+		// no shadows for things with zero radius
+		if ( other.radius <= 0. ) return;
+		let s = SWWMShadow(Spawn("SWWMShadow",other.pos));
+		s.target = other;
+		s.Update(true);
+	}
+	private void Update( bool nointerpolate = false )
+	{
+		// update scale / alpha
+		if ( ((target is 'Inventory') && Inventory(target).Owner) || target.bKILLED || target.bINVISIBLE || (target.sprite == target.GetSpriteIndex('TNT1')) || (target.sprite == target.GetSpriteIndex('ACLO')) || (target.CurSector.GetTexture(0) == skyflatnum) )
+			alpha = 0.;
+		else
+		{
+			alpha = 1.-min(1.,.006*abs(target.pos.z-pos.z));
+			alpha *= target.alpha;
+			double relz = target.pos.z-pos.z;
+			if ( target.bFLOATBOB ) relz += target.GetBobOffset();
+			double bscale = (target.radius/16.)*(1.-min(1.,.003*relz));
+			A_SetScale(bscale);
+		}
+		// update position
+		double curz = target.CurSector.NextLowestFloorAt(target.pos.x,target.pos.y,target.pos.z);
+		if ( (target.pos.xy == pos.xy) && (pos.z == curz) ) return;
+		SetOrigin((target.pos.x,target.pos.y,curz),true);
+		if ( nointerpolate )
+			prev = pos;
+		else if ( oldfloor != target.CurSector )
+			prev.z = pos.z;	// prevent interpolation of steep height changes
+		// update slope alignment
+		if ( !oldfloor || (oldfloor != target.CurSector) )
+			SWWMUtility.SetToSlope(self,0);
+		oldfloor = target.CurSector;
+	}
+	override void Tick()
+	{
+		if ( !target )
+		{
+			Destroy();
+			return;
+		}
+		Update();
+	}
+	default
+	{
+		RenderStyle "Shaded";
+		StencilColor "000000";
+		DistanceCheck SWWMMODPREFIX.."_shadowdist";
+		Radius .1;
+		Height 0.;
+		+NOBLOCKMAP;
+		+NOINTERACTION;
+		+DONTSPLASH;
+		+NOTELEPORT;
+		FloatBobPhase 0;
+	}
+	States
+	{
+	Spawn:
+		XZW1 A -1;
+		Stop;
+	}
+}
+
+// Terrain FX (cheap)
+Class SWWMBaseSplash : Actor
+{
+	default
+	{
+		Radius .1;
+		Height 0.;
+		+NOBLOCKMAP;
+		+NOINTERACTION;
+		+DONTSPLASH;
+		+NOTELEPORT;
+		FloatBobPhase 0;
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 1;
+		Stop;
+	}
+}
+Class SWWMWaterSplash : SWWMBaseSplash
+{
+	override void PostBeginPlay()
+	{
+		double ang, pt, str;
+		Vector3 dir;
+		for ( int i=0; i<60; i++ )
+		{
+			ang = FRandom[ExploS](0,360);
+			pt = FRandom[ExploS](-90,-60);
+			dir = (cos(ang)*cos(pt),sin(ang)*cos(pt),-sin(pt));
+			str = FRandom[ExploS](2.,12.);
+			dir *= str*.25;
+			dir.z += 1.;
+			A_SpawnParticle(SWWMUtility.LerpColor("40 60 FF","A0 C0 FF",FRandom[ExploS](0.,1.)),0,60,str,0,0,0,0,dir.x,dir.y,dir.z,0,0,-.03*str,.5,-1,-.02*str);
+		}
+	}
+}
+Class SWWMWaterSplash2 : SWWMBaseSplash
+{
+	override void PostBeginPlay()
+	{
+		double ang, pt, str;
+		Vector3 dir;
+		for ( int i=0; i<15; i++ )
+		{
+			ang = FRandom[ExploS](0,360);
+			pt = FRandom[ExploS](-90,-30);
+			dir = (cos(ang)*cos(pt),sin(ang)*cos(pt),-sin(pt));
+			str = FRandom[ExploS](1.,6.);
+			dir *= str*.25;
+			dir.z += .35;
+			A_SpawnParticle(SWWMUtility.LerpColor("40 60 FF","A0 C0 FF",FRandom[ExploS](0.,1.)),0,50,str,0,0,0,0,dir.x,dir.y,dir.z,0,0,-.03*str,.5,-1,-.02*str);
+		}
+	}
+}
+Class SWWMBloodSplash : SWWMBaseSplash
+{
+	override void PostBeginPlay()
+	{
+		double ang, pt, str;
+		Vector3 dir;
+		for ( int i=0; i<60; i++ )
+		{
+			ang = FRandom[ExploS](0,360);
+			pt = FRandom[ExploS](-90,-60);
+			dir = (cos(ang)*cos(pt),sin(ang)*cos(pt),-sin(pt));
+			str = FRandom[ExploS](2.,12.);
+			dir *= str*.25;
+			dir.z += 1.;
+			A_SpawnParticle(SWWMUtility.LerpColor("80 00 00","60 00 00",FRandom[ExploS](0.,1.)),0,60,str+.5,0,0,0,0,dir.x,dir.y,dir.z,0,0,-.03*str,.5,-1,-.02*str);
+		}
+	}
+}
+Class SWWMBloodSplash2 : SWWMBaseSplash
+{
+	override void PostBeginPlay()
+	{
+		double ang, pt, str;
+		Vector3 dir;
+		for ( int i=0; i<15; i++ )
+		{
+			ang = FRandom[ExploS](0,360);
+			pt = FRandom[ExploS](-90,-30);
+			dir = (cos(ang)*cos(pt),sin(ang)*cos(pt),-sin(pt));
+			str = FRandom[ExploS](1.,6.);
+			dir *= str*.25;
+			dir.z += .35;
+			A_SpawnParticle(SWWMUtility.LerpColor("80 00 00","60 00 00",FRandom[ExploS](0.,1.)),0,50,str+.5,0,0,0,0,dir.x,dir.y,dir.z,0,0,-.03*str,.5,-1,-.02*str);
+		}
+	}
+}
+Class SWWMSludgeSplash : SWWMBaseSplash
+{
+	override void PostBeginPlay()
+	{
+		double ang, pt, str;
+		Vector3 dir;
+		for ( int i=0; i<60; i++ )
+		{
+			ang = FRandom[ExploS](0,360);
+			pt = FRandom[ExploS](-90,-60);
+			dir = (cos(ang)*cos(pt),sin(ang)*cos(pt),-sin(pt));
+			str = FRandom[ExploS](2.,8.);
+			dir *= str*.25;
+			dir.z += .4;
+			A_SpawnParticle(SWWMUtility.LerpColor("40 50 40","30 30 30",FRandom[ExploS](0.,1.)),0,40,str+2.,0,0,0,0,dir.x,dir.y,dir.z,0,0,-.03*str,.8,-1,-.02*str);
+		}
+	}
+}
+Class SWWMSludgeSplash2 : SWWMBaseSplash
+{
+	override void PostBeginPlay()
+	{
+		double ang, pt, str;
+		Vector3 dir;
+		for ( int i=0; i<15; i++ )
+		{
+			ang = FRandom[ExploS](0,360);
+			pt = FRandom[ExploS](-90,-30);
+			dir = (cos(ang)*cos(pt),sin(ang)*cos(pt),-sin(pt));
+			str = FRandom[ExploS](1.,4.);
+			dir *= str*.25;
+			dir.z += .15;
+			A_SpawnParticle(SWWMUtility.LerpColor("40 50 40","30 30 30",FRandom[ExploS](0.,1.)),0,30,str+2.,0,0,0,0,dir.x,dir.y,dir.z,0,0,-.03*str,.8,-1,-.02*str);
+		}
+	}
+}
+Class SWWMMudSplash : SWWMBaseSplash
+{
+	override void PostBeginPlay()
+	{
+		double ang, pt, str;
+		Vector3 dir;
+		for ( int i=0; i<60; i++ )
+		{
+			ang = FRandom[ExploS](0,360);
+			pt = FRandom[ExploS](-90,-60);
+			dir = (cos(ang)*cos(pt),sin(ang)*cos(pt),-sin(pt));
+			str = FRandom[ExploS](2.,8.);
+			dir *= str*.25;
+			dir.z += .4;
+			A_SpawnParticle(SWWMUtility.LerpColor("50 40 20","30 20 10",FRandom[ExploS](0.,1.)),0,40,str+2.,0,0,0,0,dir.x,dir.y,dir.z,0,0,-.03*str,.8,-1,-.02*str);
+		}
+	}
+}
+Class SWWMMudSplash2 : SWWMBaseSplash
+{
+	override void PostBeginPlay()
+	{
+		double ang, pt, str;
+		Vector3 dir;
+		for ( int i=0; i<15; i++ )
+		{
+			ang = FRandom[ExploS](0,360);
+			pt = FRandom[ExploS](-90,-30);
+			dir = (cos(ang)*cos(pt),sin(ang)*cos(pt),-sin(pt));
+			str = FRandom[ExploS](1.,4.);
+			dir *= str*.25;
+			dir.z += .15;
+			A_SpawnParticle(SWWMUtility.LerpColor("50 40 20","30 20 10",FRandom[ExploS](0.,1.)),0,30,str+2.,0,0,0,0,dir.x,dir.y,dir.z,0,0,-.03*str,.8,-1,-.02*str);
+		}
+	}
+}
+Class SWWMSlimeSplash : SWWMBaseSplash
+{
+	override void PostBeginPlay()
+	{
+		double ang, pt, str;
+		Vector3 dir;
+		for ( int i=0; i<60; i++ )
+		{
+			ang = FRandom[ExploS](0,360);
+			pt = FRandom[ExploS](-90,-60);
+			dir = (cos(ang)*cos(pt),sin(ang)*cos(pt),-sin(pt));
+			str = FRandom[ExploS](2.,8.);
+			dir *= str*.25;
+			dir.z += .4;
+			A_SpawnParticle(SWWMUtility.LerpColor("00 FF 00","00 80 00",FRandom[ExploS](0.,1.)),SPF_FULLBRIGHT,40,str+2.,0,0,0,0,dir.x,dir.y,dir.z,0,0,-.03*str,.8,-1,-.02*str);
+		}
+	}
+}
+Class SWWMSlimeSplash2 : SWWMBaseSplash
+{
+	override void PostBeginPlay()
+	{
+		double ang, pt, str;
+		Vector3 dir;
+		for ( int i=0; i<15; i++ )
+		{
+			ang = FRandom[ExploS](0,360);
+			pt = FRandom[ExploS](-90,-30);
+			dir = (cos(ang)*cos(pt),sin(ang)*cos(pt),-sin(pt));
+			str = FRandom[ExploS](1.,4.);
+			dir *= str*.25;
+			dir.z += .15;
+			A_SpawnParticle(SWWMUtility.LerpColor("00 FF 00","00 80 00",FRandom[ExploS](0.,1.)),SPF_FULLBRIGHT,30,str+2.,0,0,0,0,dir.x,dir.y,dir.z,0,0,-.03*str,.8,-1,-.02*str);
+		}
+	}
+}
+Class SWWMLavaSplash : SWWMBaseSplash
+{
+	override void PostBeginPlay()
+	{
+		double ang, pt, str;
+		Vector3 dir;
+		for ( int i=0; i<60; i++ )
+		{
+			ang = FRandom[ExploS](0,360);
+			pt = FRandom[ExploS](-90,-60);
+			dir = (cos(ang)*cos(pt),sin(ang)*cos(pt),-sin(pt));
+			str = FRandom[ExploS](2.,12.);
+			dir *= str*.35;
+			dir.z += .6;
+			A_SpawnParticle(SWWMUtility.LerpColor("FF C0 40","FF 40 20",FRandom[ExploS](0.,1.)),SPF_FULLBRIGHT,40,str+1.,0,0,0,0,dir.x,dir.y,dir.z,0,0,-.03*str,.8,-1,-.02*str);
+		}
+		Spawn("SWWMSizzleSmoke",pos);
+	}
+}
+Class SWWMLavaSplash2 : SWWMBaseSplash
+{
+	override void PostBeginPlay()
+	{
+		double ang, pt, str;
+		Vector3 dir;
+		for ( int i=0; i<15; i++ )
+		{
+			ang = FRandom[ExploS](0,360);
+			pt = FRandom[ExploS](-90,-30);
+			dir = (cos(ang)*cos(pt),sin(ang)*cos(pt),-sin(pt));
+			str = FRandom[ExploS](1.,6.);
+			dir *= str*.35;
+			dir.z += .2;
+			A_SpawnParticle(SWWMUtility.LerpColor("FF C0 40","FF 40 20",FRandom[ExploS](0.,1.)),SPF_FULLBRIGHT,30,str+1.,0,0,0,0,dir.x,dir.y,dir.z,0,0,-.03*str,.8,-1,-.02*str);
+		}
+		Spawn("SWWMSizzleSmoke2",pos);
+	}
+}
+Class SWWMSizzleSmoke : SWWMBaseSplash
+{
+	override void PostBeginPlay()
+	{
+		double ang, pt, str;
+		Vector3 dir;
+		for ( int i=0; i<2; i++ )
+		{
+			ang = FRandom[ExploS](0,360);
+			pt = FRandom[ExploS](-90,-30);
+			dir = (cos(ang)*cos(pt),sin(ang)*cos(pt),-sin(pt));
+			str = FRandom[ExploS](.5,2.);
+			let s = Spawn("SWWMSmallSmoke",pos);
+			s.vel = dir*str+(0,0,.4);
+			s.SetShade(Color(1,1,1)*Random[ExploS](192,224));
+			s.scale *= 40.;
+			s.A_SetRenderStyle(s.alpha*.4,STYLE_AddShaded);
+			s.special1 = Random[ExploS](0,2);
+		}
+	}
+}
+Class SWWMSizzleSmoke2 : SWWMBaseSplash
+{
+	override void PostBeginPlay()
+	{
+		double ang, pt, str;
+		Vector3 dir;
+		ang = FRandom[ExploS](0,360);
+		pt = FRandom[ExploS](-90,-30);
+		dir = (cos(ang)*cos(pt),sin(ang)*cos(pt),-sin(pt));
+		str = FRandom[ExploS](.25,1.);
+		let s = Spawn("SWWMSmallSmoke",pos);
+		s.vel = dir*str+(0,0,.15);
+		s.SetShade(Color(1,1,1)*Random[ExploS](192,224));
+		s.scale *= 20.;
+		s.A_SetRenderStyle(s.alpha*.3,STYLE_AddShaded);
+		s.special1 = Random[ExploS](0,1);
+	}
+}

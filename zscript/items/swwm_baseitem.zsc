@@ -1,0 +1,235 @@
+// Inventory stuff
+Mixin Class SWWMAutoUseFix
+{
+	override bool HandlePickup( Inventory item )
+	{
+		if ( GetClass() == item.GetClass() )
+		{
+			if ( deathmatch && !bALWAYSPICKUP )
+			{
+				// don't allow picking up any more than just one copy in DM unless it can be auto-used
+				if ( Use(true) ) Amount--;
+				else return true;
+			}
+			else if ( Use(true) ) Amount--;
+		}
+		return Super.HandlePickup(item);
+	}
+	override bool TryPickup( in out Actor toucher )
+	{
+		if ( !deathmatch ) return Super.TryPickup(toucher);
+		// pretend to have a max amount of 0 so we can only be picked up if we can be used
+		int oldmax = MaxAmount;
+		MaxAmount = 0;
+		bool ret = Super.TryPickup(toucher);
+		MaxAmount = oldmax;
+		return ret;
+	}
+}
+
+Class CrossLineFinder : LineTracer
+{
+	Array<Line> clines;
+	Array<int> csides;
+
+	override ETraceStatus TraceCallback()
+	{
+		if ( (Results.HitType == TRACE_HitWall) && (Results.HitLine.activation&SPAC_Cross) )
+		{
+			clines.Push(Results.HitLine);
+			csides.Push(Results.Side);
+		}
+		return TRACE_Skip;
+	}
+}
+
+Mixin Class SWWMUseToPickup
+{
+	// allow pickup by use
+	override bool Used( Actor user )
+	{
+		// can't pick up
+		if ( !bSPECIAL ) return false;
+		Vector3 itempos = Vec3Offset(0,0,Height/2),
+			userpos = user.Vec2OffsetZ(0,0,user.player.viewz);
+		// test vertical range
+		Vector3 diff = level.Vec3Diff(user.Vec3Offset(0,0,user.Height/2),Vec3Offset(0,0,Height/2));
+		double rang = user.player?PlayerPawn(user.player.mo).UseRange:(user.Height/2);
+		if ( abs(diff.z) > rang ) return false;
+		Touch(user);
+		// we got picked up
+		if ( bDestroyed || Owner || !bSPECIAL )
+		{
+			Vector3 tracedir = level.Vec3Diff(userpos,itempos);
+			double dist = tracedir.length();
+			tracedir /= dist;
+			let cf = new("CrossLineFinder");
+			cf.Trace(userpos,level.PointInSector(userpos.xy),tracedir,dist,0);
+			// trigger all player cross lines found between user and item
+			for ( int i=0; i<cf.clines.Size(); i++ )
+				cf.clines[i].Activate(user,cf.csides[i],SPAC_Cross);
+			return true;
+		}
+		return false;
+	}
+}
+
+Mixin Class SWWMOverlapPickupSound
+{
+	// overlap sounds
+	override void PlayPickupSound( Actor toucher )
+	{
+		let hnd = SWWMHandler(EventHandler.Find("SWWMHandler"));
+		if ( hnd )
+		{
+			if ( hnd.lastpickuptic[toucher.PlayerNumber()] == gametic )
+				return;	// don't play if picked up on the same exact tic (overlapping items)
+			hnd.lastpickuptic[toucher.PlayerNumber()] = gametic;
+		}
+		double atten;
+		int flags = CHANF_OVERLAP|CHANF_MAYBE_LOCAL;
+		if ( bNoAttenPickupSound ) atten = ATTN_NONE;
+		else atten = ATTN_NORM;
+		if ( toucher && toucher.CheckLocalView() )
+			flags |= CHANF_NOPAUSE;
+		toucher.A_StartSound(PickupSound,CHAN_ITEM,flags,1.,atten);
+	}
+}
+
+Class SWWMRespawnTimer : Actor
+{
+	default
+	{
+		+NOGRAVITY;
+		+NOINTERACTION;
+		+DONTSPLASH;
+		+NOTELEPORT;
+		Radius .1;
+		Height 0.;
+		Args 0,3,2;
+	}
+	override void PostBeginPlay()
+	{
+		args[3] = Random[ExploS](0,30);
+		if ( !Inventory(tracer) || !Inventory(tracer).PickupFlash ) return;
+		// copy pickup flash color
+		let fog = GetDefaultByType(Inventory(tracer).PickupFlash);
+		for ( int i=0; i<3; i++ ) args[i] = fog.args[i+1];
+	}
+	override void Tick()
+	{
+		if ( !tracer || !tracer.InStateSequence(tracer.CurState,tracer.FindState("HideDoomish")) )
+		{
+			Destroy();
+			return;
+		}
+		special2 = tracer.tics;
+		if ( isFrozen() ) return;
+		double str = 1.-special2/double(special1);
+		int freq = int(clamp(30*(1.-str),3,30));
+		if ( (level.maptime+args[3])%freq ) return;
+		int numpt = int(Random[ExploS](0,10)*str);
+		for ( int i=0; i<numpt; i++ )
+		{
+			double ang = FRandom[ExploS](0,360);
+			double pt = FRandom[ExploS](-90,90);
+			A_SpawnParticle(Color(args[0]*85,args[1]*85,args[2]*85),SPF_FULLBRIGHT,Random[ExploS](30,60),FRandom[ExploS](1.,2.),0,0,0,16,FRandom[ExploS](-.8,.8),FRandom[ExploS](-.8,.8),FRandom[ExploS](-.8,.8),0,0,0,FRandom[ExploS](.45,.9)*str,-1,FRandom[ExploS](-.04,-.02)*str);
+		}
+	}
+	States
+	{
+	Spawn:
+		TNT1 A -1;
+		Stop;
+	}
+}
+
+Mixin Class SWWMPickupGlow
+{
+	override Inventory CreateTossable( int amt )
+	{
+		let ret = Super.CreateTossable(amt);
+		// reattach our glow if we became a pickup
+		if ( (ret == self) && (PickupFlash is 'SWWMPickupFlash') )
+		{
+			let p = Spawn(PickupFlash,Vec3Offset(0,0,16));
+			p.target = self;
+			p.SetStateLabel("Pickup");
+		}
+		return ret;
+	}
+}
+
+Mixin Class SWWMRespawn
+{
+	override void Hide()
+	{
+		bSPECIAL = false;
+		bNOGRAVITY = true;
+		bINVISIBLE = true;
+		SetState(FindState("HideDoomish"));
+		tics = 1050;
+		if ( (self is 'Ammo') || (self is 'MagAmmo') )
+			tics -= 350;
+		if ( self.bBIGPOWERUP )
+			tics += 1050;
+		if ( RespawnTics != 0 ) tics = RespawnTics;
+		if ( ShouldRespawn() )
+		{
+			Vector3 oldpos = pos;
+			A_RestoreSpecialPosition();
+			let t = Spawn("SWWMRespawnTimer",pos);
+			t.tracer = self;
+			t.special1 = tics;
+			t.A_SetSize(radius,height);
+			SetOrigin(oldpos,false);
+		}
+	}
+	override bool ShouldRespawn()
+	{
+		// always respawn in DM
+		if ( deathmatch && !bNEVERRESPAWN ) return true;
+		if ( bBigPowerup && !sv_respawnsuper ) return false;
+		if ( bNEVERRESPAWN ) return false;
+		return (sv_itemrespawn||bALWAYSRESPAWN);
+	}
+}
+
+Class SWWMItemOverlay : Actor
+{
+	SpriteID bsprite;
+
+	Default
+	{
+		RenderStyle "Add";
+		+NOGRAVITY;
+		+NOCLIP;
+		+DONTSPLASH;
+		+NOINTERACTION;
+		Radius .1;
+		Height 0;
+		+FLOATBOB;
+		FloatBobStrength 0.25;
+	}
+	override void Tick()
+	{
+		if ( !target )
+		{
+			Destroy();
+			return;
+		}
+		prev = target.prev;
+		vel = target.vel;
+		if ( (target.pos != pos) || (target.vel != (0,0,0)) ) SetOrigin(target.pos+vel,true);
+		if ( angle != target.angle ) A_SetAngle(target.angle,SPF_INTERPOLATE);
+		FloatBobPhase = target.FloatBobPhase;
+		if ( !bsprite ) bsprite = GetSpriteIndex('XZW1');
+		bInvisible = target.bInvisible||(target.sprite!=bsprite);
+	}
+	States
+	{
+	Spawn:
+		XZW0 A -1 Bright;	// XZW0 prevents shadows from spawning
+		Stop;
+	}
+}
