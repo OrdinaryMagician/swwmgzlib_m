@@ -217,7 +217,7 @@ Class SWWMWeapon : Weapon abstract
 		if ( mod == 'Melee' ) return StringTable.Localize("$O_MELEE");
 		return Super.GetObituary(victim,inflictor,mod,playerattack);
 	}
-	// draw ammo on hud above weapon box
+	// draw weapon status on hud
 	virtual ui void DrawWeapon( double TicFrac, double bx, double by, Vector2 hs, Vector2 ss )
 	{
 	}
@@ -331,6 +331,11 @@ Class SWWMWeapon : Weapon abstract
 	virtual clearscope bool ReportHUDAmmo()
 	{
 		return (!Ammo1||(Ammo1.Amount>0)||(Ammo2&&(Ammo2.Amount>0)));
+	}
+	// tells the SWWM HUD that this is the currently selected ammo for this weapon
+	virtual clearscope bool IsCurrentAmmo( Ammo kind )
+	{
+		return (kind == Ammo1) || (kind == Ammo2);
 	}
 	// tells the Embiggener that this weapon uses the specified ammo type
 	// even if it is not its primary one

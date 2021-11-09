@@ -11,6 +11,7 @@ enum EDoExplosionFlags
 	DE_HOWL = 64,		// 25% chance for hit enemies to howl
 	DE_COUNTENEMIES = 128,	// only count hits for hostiles
 	DE_COUNTSTEALTH = 256,	// only count hits for inactive monsters
+	DE_COUNTFHKILLS = 512	// only count kills for enemies that were at full health
 };
 
 Struct SWWMProjectionData
@@ -488,6 +489,17 @@ Class SWWMUtility
 		return true, ov0, ov1;
 	}
 
+	static clearscope bool IsValidLockNum( int l )
+	{
+		if ( (l < 1) || (l > 255) ) return true;
+		return SWWMCachedLockInfo.IsValidLock(l);
+	}
+
+	static clearscope Color GetLockColor( int l )
+	{
+		return SWWMCachedLockInfo.GetLockColor(l);
+	}
+
 	// Thanks to ZZYZX and Nash
 	static play void SetToSlopeSpecific( Actor a, double dang, SecPlane plane, bool flipnorm )
 	{
@@ -551,6 +563,37 @@ Class SWWMUtility
 			}
 		}
 		SetToSlopeSpecific(a,dang,plane,flipnorm);
+	}
+
+	// try to be as thorough as possible in checking if DEHACKED has altered this actor
+	static clearscope bool CheckDehackery( Class<Actor> cls )
+	{
+		let def = GetDefaultByType(cls);
+		for ( State s=def.SpawnState; s; s=s.NextState )
+		{
+			if ( s.bDEHACKED ) return true;
+			// keep checking until we hit a loop, just in case
+			if ( s.NextState && (s.DistanceTo(s.NextState) <= 0) ) break;
+		}
+		for ( State s=def.SeeState; s; s=s.NextState )
+		{
+			if ( s.bDEHACKED ) return true;
+			// keep checking until we hit a loop, just in case
+			if ( s.NextState && (s.DistanceTo(s.NextState) <= 0) ) break;
+		}
+		for ( State s=def.MissileState; s; s=s.NextState )
+		{
+			if ( s.bDEHACKED ) return true;
+			// keep checking until we hit a loop, just in case
+			if ( s.NextState && (s.DistanceTo(s.NextState) <= 0) ) break;
+		}
+		for ( State s=def.MeleeState; s; s=s.NextState )
+		{
+			if ( s.bDEHACKED ) return true;
+			// keep checking until we hit a loop, just in case
+			if ( s.NextState && (s.DistanceTo(s.NextState) <= 0) ) break;
+		}
+		return false;
 	}
 
 	// Apply full 3D knockback in a specific direction, useful for hitscan
@@ -635,9 +678,12 @@ Class SWWMUtility
 			if ( (!(flags&DE_COUNTENEMIES) || hostile) && (!(flags&DE_COUNTSTEALTH) || inactive) ) nhit++;
 			int dmg = int(Damage*damagescale);
 			if ( dmg <= 0 ) continue;	// no harm
+			int oldhp = a.Health;
+			int basehp = a.GetSpawnHealth();
 			int ndmg = a.DamageMobj(Source,Instigator,dmg,(DamageType=='')?Source.DamageType:DamageType,DMG_EXPLOSION,atan2(-dir.y,-dir.x));
 			if ( a && !(flags&DE_NOBLEED) ) a.TraceBleed((ndmg>0)?ndmg:dmg,Source);
 			if ( (flags&DE_HOWL) && a && (a.Health > 0) && a.bISMONSTER && !Random[DoBlast](0,3) ) a.Howl();
+			if ( (flags&DE_COUNTFHKILLS) && (oldhp < basehp) ) continue;	// was not at full health
 			if ( (!a || (a.Health <= 0)) && (!(flags&DE_COUNTENEMIES) || hostile) && (!(flags&DE_COUNTSTEALTH) || inactive) ) nkill++;
 		}
 		// traverse portals (needed since BlockThingsIterator can't properly cross sector portals in both vertical directions)
@@ -704,9 +750,12 @@ Class SWWMUtility
 				if ( (!(flags&DE_COUNTENEMIES) || hostile) && (!(flags&DE_COUNTSTEALTH) || inactive) ) nhit++;
 				int dmg = int(Damage*damagescale);
 				if ( dmg <= 0 ) continue;	// no harm
+				int oldhp = a.Health;
+				int basehp = a.GetSpawnHealth();
 				int ndmg = a.DamageMobj(Source,Instigator,dmg,(DamageType=='')?Source.DamageType:DamageType,DMG_EXPLOSION,atan2(-dir.y,-dir.x));
 				if ( a && !(flags&DE_NOBLEED) ) a.TraceBleed((ndmg>0)?ndmg:dmg,Source);
 				if ( (flags&DE_HOWL) && a && (a.Health > 0) && a.bISMONSTER && !Random[DoBlast](0,3) ) a.Howl();
+				if ( (flags&DE_COUNTFHKILLS) && (oldhp < basehp) ) continue;	// was not at full health
 				if ( (!a || (a.Health <= 0)) && (!(flags&DE_COUNTENEMIES) || hostile) && (!(flags&DE_COUNTSTEALTH) || inactive) ) nkill++;
 			}
 		}

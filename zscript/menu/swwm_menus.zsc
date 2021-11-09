@@ -457,15 +457,22 @@ Class SWWMMessageBox : MessageBoxMenu
 		double y = destHeight/2;
 		int c = mMessage.Count();
 		int theight = 0;
+		int l1 = c;
 		for ( int i=0; i<c; i++ )
 		{
-			int scl = ((i==c-1)||(mMessage.StringWidth(i)==0))?2:3;
+			if ( mMessage.StringWidth(i) != 0 ) continue;
+			l1 = i;
+			break;
+		}
+		for ( int i=0; i<c; i++ )
+		{
+			int scl = ((i==c-1)||(mMessage.StringWidth(i)==0))?2:(i>l1)?1:3;
 			theight += fontheight*scl;
 		}
 		y -= theight/2;
 		for ( int i=0; i<c; i++ )
 		{
-			double scl = ((i==c-1)||(mMessage.StringWidth(i)==0))?2.:3.;
+			double scl = ((i==c-1)||(mMessage.StringWidth(i)==0))?2.:(i>l1)?1.:3.;
 			Screen.DrawText(textfont,OptionMenuSettings.mFontColorValue,destWidth/2-mMessage.StringWidth(i)*(scl/2.),y,mMessage.StringAt(i),DTA_VirtualWidth,destWidth,DTA_VirtualHeight,destHeight,DTA_KeepRatio,true,DTA_ScaleX,scl,DTA_ScaleY,scl);
 			y += fontheight*scl;
 		}

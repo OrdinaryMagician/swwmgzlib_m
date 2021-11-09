@@ -12,6 +12,7 @@ Class SWWMHandler : EventHandler
 
 	// for checkreplacement
 	bool hasdrlamonsters;
+	Array<String> bludtypes;
 
 	override void OnRegister()
 	{
@@ -23,6 +24,22 @@ Class SWWMHandler : EventHandler
 			if ( AllActorClasses[i].GetClassName() != "RLMonster" ) continue;
 			hasdrlamonsters = true;
 			break;
+		}
+		// read bludtype files if they can be found
+		for ( int lmp = Wads.FindLump("BLUDTYPE"); lmp != -1; lmp = Wads.FindLump("BLUDTYPE",lmp+1) )
+		{
+			String dat = Wads.ReadLump(lmp);
+			Array<String> list;
+			// fucking Windows
+			dat.Replace("\r","");
+			list.Clear();
+			dat.Split(list,"\n");
+			for ( int i=0; i<list.Size(); i++ )
+			{
+				if ( (list[i].Length() == 0) || (list[i].Left(2) == "//") || (list[i].Left(1) == "") )
+					continue;
+				bludtypes.Push(list[i]);
+			}
 		}
 	}
 
@@ -45,6 +62,9 @@ Class SWWMHandler : EventHandler
 		// weapon underlays
 		if ( players[consoleplayer].ReadyWeapon is 'SWWMWeapon' )
 			SWWMWeapon(players[consoleplayer].ReadyWeapon).RenderUnderlay(e);
+		if ( !statusbar || !(statusbar is 'SWWMStatusBar') ) return;
+		SWWMStatusBar(statusbar).viewpos = e.viewpos;
+		SWWMStatusBar(statusbar).viewrot = (e.viewangle,e.viewpitch,e.viewroll);
 	}
 
 	// various shaders

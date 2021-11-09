@@ -8,12 +8,41 @@ Class SWWMAmmo : Ammo
 	String PickupTag;
 	Class<MagAmmo> MagAmmoType;
 	private int SAmmoFlags;
-	transient bool bSinglePrint;	// used for pickup messages of mag manager
+
+	private int EmbiggenMaxAmount1;
+	private int EmbiggenMaxAmount2;
+	private int EmbiggenMaxAmount3;
+	private int EmbiggenMaxAmount4;
+	private int EmbiggenMaxAmount5;
+	private int EmbiggenMaxAmount6;
+	private int EmbiggenMaxAmount7;
+	private int EmbiggenMaxAmount8;
 
 	Property PickupTag : PickupTag;
 	Property MagAmmoType : MagAmmoType;
+	Property EmbiggenMaxAmount1 : EmbiggenMaxAmount1;
+	Property EmbiggenMaxAmount2 : EmbiggenMaxAmount2;
+	Property EmbiggenMaxAmount3 : EmbiggenMaxAmount3;
+	Property EmbiggenMaxAmount4 : EmbiggenMaxAmount4;
+	Property EmbiggenMaxAmount5 : EmbiggenMaxAmount5;
+	Property EmbiggenMaxAmount6 : EmbiggenMaxAmount6;
+	Property EmbiggenMaxAmount7 : EmbiggenMaxAmount7;
+	Property EmbiggenMaxAmount8 : EmbiggenMaxAmount8;
 
 	FlagDef UsePickupMsg : SAmmoFlags, 0;	// use the set pickup message rather than generating from pickup tag
+
+	// get how much the max ammo should increase at a specific Embiggener count
+	int GetEmbiggenMaxAmount( int amt )
+	{
+		if ( (amt >= 7) && EmbiggenMaxAmount7 ) return EmbiggenMaxAmount7;
+		if ( (amt >= 6) && EmbiggenMaxAmount6 ) return EmbiggenMaxAmount6;
+		if ( (amt >= 5) && EmbiggenMaxAmount5 ) return EmbiggenMaxAmount5;
+		if ( (amt >= 4) && EmbiggenMaxAmount4 ) return EmbiggenMaxAmount4;
+		if ( (amt >= 3) && EmbiggenMaxAmount3 ) return EmbiggenMaxAmount3;
+		if ( (amt >= 2) && EmbiggenMaxAmount2 ) return EmbiggenMaxAmount2;
+		if ( (amt >= 1) && EmbiggenMaxAmount1 ) return EmbiggenMaxAmount1;
+		return default.MaxAmount;
+	}
 
 	override Class<Ammo> GetParentAmmo()
 	{
@@ -27,12 +56,11 @@ Class SWWMAmmo : Ammo
 	{
 		if ( bUsePickupMsg ) return Super.PickupMessage();
 		String tagstr = "$T_"..PickupTag;
-		if ( (Amount > 1) && !bSinglePrint )
+		if ( Amount > 1 )
 		{
 			tagstr = tagstr.."S";
 			return String.Format("%d %s",Amount,StringTable.Localize(tagstr));
 		}
-		bSinglePrint = false;
 		return StringTable.Localize(tagstr);
 	}
 
@@ -260,7 +288,6 @@ Class MagAmmo : Inventory abstract
 	int ClipSize;
 	int countdown;
 	String PickupTag;
-	transient bool bSinglePrint;	// used for pickup messages of mag manager
 
 	Property ParentAmmo : ParentAmmo;
 	Property ClipSize : ClipSize;
@@ -319,12 +346,11 @@ Class MagAmmo : Inventory abstract
 	override string PickupMessage()
 	{
 		String tagstr = "$T_"..PickupTag;
-		if ( (Amount > 1) && !bSinglePrint )
+		if ( Amount > 1 )
 		{
 			tagstr = tagstr.."S";
 			return String.Format("%d %s",Amount,StringTable.Localize(tagstr));
 		}
-		bSinglePrint = false;
 		return StringTable.Localize(tagstr);
 	}
 
@@ -373,20 +399,10 @@ Class MagAmmo : Inventory abstract
 					if ( Amount < ClipSize ) break;
 					// first of all, see if we can INCREASE
 					// parent ammo, rather than drop a mag
-					if ( pamo.Amount < pamo.MaxAmount )
-					{
-						pamo.Amount++;
-						given = true;
-						if ( Owner.CheckLocalView() )
-						{
-							SWWMAmmo(pamo).bSinglePrint = true;
-							pamo.PrintPickupMessage(true,pamo.PickupMessage());
-						}
-					}
+					if ( pamo.Amount < pamo.MaxAmount ) pamo.Amount++;
 					else DoDrop(ParentAmmo);
 					Amount -= ClipSize;
 				}
-				if ( given ) pamo.PlayPickupSound(Owner);
 			}
 			else
 			{
@@ -534,13 +550,9 @@ Class MagAmmo : Inventory abstract
 				pamo.Amount = 0;
 			}
 		}
-		// check if we can fill a mag (delayed)
+		// check if we can fill a mag
 		if ( (Amount < ClipSize) || (pamo.Amount >= pamo.MaxAmount) )
-		{
-			countdown = 35;
 			return;
-		}
-		if ( countdown-- > 0 ) return;
 		MagFill();
 	}
 
@@ -563,13 +575,7 @@ Class MagAmmo : Inventory abstract
 			pamo.Amount++;
 			Amount -= ClipSize;
 			given = true;
-			if ( Owner.CheckLocalView() )
-			{
-				SWWMAmmo(pamo).bSinglePrint = true;
-				pamo.PrintPickupMessage(true,pamo.PickupMessage());
-			}
 		}
-		if ( given ) pamo.PlayPickupSound(Owner);
 		return given;
 	}
 

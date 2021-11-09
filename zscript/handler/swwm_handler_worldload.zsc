@@ -6,12 +6,84 @@ extend Class SWWMHandler
 	// used to ease some portal-aware functions
 	Array<int> psectors;
 
+	// for minimap
+	Array<int> ffsectors;
+
+	private void SetupLockdefsCache( SWWMCachedLockInfo cli )
+	{
+		for ( int i=0; i<Wads.GetNumLumps(); i++ )
+		{
+			String lname = Wads.GetLumpName(i);
+			if ( !(lname ~== "LOCKDEFS") ) continue;
+			String data = Wads.ReadLump(i);
+			Array<String> lines;
+			lines.Clear();
+			data.Split(lines,"\n");
+			bool valid = false;
+			for ( int j=0; j<lines.Size(); j++ )
+			{
+				// strip leading whitespace
+				while ( (lines[j].Left(1) == " ") || (lines[j].Left(1) == "\t") )
+					lines[j] = lines[j].Mid(1);
+				if ( lines[j].Left(10) ~== "CLEARLOCKS" )
+				{
+					for ( int k=0; k<cli.ent.Size(); k++ )
+						cli.ent[k].Destroy();
+					cli.ent.Clear();
+				}
+				else if ( Lines[j].Left(5) ~== "LOCK " )
+				{
+					Array<String> spl;
+					spl.Clear();
+					lines[j].Split(spl," ",TOK_SKIPEMPTY);
+					// check game string (if any)
+					if ( spl.Size() > 2 )
+					{
+						if ( (spl[2] ~== "DOOM") && !(gameinfo.gametype&GAME_Doom) ) continue;
+						else if ( (spl[2] ~== "HERETIC") && !(gameinfo.gametype&GAME_Heretic) ) continue;
+						else if ( (spl[2] ~== "HEXEN") && !(gameinfo.gametype&GAME_Hexen) ) continue;
+						else if ( (spl[2] ~== "STRIFE") && !(gameinfo.gametype&GAME_Strife) ) continue;
+						else if ( (spl[2] ~== "CHEX") && !(gameinfo.gametype&GAME_Chex) ) continue;
+					}
+					// valid lock, prepare it
+					let li = new("LIEntry");
+					li.locknumber = spl[1].ToInt();
+					li.hascolor = false;
+					// see if there's a Mapcolor defined
+					int k = j+1;
+					for ( int k=j+2; k<lines.Size(); k++ )
+					{
+						// strip leading whitespace
+						while ( (lines[k].Left(1) == " ") || (lines[k].Left(1) == "\t") )
+							lines[k] = lines[k].Mid(1);
+						if ( lines[k].Left(5) ~== "LOCK " )
+							break;	// we reached the next lock
+						if ( !(lines[k].Left(9) ~== "MAPCOLOR ") )
+							continue;
+						// here it is
+						spl.Clear();
+						lines[k].Split(spl," ",TOK_SKIPEMPTY);
+						if ( spl.Size() < 4 ) break;
+						li.hascolor = true;
+						li.mapcolor = Color(spl[1].ToInt(),spl[2].ToInt(),spl[3].ToInt());
+					}
+					cli.ent.Push(li);
+				}
+			}
+		}
+	}
+
 	override void WorldLoaded( WorldEvent e )
 	{
 		if ( e.IsReopen ) return;
 		if ( level.levelname ~== "Modder Test Map" )
 			level.ReplaceTextures("-noflat-","kinstile",0);
-		// portal group counting
+		// setup cached lockdefs data
+		let cli = SWWMCachedLockInfo.GetInstance();
+		if ( cli.ent.Size() == 0 ) SetupLockdefsCache(cli);
+		// keep a list of sectors containing 3D floors, for use by the minimap
+		// also does the same for the portal group list
+		ffsectors.Clear();
 		psectors.Clear();
 		for ( int i=0; i<level.sectors.Size(); i++ )
 		{
@@ -19,6 +91,18 @@ extend Class SWWMHandler
 			if ( psectors.Size() <= s.portalgroup )
 				psectors.Resize(s.portalgroup+1);
 			psectors[s.portalgroup] = s.Index();
+			if ( !s.Get3DFloorCount() ) continue;
+			int realcount = 0;
+			for ( int j=0; j<s.Get3DFloorCount(); j++ )
+			{
+				F3DFloor rover = s.Get3DFloor(j);
+				if ( rover.flags&F3DFloor.FF_THISINSIDE ) continue;
+				if ( !(rover.flags&F3DFloor.FF_EXISTS) ) continue;
+				if ( rover.alpha == 0 ) continue;
+				realcount++;
+			}
+			if ( !realcount ) continue;
+			ffsectors.Push(s.Index());
 		}
 		// add teleporter sparks
 		for ( int i=0; i<level.lines.Size(); i++ )

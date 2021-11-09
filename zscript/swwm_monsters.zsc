@@ -1,48 +1,5 @@
 // enemies 'n stuff
 
-// Future planning, will be filled out with AI stuff and whatnot someday
-Class SWWMMonster : Actor abstract
-{
-	// integrated fun tags
-	virtual clearscope String GetFunTag( String defstr = "" )
-	{
-		return GetTag(defstr);
-	}
-
-	// the function that should be overriden in subclasses
-	virtual int HandleLocationalDamage( Actor inflictor, Actor source, int damage, Name mod, Vector3 HitLocation, int flags = 0, double angle = 0 )
-	{
-		return damage;
-	}
-
-	// locational damage support, akin to UE1, but hitlocation will be treated as a relative offset, to make things easier
-	// this one should be called directly by everything in this mod, when possible
-	int LocationalDamageMobj( Actor inflictor, Actor source, int damage, Name mod, Vector3 HitLocation, int flags = 0, double angle = 0 )
-	{
-		damage = HandleLocationalDamage(inflictor,source,damage,mod,HitLocation,flags,angle);
-		return Super.DamageMobj(inflictor,source,damage,mod,flags,angle);
-	}
-
-	// "estimated" locational damage for the vanilla DamageMobj
-	override int DamageMobj( Actor inflictor, Actor source, int damage, Name mod, int flags, double angle )
-	{
-		Vector3 guesspos = (0,0,Height/2.);
-		// use inflictor if available, as it may be a projectile or hitscan puff
-		// if damage comes from an item, use owner
-		// all of this could be done better (or implemented as an engine feature), but whatever
-		Actor whomst = inflictor?inflictor:source;
-		if ( whomst is 'Inventory' ) whomst = Inventory(whomst).Owner;
-		if ( whomst )
-		{
-			guesspos = level.Vec3Diff(pos,whomst.Vec3Offset(0,0,whomst.Height/2));
-			guesspos.x = clamp(guesspos.x,-radius,radius);
-			guesspos.y = clamp(guesspos.y,-radius,radius);
-			guesspos.z = clamp(guesspos.z,0,height);
-		}
-		return LocationalDamageMobj(inflictor,source,damage,mod,guesspos,flags,angle);
-	}
-}
-
 // Less mean-spirited Keen
 Class SWWMHangingKeen : Actor
 {

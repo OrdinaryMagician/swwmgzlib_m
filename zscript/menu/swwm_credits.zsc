@@ -37,6 +37,12 @@ Class SWWMCreditsEntry ui
 		return self;
 	}
 
+	override void OnDestroy()
+	{
+		Super.OnDestroy();
+		if ( btext ) btext.Destroy();
+	}
+
 	private int CalcWidth()
 	{
 		int len = fnt.StringWidth(title);

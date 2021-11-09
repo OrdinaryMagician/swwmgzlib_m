@@ -1,5 +1,98 @@
 // additional hud things
 
+// Press F to Pay Respects
+Class PayRespects : HUDMessageBase
+{
+	Vector2 basepos;
+	int lifespan, initialspan, starttic;
+	transient Font TewiFont;
+	double scale;
+	Vector2 hs, ss;
+	int seed, seed2;
+
+	static PayRespects PressF()
+	{
+		let f = new("PayRespects");
+		f.basepos = (FRandom[FInTheChat](0.,1.),FRandom[FInTheChat](1.02,1.05));
+		f.scale = FRandom[FInTheChat](.5,2.);
+		f.lifespan = f.initialspan = Random[FInTheChat](20,80);
+		f.starttic = level.maptime;
+		f.seed = Random[FInTheChat]();
+		f.seed2 = Random[FInTheChat]();
+		f.ScreenSizeChanged();
+		return f;
+	}
+
+	override bool Tick()
+	{
+		lifespan--;
+		return (lifespan<=0);
+	}
+
+	override void ScreenSizeChanged()
+	{
+		hs = StatusBar.GetHUDScale()*scale;
+		hs.y = hs.x;
+		ss = (Screen.GetWidth()/hs.x,Screen.GetHeight()/hs.y);
+	}
+
+	override void Draw( int bottom, int visibility )
+	{
+		Vector2 realpos = (basepos.x*ss.x,basepos.y*ss.y);
+		if ( !TewiFont ) TewiFont = Font.GetFont('TewiShaded');
+		Vector2 fo = (TewiFont.StringWidth("F")/2.,-TewiFont.GetHeight());
+		// F rise up
+		int initspd = (128-seed);
+		if ( (initspd >= 0) && (initspd < 32) ) initspd = 32;
+		if ( (initspd < 0) && (initspd > -32) ) initspd = -32;
+		int boostup = 32+(seed2/4);
+		double fractic = SWWMStatusBar(statusbar)?SWWMStatusBar(statusbar).fractic:0;
+		fo.x += (.15*initspd)*((initialspan-(lifespan-fractic))**.6);
+		fo.y += ((initialspan-(lifespan-fractic))**1.6)-boostup*sin((90./initialspan)*(level.maptime+fractic-starttic));
+		double alph = clamp((lifespan+fractic)/double(initialspan),0.,1.);
+		Screen.DrawText(TewiFont,Font.CR_GREEN,realpos.x-fo.x,realpos.y-fo.y,"F",DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+	}
+}
+
+// Screen flashes from DT
+Class GenericFlash : HUDMessageBase
+{
+	Color col;
+	int duration;
+	double alpha;
+	Actor cam;
+	transient CVar flashstr;
+
+	GenericFlash Setup( Actor camera, Color c, int d )
+	{
+		alpha = 1.0;
+		col = c;
+		duration = d;
+		cam = camera;
+		return self;
+	}
+	override bool Tick()
+	{
+		if ( duration > 0 ) alpha -= 1./duration;
+		return (alpha<=0)||(!cam);
+	}
+	override void Draw( int bottom, int visibility )
+	{
+		if ( automapactive || (visibility != BaseStatusBar.HUDMSGLayer_UnderHUD) ) return;
+		if ( cam && (players[consoleplayer].camera != cam) ) return;
+		if ( !flashstr ) flashstr = CVar.FindCVar(SWWMMODPREFIX.."_flashstrength");
+		Screen.Dim(col,(col.a/255.)*alpha*flashstr.GetFloat(),0,0,Screen.GetWidth(),Screen.GetHeight());
+	}
+}
+
+Class QueuedFlash
+{
+	Color c;
+	int duration;
+	int tic;
+	Actor cam;
+}
+
 // weapon tooltips
 Class SWWMWeaponTooltip : HUDMessageBase
 {

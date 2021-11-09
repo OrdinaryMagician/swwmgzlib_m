@@ -115,3 +115,53 @@ Class SWWMDamageAccumulator : Thinker
 		return 0;
 	}
 }
+
+// cache data for manual lockdefs parsing nonsense
+Class LIEntry
+{
+	int locknumber;
+	bool hascolor;
+	Color mapcolor;
+}
+
+Class SWWMCachedLockInfo : Thinker
+{
+	Array<LIEntry> ent;
+
+	static clearscope bool IsValidLock( int l )
+	{
+		let ti = ThinkerIterator.Create("SWWMCachedLockInfo",STAT_STATIC);
+		SWWMCachedLockInfo cli = SWWMCachedLockInfo(ti.Next());
+		if ( !cli ) return false;
+		for ( int i=0; i<cli.ent.Size(); i++ )
+		{
+			if ( cli.ent[i].locknumber == l )
+				return true;
+		}
+		return false;
+	}
+
+	static clearscope Color GetLockColor( int l )
+	{
+		let ti = ThinkerIterator.Create("SWWMCachedLockInfo",STAT_STATIC);
+		SWWMCachedLockInfo cli = SWWMCachedLockInfo(ti.Next());
+		if ( !cli ) return 0;
+		for ( int i=0; i<cli.ent.Size(); i++ )
+		{
+			if ( (cli.ent[i].locknumber == l) && cli.ent[i].hascolor )
+				return cli.ent[i].mapcolor;
+		}
+		return 0;
+	}
+
+	static SWWMCachedLockInfo GetInstance()
+	{
+		let ti = ThinkerIterator.Create("SWWMCachedLockInfo",STAT_STATIC);
+		SWWMCachedLockInfo cli = SWWMCachedLockInfo(ti.Next());
+		if ( cli ) return cli;
+		cli = new("SWWMCachedLockInfo");
+		cli.ChangeStatNum(STAT_STATIC);
+		return cli;
+	}
+}
+

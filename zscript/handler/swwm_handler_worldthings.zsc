@@ -110,7 +110,7 @@ extend Class SWWMHandler
 		if ( !G_SkillPropertyInt(SKILLP_SpawnMulti) || multiplayer || sv_alwaysspawnmulti )
 			return false;
 		// is it coop inventory? suppress it
-		if ( (e.Thing.spawnflags&(MTF_COOPERATIVE|MTF_DEATHMATCH)) && !(e.Thing.spawnflags&MTF_SINGLE) && (e.Thing is 'Inventory') )
+		if ( (e.Thing.spawnflags&(MTF_COOPERATIVE|MTF_DEATHMATCH)) && !(e.Thing.spawnflags&MTF_SINGLE) && ((e.Thing is 'Inventory') || (e.Thing is 'MaceSpawner')) )
 		{
 			e.Thing.ClearCounters();
 			e.Thing.Destroy();

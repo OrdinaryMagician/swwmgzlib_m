@@ -1,0 +1,952 @@
+// Shared HUD code, to be extended in subclasses
+
+Class MsgLine
+{
+	String str;
+	int tic, type, rep;
+}
+
+Enum EMiniHUDFontColor
+{
+	MCR_WHITE,
+	MCR_RED,
+	MCR_GREEN,
+	MCR_BLUE,
+	MCR_BRASS,
+	MCR_SILVER,
+	MCR_GOLD,
+	MCR_MANA,
+	MCR_FLASH
+};
+
+Class SWWMStatusBar : BaseStatusBar abstract
+{
+	TextureID ChatTex[6], MiniBox, PauseTex, bgtex;
+	HUDFont mTewiFont, mMiniwiFont, mMPlusFont, mk6x8Font, mMiniHUDFont;
+	int mhudfontcol[9];
+
+	Array<MsgLine> MainQueue, PickupQueue;
+
+	// the event handler, holding all sorts of stuff
+	SWWMHandler hnd;
+
+	// shared stuff
+	Vector2 ss, hs;
+	int margin;
+	double FracTic;
+	double FrameTime;
+	int PrevFrame;
+	int chatopen;
+	bool camhidden;
+
+	// shared from renderunderlay, needed for proper interpolation of some things
+	Vector3 viewpos, viewrot;
+
+	Inventory lastsel;
+	Weapon lastwep;
+	String ntagstr;
+	int ntagtic, ntagcol;
+
+	String midstr;
+	int midtic, midtype;
+
+	SWWMWeaponTooltip ctip;
+
+	double mm_zoom;
+	// for interpolation
+	double minimapzoom, oldminimapzoom;
+	// minimap constants
+	const CLIPDIST = 800;		// clip distance for minimap view, with rotation accounted
+	const MAPVIEWDIST = 1132;	// maximum distance for something to be considered visible (rounded up CLIPDIST*sqrt(2))
+	const HALFMAPSIZE = 40;		// half the size of the minimap draw region (unscaled)
+
+	// minimap colors (thats a lot of 'em)
+	int mm_colorset;
+	Color mm_backcolor, mm_cdwallcolor, mm_efwallcolor, mm_fdwallcolor, mm_interlevelcolor, mm_intralevelcolor, mm_lockedcolor, mm_notseencolor, mm_portalcolor, mm_secretsectorcolor, mm_secretwallcolor, mm_specialwallcolor, mm_tswallcolor, mm_unexploredsecretcolor, mm_wallcolor, mm_yourcolor;
+
+	transient CVar pickduration, msgduration, chatduration, forcestats,
+		maxpickup, maxshownbig, maxshown, hudmargin, fuzz, mm_enable;
+
+	// if playing in Japanese, returns an alternate font of the same height
+	// Tewi -> MPlus
+	// Miniwi -> k6x8
+	Font LangFont( HUDFont req )
+	{
+		if ( language ~== "jp" )
+		{
+			if ( req == mMiniwiFont ) return mk6x8Font.mFont;
+			return mMPlusFont.mFont;
+		}
+		return req.mFont;
+	}
+
+	override void FlushNotify()
+	{
+		if ( level.maptime <= 1 )
+		{
+			// flush ALL messages
+			MainQueue.Clear();
+			PickupQueue.Clear();
+			return;
+		}
+		// flush non-chat messages
+		for ( int i=0; i<MainQueue.Size(); i++ )
+		{
+			if ( MainQueue[i].type >= PRINT_CHAT ) continue;
+			MainQueue.Delete(i);
+			i--;
+		}
+		// flush nametag
+		ntagstr = "";
+		ntagtic = 0;
+	}
+
+	override bool ProcessMidPrint( Font fnt, String msg, bool bold )
+	{
+		// hack lol
+		if ( msg.Left(15) ~== "swwmwpntooltip." )
+		{
+			String wname = msg.Mid(15);
+			Class<SWWMWeapon> w = wname;
+			if ( w )
+			{
+				let tt = new("SWWMWeaponTooltip").Init(w);
+				bool appended = false;
+				for ( SWWMWeaponTooltip t=ctip; t; t=t.next )
+				{
+					if ( t.next ) continue;
+					appended = true;
+					t.next = tt;
+					break;
+				}
+				if ( !appended )
+				{
+					ctip = tt;
+					AttachMessage(tt,-2910);
+				}
+			}
+			return true;
+		}
+		if ( !fnt || (fnt == smallfont) )
+		{
+			midstr = msg;
+			midtic = level.totaltime;
+			midtype = bold?2:0;
+			return true;
+		}
+		if ( (fnt == bigfont) || (fnt == originalbigfont) )
+		{
+			midstr = msg;
+			midtic = level.totaltime;
+			midtype = bold?3:1;
+			return true;
+		}
+		return false;
+	}
+
+	override bool ProcessNotify( EPrintLevel printlevel, String outline )
+	{
+		let m = new("MsgLine");
+		m.str = outline.Left(outline.Length()-1);	// strip newline
+		m.type = printlevel;
+		m.tic = level.totaltime;
+		m.rep = 1;
+		// ignore during intermission
+		if ( gamestate != GS_LEVEL ) return false;
+		if ( (printlevel < PRINT_LOW) || (printlevel > PRINT_TEAMCHAT) ) return true;	// we couldn't care less about these
+		if ( printlevel == PRINT_LOW )
+		{
+			// check if repeated
+			for ( int i=0; i<PickupQueue.Size(); i++ )
+			{
+				if ( PickupQueue[i].str != m.str ) continue;
+				// delete old one and add its repeats
+				m.rep += PickupQueue[i].rep;
+				PickupQueue.Delete(i);
+				break;
+			}
+			PickupQueue.Push(m);
+		}
+		else
+		{
+			// check if repeated
+			for ( int i=0; i<MainQueue.Size(); i++ )
+			{
+				if ( MainQueue[i].str != m.str ) continue;
+				// delete old one and add its repeats
+				m.rep += MainQueue[i].rep;
+				MainQueue.Delete(i);
+				break;
+			}
+			MainQueue.Push(m);
+		}
+		return true;
+	}
+
+	abstract void UpdateInterpolators();
+
+	override void Tick()
+	{
+		Super.Tick();
+		if ( !pickduration ) pickduration = CVar.FindCVar(SWWMMODPREFIX.."_pickduration");
+		if ( !msgduration ) msgduration = CVar.FindCVar(SWWMMODPREFIX.."_msgduration");
+		if ( !chatduration ) chatduration = CVar.FindCVar(SWWMMODPREFIX.."_chatduration");
+		// prune old messages
+		for ( int i=0; i<PickupQueue.Size(); i++ )
+		{
+			if ( level.totaltime < (PickupQueue[i].tic+GameTicRate*pickduration.GetInt()) ) continue;
+			PickupQueue.Delete(i);
+			i--;
+		}
+		for ( int i=0; i<MainQueue.Size(); i++ )
+		{
+			if ( (MainQueue[i].type <= PRINT_HIGH) && (level.totaltime < (MainQueue[i].tic+GameTicRate*msgduration.GetInt())) ) continue;
+			else if ( (MainQueue[i].type > PRINT_HIGH) && (level.totaltime < (MainQueue[i].tic+GameTicRate*chatduration.GetInt())) ) continue;
+			MainQueue.Delete(i);
+			i--;
+		}
+		// update interpolators
+		UpdateInterpolators();
+		if ( CPlayer.ReadyWeapon is 'SWWMWeapon' )
+			SWWMWeapon(CPlayer.ReadyWeapon).HudTick();
+		double desiredzoom = clamp(mm_zoom,.5,1.);
+		if ( (minimapzoom != mm_zoom) || (oldminimapzoom != mm_zoom) )
+		{
+			oldminimapzoom = minimapzoom;
+			double diff = .1*(desiredzoom-minimapzoom);
+			minimapzoom += diff;
+			if ( abs(minimapzoom-desiredzoom) <= .01 )
+				minimapzoom = desiredzoom;
+		}
+		// part of gross hackery to override nametag display
+		if ( CPlayer.inventorytics > 0 )
+		{
+			if ( CPlayer.mo.InvSel && (CPlayer.mo.InvSel != lastsel) && (displaynametags&1) && (CPlayer == players[consoleplayer]) )
+			{
+				ntagstr = CPlayer.mo.InvSel.GetTag();
+				ntagtic = level.totaltime;
+				ntagcol = nametagcolor;
+			}
+			lastsel = CPlayer.mo.InvSel;
+		}
+		if ( CPlayer.PendingWeapon && (CPlayer.PendingWeapon != WP_NOCHANGE) && (CPlayer.PendingWeapon != lastwep) )
+		{
+			if ( (displaynametags&2) && (CPlayer == players[consoleplayer]) )
+			{
+				ntagstr = CPlayer.PendingWeapon.GetTag();
+				ntagtic = level.totaltime;
+				ntagcol = nametagcolor;
+			}
+		}
+		lastwep = CPlayer.PendingWeapon;
+		// make sure vanilla nametags don't display
+		DetachMessageID(0x5745504e);	// WEPN
+		DetachMessageID(0x53494e56);	// SINV
+		// also try with different endianness, just in case
+		DetachMessageID(0x4e504557);	// WEPN
+		DetachMessageID(0x564e4953);	// SINV
+	}
+
+	override void Init()
+	{
+		Super.Init();
+		// scaling is set to 640 pixels wide minimum
+		// and height set so it fits up to ultrawide (2.370:1 ~ 2.4:1)
+		// ultrawide is honestly an abomination,
+		// and these numbers should be proof enough of it
+		// none of the commercially available "21:9" screens even have
+		// that actual ratio in the first place, what the fuck man
+		// they dangle anywhere between 12:4, 43:18 and 64:27
+		// fuck ultrawide, seriously
+		// get a 16:10 screen instead, it's the best aspect ratio
+		SetSize(0,640,266);
+		ChatTex[0] = TexMan.CheckForTexture("graphics/HUD/ChatBoxTop.png",TexMan.Type_Any);
+		ChatTex[1] = TexMan.CheckForTexture("graphics/HUD/ChatBoxLine.png",TexMan.Type_Any);
+		ChatTex[2] = TexMan.CheckForTexture("graphics/HUD/ChatBoxBottom.png",TexMan.Type_Any);
+		ChatTex[3] = TexMan.CheckForTexture("graphics/HUD/ChatBoxTop_Smol.png",TexMan.Type_Any);
+		ChatTex[4] = TexMan.CheckForTexture("graphics/HUD/ChatBoxLine_Smol.png",TexMan.Type_Any);
+		ChatTex[5] = TexMan.CheckForTexture("graphics/HUD/ChatBoxBottom_Smol.png",TexMan.Type_Any);
+		MiniBox = TexMan.CheckForTexture("graphics/HUD/MinimapBox.png",TexMan.Type_Any);
+		PauseTex = TexMan.CheckForTexture("graphics/"..SWWMMODPREFIX.."pause.png",TexMan.Type_Any);
+		bgtex = TexMan.CheckForTexture("graphics/tempbg.png",TexMan.Type_Any);
+		mm_zoom = minimapzoom = oldminimapzoom = 1.;
+		mTewiFont = HUDFont.Create("TewiShaded");
+		mMiniwiFont = HUDFont.Create("MiniwiShaded");
+		mMPlusFont = HUDFont.Create("MPlusShaded");
+		mk6x8Font = HUDFont.Create("k6x8Shaded");
+		mMiniHudFont = HUDFont.Create("MiniHUD");
+		mhudfontcol[MCR_WHITE] = Font.FindFontColor("MiniWhite");
+		mhudfontcol[MCR_RED] = Font.FindFontColor("MiniRed");
+		mhudfontcol[MCR_GREEN] = Font.FindFontColor("MiniGreen");
+		mhudfontcol[MCR_BLUE] = Font.FindFontColor("MiniBlue");
+		mhudfontcol[MCR_BRASS] = Font.FindFontColor("MiniBrass");
+		mhudfontcol[MCR_SILVER] = Font.FindFontColor("MiniSilver");
+		mhudfontcol[MCR_GOLD] = Font.FindFontColor("MiniGold");
+		mhudfontcol[MCR_MANA] = Font.FindFontColor("MiniMana");
+		mhudfontcol[MCR_FLASH] = Font.FindFontColor("MiniFlash");
+		GetMinimapColors();
+		hnd = SWWMHandler(EventHandler.Find("SWWMHandler"));
+		PrevFrame = MSTime();
+	}
+
+	override void DrawMyPos()
+	{
+		String str = String.Format("(%d,%d,%d)",CPlayer.mo.pos.X,CPlayer.mo.pos.Y,CPlayer.mo.pos.Z);
+		let fnt = LangFont(mMiniwiFont);
+		Screen.DrawText(fnt,Font.CR_GREEN,(ss.x-fnt.StringWidth(str))/2,4,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+	}
+
+	override void DrawAutomapHUD( double ticFrac )
+	{
+		// do nothing, DrawTopStuff handles this
+	}
+
+	// minimap helper code
+	abstract void GetMinimapColors();	// this MUST be defined in each mod
+
+	private bool ShouldDisplaySpecial( int special )
+	{
+		// thanks graf/randi/whoever
+		switch ( special )
+		{
+		// the following have (max_args < 0)
+		// but we can't know this from zscript, so they're hardcoded here
+		case Polyobj_StartLine:
+		case Polyobj_ExplicitLine:
+		case Transfer_WallLight:
+		case Sector_Attach3dMidtex:
+		case ExtraFloor_LightOnly:
+		case Sector_CopyScroller:
+		case Scroll_Texture_Left:
+		case Scroll_Texture_Right:
+		case Scroll_Texture_Up:
+		case Scroll_Texture_Down:
+		case Plane_Copy:
+		case Line_SetIdentification:
+		case Line_SetPortal:
+		case Sector_Set3DFloor:
+		case Sector_SetContents:
+		case Plane_Align:
+		case Static_Init:
+		case Transfer_Heights:
+		case Transfer_FloorLight:
+		case Transfer_CeilingLight:
+		case Scroll_Texture_Model:
+		case Scroll_Texture_Offsets:
+		case PointPush_SetForce:
+			return false;
+		}
+		return true;
+	}
+	private bool CheckSectorAction( Sector s, out int special, bool useonly )
+	{
+		for ( Actor act=s.SecActTarget; act; act=act.tracer )
+		{
+			if ( (act.Health&(SectorAction.SECSPAC_Use|SectorAction.SECSPAC_UseWall) || !useonly)
+				&& act.special && !act.bFRIENDLY )
+			{
+				special = act.special;
+				return true;
+			}
+		}
+		return false;
+	}
+	private bool RealLineSpecial( Line l, out int special )
+	{
+		if ( special && l.activation&SPAC_PlayerActivate )
+			return true;
+		if ( CheckSectorAction(l.frontsector,special,!l.backsector) )
+			return true;
+		return (l.backsector && CheckSectorAction(l.backsector,special,false));
+	}
+	private bool ShowTriggerLine( Line l )
+	{
+		if ( am_showtriggerlines == 0 ) return false;
+		int special = l.special;
+		if ( !RealLineSpecial(l,special) ) return false;
+		if ( !ShouldDisplaySpecial(special) ) return false;
+		if ( special && (am_showtriggerlines >= 2) ) return true;
+		if ( !special || (special == Door_Open)
+			|| (special == Door_Close)
+			|| (special == Door_CloseWaitOpen)
+			|| (special == Door_Raise)
+			|| (special == Door_Animated)
+			|| (special == Generic_Door) )
+			return false;
+		return true;
+	}
+	private bool CmpFloorPlanes( Line l )
+	{
+		return (l.frontsector.floorplane.Normal == l.backsector.floorplane.Normal)
+			&& (l.frontsector.floorplane.D == l.backsector.floorplane.D);
+	}
+	private bool CmpCeilingPlanes( Line l )
+	{
+		return (l.frontsector.ceilingplane.Normal == l.backsector.ceilingplane.Normal)
+			&& (l.frontsector.ceilingplane.D == l.backsector.ceilingplane.D);
+	}
+
+	private int CheckSecret( Line l )
+	{
+		if ( !mm_secretsectorcolor || !mm_unexploredsecretcolor )
+			return 0;
+		if ( l.frontsector && (l.frontsector.flags&Sector.SECF_WASSECRET) )
+		{
+			if ( am_map_secrets && !(l.frontsector.flags&Sector.SECF_SECRET) ) return 1;
+			if ( (am_map_secrets == 2) && !(l.flags&Line.ML_SECRET) ) return 2;
+		}
+		if ( l.backsector && (l.backsector.flags&Sector.SECF_WASSECRET) )
+		{
+			if ( am_map_secrets && !(l.backsector.flags&Sector.SECF_SECRET) ) return 1;
+			if ( (am_map_secrets == 2) && !(l.flags&Line.ML_SECRET) ) return 2;
+		}
+		return 0;
+	}
+	private bool CheckFFBoundary( Line l )
+	{
+		if ( !hnd || !hnd.ffsectors.Size() ) return false;
+		int frontidx = hnd.ffsectors.Find(l.frontsector.Index());
+		int backidx = hnd.ffsectors.Find(l.backsector.Index());
+		// no 3D floors, no boundary
+		if ( (frontidx == hnd.ffsectors.Size()) && (backidx == frontidx) )
+			return false;
+		return true;
+	}
+
+	private void DrawMapLines( Vector2 basepos )
+	{
+		double zoomlevel = oldminimapzoom*(1.-FracTic)+minimapzoom*FracTic;
+		double zoomview = MAPVIEWDIST*zoomlevel, zoomclip = CLIPDIST*zoomlevel;
+		Vector2 cpos = players[consoleplayer].Camera.prev.xy*(1.-FracTic)+players[consoleplayer].Camera.pos.xy*FracTic;
+		Sector csec = players[consoleplayer].Camera.CurSector;
+		for ( int i=0; i<level.lines.Size(); i++ )
+		{
+			Line l = level.lines[i];
+			if ( !(l.flags&Line.ML_MAPPED) && !level.allmap && !am_cheat ) continue;
+			if ( (l.flags&Line.ML_DONTDRAW) && ((am_cheat == 0) || (am_cheat >= 4)) )
+				continue;
+			Vector2 rv1 = l.v1.p-cpos, rv2 = l.v2.p-cpos;
+			bool isportal = false;
+			Sector linesector;
+			if ( l.sidedef[0].flags&Side.WALLF_POLYOBJ ) linesector = level.PointInSector(l.v1.p+l.delta/2.);
+			else linesector = l.frontsector;
+			isportal = (linesector.portalgroup!=csec.portalgroup);
+			if ( isportal )
+			{
+				// portal displacement
+				Vector2 pofs = SWWMUtility.PortalDisplacement(csec,linesector);
+				rv1 -= pofs;
+				rv2 -= pofs;
+			}
+			if ( min(min(abs(rv1.x),abs(rv2.x)),min(abs(rv1.y),abs(rv2.y))) > zoomview )
+				continue;
+			// flip Y
+			rv1.y *= -1;
+			rv2.y *= -1;
+			// rotate by view
+			rv1 = Actor.RotateVector(rv1,ViewRot.x-90);
+			rv2 = Actor.RotateVector(rv2,ViewRot.x-90);
+			// clip to frame
+			bool visible;
+			[visible, rv1, rv2] = SWWMUtility.LiangBarsky((-1,-1)*zoomclip,(1,1)*zoomclip,rv1,rv2);
+			if ( !visible ) continue;
+			// scale to minimap frame
+			rv1 *= (HALFMAPSIZE/zoomclip)*hs.x;
+			rv2 *= (HALFMAPSIZE/zoomclip)*hs.x;
+			// offset to minimap center
+			rv1 += basepos;
+			rv2 += basepos;
+			// get the line color
+			Color col = mm_wallcolor;
+			if ( (l.flags&Line.ML_MAPPED) || am_cheat )
+			{
+				int secwit = CheckSecret(l);
+				int lock = SWWMUtility.GetLineLock(l);
+				if ( secwit == 1 ) col = mm_secretsectorcolor;
+				else if ( secwit == 2 ) col = mm_unexploredsecretcolor;
+				else if ( l.flags&Line.ML_SECRET )
+				{
+					if ( am_cheat && l.backsector && mm_secretwallcolor )
+						col = mm_secretwallcolor;
+					else col = mm_wallcolor;
+				}
+				else if ( mm_interlevelcolor
+					&& ((l.special == Exit_Normal)
+					|| (l.special == Exit_Secret)
+					|| (l.special == Teleport_NewMap)
+					|| (l.special == Teleport_EndGame)) )
+					col = mm_interlevelcolor;
+				else if ( mm_intralevelcolor &&
+					(l.activation&SPAC_PlayerActivate)
+					&& ((l.special == Teleport)
+					|| (l.special == Teleport_NoFog)
+					|| (l.special == Teleport_ZombieChanger)
+					|| (l.special == Teleport_Line)) )
+					col = mm_intralevelcolor;
+				else if ( (lock > 0) && (lock < 256) )
+				{
+					let lcol = SWWMUtility.GetLockColor(lock);
+					if ( lcol ) col = lcol;
+					else col = mm_lockedcolor;
+				}
+				else if ( mm_specialwallcolor && ShowTriggerLine(l) )
+					col = mm_specialwallcolor;
+				else if ( l.frontsector && l.backsector )
+				{
+					if ( !CmpFloorPlanes(l) ) col = mm_fdwallcolor;
+					else if ( !CmpCeilingPlanes(l) ) col = mm_cdwallcolor;
+					else if ( CheckFFBoundary(l) ) col = mm_efwallcolor;
+					else
+					{
+						if ( (am_cheat == 0) || (am_cheat >= 4) )
+							continue;
+						col = mm_tswallcolor;
+					}
+				}
+			}
+			else col = mm_notseencolor;
+			// draw the line
+			if ( isportal )
+			{
+				col = Color((col.r+mm_portalcolor.r*7)/8,(col.g+mm_portalcolor.g*7)/8,(col.b+mm_portalcolor.b*7)/8);
+				Screen.DrawThickLine(int(rv1.x),int(rv1.y),int(rv2.x),int(rv2.y),max(1.,hs.x*.25),col);
+			}
+			else Screen.DrawThickLine(int(rv1.x),int(rv1.y),int(rv2.x),int(rv2.y),max(1.,hs.x*.5),col);
+		}
+	}
+
+	private void DrawTopStuff()
+	{
+		// obviously, don't draw the minimap if the automap is open
+		int xx, yy = margin;
+		if ( !mm_enable ) mm_enable = CVar.FindCVar(SWWMMODPREFIX.."_mm_enable");
+		if ( !automapactive && mm_enable.GetBool() )
+		{
+			xx = int(ss.x-(margin+(HALFMAPSIZE+2)*2));
+			Screen.DrawTexture(MiniBox,false,xx,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+			Vector2 basemappos = (xx+HALFMAPSIZE+2,yy+HALFMAPSIZE+2);
+			Screen.Dim(mm_backcolor,1.,int((basemappos.x-HALFMAPSIZE)*hs.x),int((basemappos.y-HALFMAPSIZE)*hs.x),int(HALFMAPSIZE*2*hs.x),int(HALFMAPSIZE*2*hs.x));
+			// draw dat stuff
+			DrawMapLines(basemappos*hs.x);
+			// draw the player arrow
+			Vector2 tv[3];
+			tv[0] = (0,-4);
+			tv[1] = (-3,2);
+			tv[2] = (3,2);
+			for ( int i=0; i<3; i++ ) tv[i] = (tv[i]+basemappos)*hs.x;
+			for ( int i=0; i<3; i++ ) Screen.DrawThickLine(int(tv[i].x),int(tv[i].y),int(tv[(i+1)%3].x),int(tv[(i+1)%3].y),max(1.,hs.x*.5),mm_yourcolor);
+			yy += ((HALFMAPSIZE+2)*2)+3;
+		}
+		// draw stats and timer when automap is open
+		if ( !forcestats ) forcestats = CVar.FindCVar(SWWMMODPREFIX.."_forcestats");
+		int fstats = forcestats.GetInt();
+		if ( automapactive || (fstats > 0) )
+		{
+			xx = int(ss.x-(margin+2));
+			String str;
+			Font fnt;
+			if ( automapactive || (fstats > 1) )
+			{
+				int label = am_showmaplabel;
+				String ln = level.levelname;
+				int iof = ln.IndexOf(" - by: ");
+				if ( iof != -1 ) ln.Truncate(iof);
+				if ( !label || ((level.clusterflags&level.CLUSTER_HUB) && (label == 2)) ) str = ln;
+				else str = String.Format("%s - %s",level.mapname.MakeUpper(),ln);
+				fnt = LangFont(mTewiFont);
+				Screen.DrawText(fnt,Font.CR_FIRE,xx-fnt.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				yy += fnt.GetHeight();
+			}
+			fnt = LangFont(mMiniwiFont);
+			if ( (level.total_monsters > 0) && am_showmonsters && !deathmatch )
+			{
+				str = String.Format("\cxK \c-%d\cu/\c-%d",level.killed_monsters,level.total_monsters);
+				Screen.DrawText(fnt,(level.killed_monsters>=level.total_monsters)?Font.CR_GOLD:Font.CR_WHITE,xx-fnt.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				yy += fnt.GetHeight();
+			}
+			if ( (level.total_items > 0) && am_showitems && !deathmatch )
+			{
+				str = String.Format("\cxI \c-%d\cu/\c-%d",level.found_items,level.total_items);
+				Screen.DrawText(fnt,(level.found_items>=level.total_items)?Font.CR_GOLD:Font.CR_WHITE,xx-fnt.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				yy += fnt.GetHeight();
+			}
+			if ( (level.total_secrets > 0) && am_showsecrets && !deathmatch )
+			{
+				str = String.Format("\cxS \c-%d\cu/\c-%d",level.found_secrets,level.total_secrets);
+				Screen.DrawText(fnt,(level.found_secrets>=level.total_secrets)?Font.CR_GOLD:Font.CR_WHITE,xx-fnt.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				yy += fnt.GetHeight();
+			}
+			int sec;
+			if ( am_showtime )
+			{
+				sec = Thinker.Tics2Seconds(level.maptime);
+				str = String.Format("\cxT \c-%02d\cu:\c-%02d\cu:\c-%02d",sec/3600,(sec%3600)/60,sec%60);
+				Screen.DrawText(fnt,((level.sucktime>0)&&(sec>=(level.sucktime*3600)))?Font.CR_RED:(sec<=level.partime)?Font.CR_GOLD:Font.CR_WHITE,xx-fnt.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				yy += fnt.GetHeight();
+			}
+			// don't show total time if it's equal to map time
+			if ( am_showtotaltime && (level.totaltime != level.maptime) )
+			{
+				sec = Thinker.Tics2Seconds(level.totaltime);
+				str = String.Format("\cxTT \c-%02d\cu:\c-%02d\cu:\c-%02d",sec/3600,(sec%3600)/60,sec%60);
+				Screen.DrawText(fnt,Font.CR_WHITE,xx-fnt.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				yy += fnt.GetHeight();
+			}
+			yy += 3;
+		}
+		// draw key icons
+		Vector2 keypos = (ss.x-(margin+2),yy);
+		int colc = 0;
+		double colh = 0;
+		int n = Key.GetKeyTypeCount();
+		Array<Key> klist;
+		for ( int i=0; i<n; i++ )
+		{
+			let k = Key(CPlayer.mo.FindInventory(Key.GetKeyType(i)));
+			if ( !k || !k.Icon.IsValid() ) continue;
+			klist.Push(k);
+		}
+		int maxcolc = (gameinfo.gametype&GAME_DOOMCHEX)?6:4;
+		for ( int i=0; i<klist.Size(); i++ )
+		{
+			let k = klist[i];
+			// Hexen key icons aren't meant for this kind of HUD
+			TextureID icon = (k is 'HexenKey')?k.SpawnState.GetSpriteTexture(0):k.Icon;
+			Vector2 siz = TexMan.GetScaledSize(icon);
+			Screen.DrawTexture(icon,false,keypos.x-siz.x,keypos.y,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_TopLeft,true);
+			keypos.x -= siz.x+2;
+			colh = max(colh,siz.y);
+			if ( ++colc == maxcolc )
+			{
+				keypos.x = ss.x-(margin+2);
+				keypos.y += colh+2;
+				colh = colc = 0;
+			}
+		}
+	}
+
+	protected bool DrawInvIcon( Inventory i, double xx, double yy, double scale, double alpha = 1., bool forceamt = false, bool selected = false )
+	{
+		if ( !i || !i.Icon.IsValid() ) return false;
+		Vector2 scl = TexMan.GetScaledSize(i.Icon);
+		double mscl = min(1.,scale/max(scl.x,scl.y));
+		double dw = (ss.x/mscl), dh = (ss.y/mscl);
+		double dx = (xx+(scale-scl.x*mscl)/2)/mscl, dy = (yy+(scale-scl.y*mscl)/2)/mscl;
+		if ( i is 'Powerup' )
+		{
+			Screen.DrawTexture(i.Icon,false,dx,dy,DTA_VirtualWidthF,dw,DTA_VirtualHeightF,dh,DTA_KeepRatio,true,DTA_Alpha,Powerup(i).IsBlinking()?alpha*.5:alpha,DTA_TopOffset,0,DTA_LeftOffset,0);
+			String nstr = String.Format("%ds",Powerup(i).EffectTics/GameTicRate);
+			int len = mMiniHUDFont.mFont.StringWidth(nstr);
+			Screen.DrawText(mMiniHUDFont.mFont,mhudfontcol[MCR_BRASS],(xx+scale)-len,(yy+scale)-7,nstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,Powerup(i).IsBlinking()?alpha*.5:alpha);
+			return true;
+		}
+		Screen.DrawTexture(i.Icon,false,dx,dy,DTA_VirtualWidthF,dw,DTA_VirtualHeightF,dh,DTA_KeepRatio,true,DTA_Alpha,alpha,DTA_TopOffset,0,DTA_LeftOffset,0,DTA_ColorOverlay,(i.Amount<=0)?Color(128,0,0,0):Color(0,0,0,0));
+		if ( (i.Amount > 1) || forceamt )
+		{
+			String nstr;
+			if ( (i.Amount > 99999) && !forceamt ) nstr = "99999";
+			else nstr = String.Format("%d",i.Amount);
+			int len = mMiniHUDFont.mFont.StringWidth(nstr);
+			Screen.DrawText(mMiniHUDFont.mFont,mhudfontcol[(i.Amount<=0)?MCR_RED:selected?MCR_BRASS:MCR_WHITE],(xx+scale)-len,(yy+scale)-6,nstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
+		}
+		return true;
+	}
+
+	protected bool DrawInventoryBar( TextureID box, double scale )
+	{
+		if ( isInventoryBarVisible() ) return false;
+		Array<Inventory> bar;
+		bar.Clear();
+		for ( Inventory i=CPlayer.mo.FirstInv(); i; i=i.NextInv() ) bar.Push(i);
+		int ps = bar.Find(CPlayer.mo.InvSel);
+		Inventory prev[2], next[2];
+		if ( bar.Size() > 1 )
+		{
+			if ( ps+1 >= bar.Size() ) next[0] = bar[0];
+			else next[0] = bar[ps+1];
+			if ( ps-1 < 0 ) prev[0] = bar[bar.Size()-1];
+			else prev[0] = bar[ps-1];
+		}
+		if ( bar.Size() > 2 )
+		{
+			if ( ps+2 >= bar.Size() ) next[1] = bar[(ps+2)-bar.Size()];
+			else next[1] = bar[ps+2];
+			if ( ps-2 < 0 ) prev[1] = bar[bar.Size()+(ps-2)];
+			else prev[1] = bar[ps-2];
+		}
+		double xx = (ss.x-(scale+4))/2;
+		double yy = (ss.y+(scale*2+4))/2;
+		Screen.DrawTexture(box,false,xx,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+		DrawInvIcon(CPlayer.mo.InvSel,xx+2,yy+2,scale);
+		DrawInvIcon(prev[0],xx-(scale+2),yy+2,scale,2./3.);
+		DrawInvIcon(prev[1],xx-(scale*2+6),yy+2,scale,1./3.);
+		DrawInvIcon(next[0],xx+(scale+6),yy+2,scale,2./3.);
+		DrawInvIcon(next[1],xx+(scale*2+10),yy+2,scale,1./3.);
+		return true;
+	}
+
+	abstract void DrawInventory();
+
+	abstract void DrawWeapons();
+
+	abstract void DrawStatus();
+
+	private void DrawPickups()
+	{
+		Font fnt = LangFont(mTewiFont);
+		int h = fnt.GetHeight();
+		// draw nametags below them
+		double yy;
+		double nalph = 0.;
+		double tagtime = (ntagtic+70)-(level.totaltime+fractic);
+		if ( (ntagstr != "") && (tagtime > 0) )
+		{
+			nalph = clamp(tagtime/20.,0.,1.);
+			yy = ss.y-(margin+50);
+			int len = fnt.StringWidth(ntagstr);
+			double xx = (ss.x-len)/2.;
+			Screen.Dim("Black",.8*nalph,int((xx-6)*hs.x),int(yy*hs.y),int((len+12)*hs.x),int((h+4)*hs.y));
+			Screen.DrawText(fnt,ntagcol,int(xx),yy+2,ntagstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,nalph);
+		}
+		if ( PickupQueue.Size() <= 0 ) return;
+		// reverse order since they're drawn bottom to top
+		if ( !maxpickup ) maxpickup = CVar.FindCVar(SWWMMODPREFIX.."_maxpickup");
+		if ( !pickduration ) pickduration = CVar.FindCVar(SWWMMODPREFIX.."_pickduration");
+		int mend = max(0,PickupQueue.Size()-maxpickup.GetInt());
+		yy = ss.y-(margin+50);
+		// shift up if nametag is present
+		if ( nalph > 0. ) yy -= int((fnt.GetHeight()+6)*clamp(nalph*2.,0.,1.));
+		for ( int i=PickupQueue.Size()-1; i>=mend; i-- )
+		{
+			String cstr = PickupQueue[i].str;
+			if ( PickupQueue[i].rep > 1 ) cstr.AppendFormat(" (x%d)",PickupQueue[i].rep);
+			double curtime = (PickupQueue[i].tic+GameTicRate*pickduration.GetInt())-(level.totaltime+fractic);
+			double alph = clamp(curtime/20.,0.,1.);
+			BrokenLines l = fnt.BreakLines(cstr,int(ss.x*.75));
+			int maxlen = 0;
+			for ( int j=0; j<l.Count(); j++ )
+			{
+				int len = fnt.StringWidth(l.StringAt(j));
+				if ( len > maxlen ) maxlen = len;
+			}
+			double xx = (ss.x-maxlen)/2.;
+			Screen.Dim("Black",.8*alph,int((xx-6)*hs.x),int((yy-h*(l.Count()-1))*hs.y),int((maxlen+12)*hs.x),int((h*l.Count()+4)*hs.y));
+			for ( int j=l.Count()-1; j>=0; j-- )
+			{
+				int len = fnt.StringWidth(l.StringAt(j));
+				xx = int((ss.x-len)/2.);
+				Screen.DrawText(fnt,msg0color,xx,yy+2,l.StringAt(j),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+				yy -= h;
+			}
+			l.Destroy();
+			yy -= 6;
+		}
+	}
+
+	private void DrawMessages( double boxalph = 1. )
+	{
+		Font fnt = LangFont(mTewiFont);
+		double xx, yy;
+		if ( midstr != "" )
+		{
+			double ssp = (midtype&1)?.5:1.;
+			double hsp = (midtype&1)?2.:1.;
+			int col = (midtype&2)?msgmidcolor2:msgmidcolor;
+			double curtime = (midtic+int(GameTicRate*con_midtime))-(level.totaltime+fractic);
+			double alph = clamp(curtime/20.,0.,1.);
+			BrokenLines l = fnt.BreakLines(midstr,int(ss.x*ssp));
+			int h = fnt.GetHeight();
+			int maxlen = 0;
+			for ( int i=0; i<l.Count(); i++ ) maxlen = max(maxlen,fnt.StringWidth(l.StringAt(i)));
+			xx = int((ss.x*ssp-maxlen)/2.);
+			yy = ss.y*ssp*.375;
+			yy -= (h*l.Count()+4)/2;	// center
+			Screen.Dim("Black",.8*alph,int((xx-6)*hs.x*hsp),int(yy*hs.y*hsp),int((maxlen+12)*hs.x*hsp),int((h*l.Count()+4)*hs.y*hsp));
+			for ( int i=0; i<l.Count(); i++ )
+			{
+				int len = fnt.StringWidth(l.StringAt(i));
+				xx = int((ss.x*ssp-len)/2.);
+				Screen.DrawText(fnt,col,int(xx),yy+2,l.StringAt(i),DTA_VirtualWidthF,ss.x*ssp,DTA_VirtualHeightF,ss.y*ssp,DTA_KeepRatio,true,DTA_Alpha,alph);
+				yy += h;
+			}
+			l.Destroy();
+		}
+		if ( MainQueue.Size() <= 0 ) return;
+		if ( !msgduration ) msgduration = CVar.FindCVar(SWWMMODPREFIX.."_msgduration");
+		if ( !chatduration ) chatduration = CVar.FindCVar(SWWMMODPREFIX.."_chatduration");
+		if ( !maxshownbig ) maxshownbig = CVar.FindCVar(SWWMMODPREFIX.."_maxshownbig");
+		if ( !maxshown ) maxshown = CVar.FindCVar(SWWMMODPREFIX.."_maxshown");
+		int mstart = max(0,MainQueue.Size()-((chatopen>=gametic)?maxshownbig.GetInt():maxshown.GetInt()));
+		xx = margin;
+		yy = margin;
+		bool smol = (ss.x<640);
+		Screen.DrawTexture(ChatTex[smol?3:0],false,xx,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,boxalph);
+		yy++;
+		for ( int i=mstart; i<MainQueue.Size(); i++ )
+		{
+			int col = msg2color;
+			if ( MainQueue[i].type == PRINT_MEDIUM ) col = msg1color;
+			else if ( MainQueue[i].type == PRINT_CHAT ) col = msg3color;
+			else if ( MainQueue[i].type == PRINT_TEAMCHAT ) col = msg4color;
+			String cstr = MainQueue[i].str;
+			if ( MainQueue[i].rep > 1 ) cstr.AppendFormat(" (x%d)",MainQueue[i].rep);
+			double curtime = MainQueue[i].tic-(level.totaltime+fractic);
+			if ( MainQueue[i].type < PRINT_CHAT ) curtime += GameTicRate*msgduration.GetInt();
+			else curtime += GameTicRate*chatduration.GetInt();
+			double alph = clamp(curtime/20.,0.,1.);
+			BrokenLines l = fnt.BreakLines(cstr,smol?211:361);
+			for ( int j=0; j<l.Count(); j++ )
+			{
+				Screen.DrawTexture(ChatTex[smol?4:1],false,xx,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,boxalph);
+				Screen.DrawText(fnt,col,xx+4,yy,l.StringAt(j),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+				yy += 13;
+			}
+			l.Destroy();
+		}
+		Screen.DrawTexture(ChatTex[smol?5:2],false,xx,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,boxalph);
+	}
+
+	override bool DrawChat( String txt )
+	{
+		// ignore during intermission
+		if ( gamestate != GS_LEVEL ) return false;
+		chatopen = gametic+1;	// have to add 1 because DrawChat is called after everything else
+		double xx = 2;
+		double yy = ss.y-14;
+		Screen.Dim("Black",.8,0,Screen.GetHeight()-int(15*hs.y),Screen.GetWidth(),int(15*hs.y));
+		String fullstr = String.Format("\cd(>\c- %s_",txt);
+		Font fnt = LangFont(mTewiFont);
+		// cut out to fit
+		int w = fnt.StringWidth(fullstr);
+		if ( w > ss.x-4 )
+		{
+			// draw trailing dots
+			Screen.DrawText(fnt,Font.CR_WHITE,xx,yy,"...",DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+			// shift back
+			xx -= w-(ss.x-4);
+			// draw trimmed
+			Screen.DrawText(fnt,Font.CR_WHITE,xx,yy,fullstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_ClipLeft,int(26*hs.x));
+		}
+		else Screen.DrawText(fnt,Font.CR_WHITE,xx,yy,fullstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+		return true;
+	}
+
+	override bool DrawPaused( int player )
+	{
+		if ( !fuzz ) fuzz = CVar.FindCVar(SWWMMODPREFIX.."_fuzz");
+		if ( fuzz.GetBool() )
+		{
+			Vector2 tsize = TexMan.GetScaledSize(bgtex);
+			double zoom = max(ceil(Screen.GetWidth()/tsize.x),ceil(Screen.GetHeight()/tsize.y));
+			Vector2 vsize = (Screen.GetWidth(),Screen.GetHeight())/zoom;
+			Screen.DrawTexture(bgtex,false,(vsize.x-tsize.x)/2,(vsize.y-tsize.y)/2,DTA_VirtualWidthF,vsize.x,DTA_VirtualHeightF,vsize.y,DTA_KeepRatio,true,DTA_ColorOverlay,Color(192,0,0,0),DTA_Alpha,.5);
+		}
+		else Screen.Dim("Black",.5,0,0,Screen.GetWidth(),Screen.GetHeight());
+		Screen.DrawTexture(PauseTex,false,Screen.GetWidth()/2,Screen.GetHeight()/2,DTA_CleanNoMove,true,DTA_CenterOffset,true);
+		if ( multiplayer && (player != -1) )
+		{
+			Font fnt = LangFont(mTewiFont);
+			String str = String.Format(StringTable.Localize("$TXT_BY"),players[player].GetUserName());
+			Vector2 sz = TexMan.GetScaledSize(PauseTex);
+			double xx = (Screen.GetWidth()-fnt.StringWidth(str)*CleanXFac)/2;
+			double yy = (Screen.GetHeight()+(sz.y+4)*CleanYFac)/2;
+			Screen.DrawText(fnt,Font.CR_WHITE,xx,yy,str,DTA_CleanNoMove,true);
+		}
+		// TODO draw something extra to make the screen more visually interesting, maybe
+		return true;
+	}
+
+	override void DrawPowerups()
+	{
+		// don't do anything, this is handled by DrawInventory
+	}
+
+	private double DrawDeath()
+	{
+		// death prompt
+		let demo = SWWMPlayer(CPlayer.mo);
+		if ( !demo || (CPlayer.Health > 0) || (CPlayer != players[consoleplayer]) ) return 1.;
+		String str;
+		double alph;
+		int len;
+		double xx, yy;
+		Font fnt;
+		double deadtimer = demo.deadtimer+fractic;
+		if ( demo.player.viewheight > 6 ) return 1.;
+		double dimalph = min(deadtimer/80.,1.);
+		Screen.Dim("Black",dimalph,0,0,Screen.GetWidth(),Screen.GetHeight());
+		alph = clamp((deadtimer-60)/60.,0.,1.);
+		str = StringTable.Localize("$SWWM_URDED");
+		fnt = LangFont(mTewiFont);
+		len = fnt.StringWidth(str);
+		xx = int((ss.x-len)/2.);
+		yy = (ss.y-fnt.GetHeight()*4)/2.;
+		Screen.DrawText(fnt,Font.CR_RED,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+		if ( multiplayer || level.AllowRespawn || sv_singleplayerrespawn || G_SkillPropertyInt(SKILLP_PlayerRespawn) )
+		{
+			if ( sv_norespawn ) return (1.-dimalph);
+			alph = clamp((deadtimer-90)/60.,0.,1.);
+			str = String.Format(StringTable.Localize("$SWWM_URDEDMP"));
+			fnt = LangFont(mTewiFont);
+			len = fnt.StringWidth(str);
+			xx = int((ss.x-len)/2.);
+			yy = ss.y/2.;
+			Screen.DrawText(fnt,Font.CR_WHITE,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+			return (1.-dimalph);
+		}
+		alph = clamp((deadtimer-140)/60.,0.,1.);
+		str = String.Format(StringTable.Localize("$SWWM_URDED2"));
+		fnt = LangFont(mTewiFont);
+		len = fnt.StringWidth(str);
+		xx = int((ss.x-len)/2.);
+		yy = ss.y/2.;
+		Screen.DrawText(fnt,Font.CR_WHITE,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+		alph = clamp((deadtimer-160)/60.,0.,1.);
+		str = String.Format(StringTable.Localize("$SWWM_URDED3"));
+		fnt = LangFont(mTewiFont);
+		len = fnt.StringWidth(str);
+		xx = int((ss.x-len)/2.);
+		yy = (ss.y+fnt.GetHeight()*2)/2.;
+		Screen.DrawText(fnt,Font.CR_WHITE,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+		return (1.-dimalph);
+	}
+
+	override void Draw( int state, double TicFrac )
+	{
+		Super.Draw(state,TicFrac);
+		int CurFrame = MSTime();
+		FrameTime = (CurFrame-PrevFrame)/1000.;
+		if ( (state != HUD_StatusBar) && (state != HUD_Fullscreen) )
+		{
+			PrevFrame = CurFrame;
+			return;
+		}
+		if ( !hnd ) hnd = SWWMHandler(EventHandler.Find("SWWMHandler"));
+		if ( !(players[consoleplayer].Camera is 'PlayerPawn') ) camhidden = true;
+		else camhidden = false;
+		BeginHUD();
+		hs = GetHUDScale();
+		hs.y = hs.x;
+		ss = (Screen.GetWidth()/hs.x,Screen.GetHeight()/hs.y);
+		if ( !hudmargin ) hudmargin = CVar.FindCVar(SWWMMODPREFIX.."_hudmargin");
+		margin = clamp(hudmargin.GetInt(),0,40);
+		FracTic = TicFrac;
+		if ( camhidden )
+		{
+			DrawPickups();
+			DrawDeath();
+			DrawMessages(0.);
+		}
+		else
+		{
+			DrawTopStuff();
+			DrawInventory();
+			DrawStatus();
+			DrawWeapons();
+			DrawPickups();
+			double malph = DrawDeath();
+			DrawMessages(malph);
+		}
+		PrevFrame = CurFrame;
+	}
+}

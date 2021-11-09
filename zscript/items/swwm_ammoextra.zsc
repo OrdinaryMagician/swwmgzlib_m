@@ -58,7 +58,8 @@ Class HammerspaceEmbiggener : Inventory
 				// The player did not have the ammoitem. Add it.
 				ammoitem = Ammo(Spawn(type));
 				ammoitem.Amount = amount;
-				if ( ammoitem.BackpackMaxAmount > 0 )
+				if ( ammoitem is 'SWWMAmmo' ) ammoitem.MaxAmount = SWWMAmmo(ammoitem).GetEmbiggenMaxAmount(self.Amount);
+				else if ( ammoitem.BackpackMaxAmount > 0 )
 				{
 					double factor = (ammoitem.BackpackMaxAmount-ammoitem.default.MaxAmount)/double(MaxAmount);
 					ammoitem.MaxAmount = int(ammoitem.default.MaxAmount+min(self.Amount,MaxAmount)*factor);
@@ -70,7 +71,8 @@ Class HammerspaceEmbiggener : Inventory
 			else
 			{
 				// The player had the ammoitem. Give some more.
-				if ( ammoitem.BackpackMaxAmount > 0 )
+				if ( ammoitem is 'SWWMAmmo' ) ammoitem.MaxAmount = SWWMAmmo(ammoitem).GetEmbiggenMaxAmount(self.Amount);
+				else if ( ammoitem.BackpackMaxAmount > 0 )
 				{
 					double factor = (ammoitem.BackpackMaxAmount-ammoitem.default.MaxAmount)/double(MaxAmount);
 					ammoitem.MaxAmount = int(ammoitem.default.MaxAmount+min(self.Amount,MaxAmount)*factor);
@@ -121,7 +123,8 @@ Class HammerspaceEmbiggener : Inventory
 			for ( Inventory i=Owner.Inv; i; i=i.Inv )
 			{
 				if ( !(i is 'Ammo') ) continue;
-				if ( Ammo(i).BackpackMaxAmount > 0 )
+				if ( i is 'SWWMAmmo' ) i.MaxAmount = SWWMAmmo(i).GetEmbiggenMaxAmount(Amount);
+				else if ( Ammo(i).BackpackMaxAmount > 0 )
 				{
 					double factor = (Ammo(i).BackpackMaxAmount-i.default.MaxAmount)/double(MaxAmount);
 					i.MaxAmount = int(i.default.MaxAmount+Amount*factor);
@@ -139,7 +142,8 @@ Class HammerspaceEmbiggener : Inventory
 		// new ammo suddenly added? upgrade it (this shouldn't happen unless fucky scripting has been involved)
 		if ( (item is 'Ammo') && !Owner.FindInventory(Ammo(item).GetParentAmmo()) )
 		{
-			if ( Ammo(item).BackpackMaxAmount > 0 )
+			if ( item is 'SWWMAmmo' ) item.MaxAmount = SWWMAmmo(item).GetEmbiggenMaxAmount(Amount);
+			else if ( Ammo(item).BackpackMaxAmount > 0 )
 			{
 				double factor = (Ammo(item).BackpackMaxAmount-item.default.MaxAmount)/double(MaxAmount);
 				item.MaxAmount = int(item.default.MaxAmount+Amount*factor);
@@ -163,12 +167,6 @@ Class HammerspaceEmbiggener : Inventory
 	// merges overlapping embiggeners into a bulk upgrade
 	void A_MergeEmbiggeners()
 	{
-		if ( SWWMMAXBACKPACK <= 0 )
-		{
-			ClearCounters();
-			Destroy();
-			return;
-		}
 		let bt = BlockThingsIterator.Create(self,16);
 		int tamount = Amount;
 		while ( bt.Next() )
@@ -191,17 +189,6 @@ Class HammerspaceEmbiggener : Inventory
 		SWWMUtility.TransferItemProp(self,n);
 		ClearCounters();
 		Destroy();
-	}
-
-	override bool CanPickup( Actor toucher )
-	{
-		if ( SWWMMAXBACKPACK <= 0 ) return false;
-		return Super.CanPickup(toucher);
-	}
-
-	override bool ShouldSpawn()
-	{
-		return (SWWMMAXBACKPACK > 0);
 	}
 
 	Default

@@ -4,7 +4,7 @@ Heliotrope
 	#130023  #C885FF
 Console:
 	#000000  #9664BF    0 127
-	#C885FF  #FFFFFF  128 256
+	#C885FF  #FFFFFF  128 255
 Flat:
 	#C885FF
 }
@@ -13,7 +13,7 @@ BlushPink
 	#220923  #F367F8
 Console:
 	#000000  #BB4FBF    0 127
-	#F367F8  #FFFFFF  128 256
+	#F367F8  #FFFFFF  128 255
 Flat:
 	#F367F8
 }
@@ -24,7 +24,63 @@ Blue
 	#101040  #3030FF
 Console:
 	#000000  #20207F    0 127
-	#4040FF  #DEDEFF  128 256
+	#4040FF  #DEDEFF  128 255
 Flat:
 	#9999FF
+}
+
+// general minihud font colors
+MiniWhite
+{
+	#000000  #FFFFFF
+}
+MiniRed
+{
+	#000000  #FF0000
+}
+MiniGreen
+{
+	#000000  #00FF00
+}
+MiniBlue
+{
+	#000000  #3030FF
+}
+// specialized minihud font colors
+MiniBrass
+{
+	#000000  #330800    0  50
+	#330800  #662200   51 101
+	#662200  #994D00  102 151
+	#994D00  #CC8800  152 203
+	#CC8800  #FFD500  204 255
+}
+MiniSilver
+{
+	#000000  #262933    0  50
+	#262933  #4D5366   51 101
+	#4D5366  #737C99  102 151
+	#737C99  #99A6CC  152 203
+	#99A6CC  #BFCFFF  204 255
+}
+MiniGold
+{
+	#000000  #332A00    0  50
+	#332A00  #806A00   51 101
+	#806A00  #CCAA00  102 151
+	#CCAA00  #E6C939  152 203
+	#E6C939  #FFEA80  204 255
+}
+MiniMana
+{
+	#000000  #002233    0  50
+	#002233  #002266   51 101
+	#002266  #000099  102 151
+	#000099  #4400CC  152 203
+	#4400CC  #AA00FF  204 255
+}
+MiniFlash
+{
+	#000000  #FFC040    0  50
+	#FFC040  #FFC040   51 255
 }

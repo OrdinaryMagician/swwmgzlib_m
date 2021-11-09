@@ -965,7 +965,6 @@ Class SWWMTeleportFog : Actor
 		Super.PostBeginPlay();
 		A_StartSound("misc/teleport",CHAN_VOICE);
 		Spawn("TeleLight",pos);
-		if ( swwm_simplefog ) SetStateLabel("Simple");
 	}
 	States
 	{
@@ -1001,9 +1000,6 @@ Class SWWMTeleportFog : Actor
 			A_FadeOut(.07);
 		}
 		Wait;
-	Simple:
-		SPEX ABCDEFGHIJKLMNOPQRSTUVWXYZ[\] 1 Bright;
-		Stop;
 	}
 }
 

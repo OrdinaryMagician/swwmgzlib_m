@@ -10,6 +10,8 @@ Class SWWMArmor : Armor abstract
 
 	FlagDef NoHitFlash : SArmorFlags, 0;	// doesn't flash when taking damage
 	FlagDef NoHitSound : SArmorFlags, 1;	// doesn't play a sound when taking damage
+	FlagDef NoDrain : SArmorFlags, 2;	// amount is not drained, will always reduce as long as amount is non-zero
+						// useful for powerup-given armors
 
 	Default
 	{
@@ -62,10 +64,10 @@ Class SWWMArmor : Armor abstract
 		saved = HandleDamage(damage,damageType,flags);
 		int healed = max(0,saved-damage);
 		saved = min(saved,damage);
-		if ( amount <= saved ) saved = amount;
+		if ( !bNODRAIN && (amount <= saved) ) saved = amount;
 		newdamage -= saved;
 		if ( healed > 0 ) Owner.GiveBody(healed);
-		amount -= saved;
+		if ( !bNODRAIN ) amount -= saved;
 		damage = newdamage;
 		if ( amount <= 0 )
 		{

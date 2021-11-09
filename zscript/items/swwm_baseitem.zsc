@@ -5,25 +5,15 @@ Mixin Class SWWMAutoUseFix
 	{
 		if ( GetClass() == item.GetClass() )
 		{
-			if ( deathmatch && !bALWAYSPICKUP )
+			if ( (MaxAmount == 0) && !bALWAYSPICKUP )
 			{
-				// don't allow picking up any more than just one copy in DM unless it can be auto-used
+				// don't allow picking up any more than just one copy if max amount is zero unless it can be auto-used
 				if ( Use(true) ) Amount--;
 				else return true;
 			}
 			else if ( Use(true) ) Amount--;
 		}
 		return Super.HandlePickup(item);
-	}
-	override bool TryPickup( in out Actor toucher )
-	{
-		if ( !deathmatch ) return Super.TryPickup(toucher);
-		// pretend to have a max amount of 0 so we can only be picked up if we can be used
-		int oldmax = MaxAmount;
-		MaxAmount = 0;
-		bool ret = Super.TryPickup(toucher);
-		MaxAmount = oldmax;
-		return ret;
 	}
 }
 

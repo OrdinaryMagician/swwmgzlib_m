@@ -1,6 +1,14 @@
 // TODO Shared player class code
 Class SWWMPlayer : PlayerPawn
 {
+	// for weapon bobbing stuff
+	Array<double> bumpvelz, bumppitch;
+	double oldangle, oldpitch;
+	double oldlagangle, oldlagpitch, oldlagready;
+	Vector3 oldlagvel;
+	double lagangle, lagpitch, lagready;
+	Vector3 lagvel;
+
 	enum EUnderType
 	{
 		UNDER_NONE,
@@ -11,10 +19,16 @@ Class SWWMPlayer : PlayerPawn
 
 	int lastunder;
 	Color undercol;
+	int deadtimer;
 
 	transient int bumptic;
 	transient double lastbump;
 	transient CVar bumpstr;
+
+	Actor oldencroached;
+	Vector3 oldencroachedpos;
+
+	transient SWWMItemTracer itrace;
 
 	void CheckUnderwaterAmb( bool restore = false )
 	{

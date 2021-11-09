@@ -15,6 +15,10 @@ Functions that must be extended:
   *noscope* : Don't disable scope overlay shaders.
 - **`private bool SWWMHandler.ModReplacement( ReplaceEvent e )`**<br/>
   Used for mod-specific replacements. Return false if nothing was replaced.
+- **`private ui void SWWMHandler.ModConsoleProcess( ConsoleEvent e )`**<br/>
+  Used for mod-specific console event processing.
+- **`private void SWWMHandler.ModNetworkProcess( ConsoleEvent e )`**<br/>
+  Used for mod-specific network event processing.
 - **`static play bool SWWMUtility.ValidProjectile( Actor a )`**<br/>
   Required by some shared code. Used to finetune projectile detection.<br/>
   This is mainly needed to handle false positives returned by `IsZeroDamage()`.
