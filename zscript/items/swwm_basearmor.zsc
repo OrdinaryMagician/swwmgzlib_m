@@ -36,7 +36,7 @@ Class SWWMArmor : Armor abstract
 			// find first item with an armor worse than us after it
 			for ( Inventory i=other.Inv; i; i=i.Inv )
 			{
-				if ( (i == self) || !(i.Inv is 'SWWMArmor') ) continue;
+				if ( (i == self) || (i is 'SWWMArmor') || !(i.Inv is 'SWWMArmor') ) continue;
 				if ( SWWMArmor(i.Inv).priority > priority ) continue;
 				found = i;
 				break;
