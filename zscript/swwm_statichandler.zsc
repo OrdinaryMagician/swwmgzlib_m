@@ -82,16 +82,6 @@ Class SWWMStaticHandler : StaticEventHandler
 
 	override void OnRegister()
 	{
-		// preload various fonts
-		Font.GetFont('k6x8Shaded');
-		Font.GetFont('MiniwiShaded');
-		Font.GetFont('MPlusShaded');
-		Font.GetFont('TewiShaded');
-		// used for "big text"
-		Font.GetFont('MPlusShadedOutline');
-		Font.GetFont('TewiShadedOutline');
-		// any mod-defined fonts
-		PreloadModFonts();
 		// check for brutal doom
 		for ( int i=0; i<AllActorClasses.size(); i++ )
 		{

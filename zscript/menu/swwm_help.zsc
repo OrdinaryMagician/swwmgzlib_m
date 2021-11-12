@@ -5,17 +5,9 @@ Class SWWMHelpMenu : GenericMenu
 	int curpage, prevpage, numpages;
 	int fadetic;
 	TextureID bgtex;
-	transient Font TewiFont, MPlusFont;
 	transient CVar fuzz;
 	bool isrclick;
 	int pagedir;
-
-	// returns MPlus if we're playing in Japanese, otherwise returns the requested font
-	Font LangFont( Font req )
-	{
-		if ( language ~== "jp" ) return MPlusFont;
-		return req;
-	}
 
 	override void Init( Menu parent )
 	{
@@ -118,17 +110,16 @@ Class SWWMHelpMenu : GenericMenu
 	// big bulk of code
 	private void DrawPage( int page, double xofs = 0., double alpha = 1. )
 	{
-		Font fnt = LangFont(TewiFont);
-		int h = fnt.GetHeight();
+		int h = smallfont.GetHeight();
 		String hdr = "", txt = "";
 		BrokenLines l;
 		int maxlen = 0, lh;
 		double y = 0;
 		hdr = StringTable.Localize("$"..SWWMMODPREFIX.."_HELP_PAGE"..(page+1));
 		txt = StringTable.Localize("$"..SWWMMODPREFIX.."_HELP_PAGE"..(page+1).."_TXT");
-		l = fnt.BreakLines(txt,600);
+		l = smallfont.BreakLines(txt,600);
 		lh = l.Count()*h;
-		Screen.DrawText(fnt,SWWMCREDITSCOL0,xofs+(Screen.GetWidth()-fnt.StringWidth(hdr)*CleanXFac_1)/2,(Screen.GetHeight()-(h*3+lh)*CleanYFac_1)/2,hdr,DTA_CleanNoMove_1,true,DTA_Alpha,alpha);
+		Screen.DrawText(smallfont,SWWMCREDITSCOL0,xofs+(Screen.GetWidth()-smallfont.StringWidth(hdr)*CleanXFac_1)/2,(Screen.GetHeight()-(h*3+lh)*CleanYFac_1)/2,hdr,DTA_CleanNoMove_1,true,DTA_Alpha,alpha);
 		for ( int i=0; i<l.Count(); i++ )
 		{
 			int len = l.StringWidth(i);
@@ -136,7 +127,7 @@ Class SWWMHelpMenu : GenericMenu
 		}
 		for ( int i=0; i<l.Count(); i++ )
 		{
-			Screen.DrawText(fnt,SWWMCREDITSCOL2,xofs+(Screen.GetWidth()-maxlen*CleanXFac_1)/2,(Screen.GetHeight()-lh*CleanYFac_1)/2+y,l.StringAt(i),DTA_CleanNoMove_1,true,DTA_Alpha,alpha);
+			Screen.DrawText(smallfont,SWWMCREDITSCOL2,xofs+(Screen.GetWidth()-maxlen*CleanXFac_1)/2,(Screen.GetHeight()-lh*CleanYFac_1)/2+y,l.StringAt(i),DTA_CleanNoMove_1,true,DTA_Alpha,alpha);
 			y += h*CleanYFac_1;
 		}
 		l.Destroy();
@@ -144,8 +135,6 @@ Class SWWMHelpMenu : GenericMenu
 
 	override void Drawer()
 	{
-		if ( !TewiFont ) TewiFont = Font.GetFont('TewiShaded');
-		if ( !MPlusFont ) MPlusFont = Font.GetFont('MPlusShaded');
 		if ( !fuzz ) fuzz = CVar.FindCVar(SWWMMODPREFIX.."_fuzz");
 		if ( fuzz.GetBool() )
 		{
@@ -162,14 +151,14 @@ Class SWWMHelpMenu : GenericMenu
 			DrawPage(prevpage,-(pagedir*alph*32)*CleanXFac_1,(1.-alph)**3);
 			DrawPage(curpage,(pagedir*(1.-alph)*32)*CleanXFac_1,alph**3);
 		}
-		int h = TewiFont.GetHeight();
+		int h = smallfont.GetHeight();
 		double y = Screen.GetHeight()/2-(h*2)*CleanYFac_1;
 		for ( int i=0; i<4; i++ )
 		{
 			if ( curpage > 0 )
-				Screen.DrawText(TewiFont,SWWMCREDITSCOL1,12*CleanXFac_1,y,"<",DTA_CleanNoMove_1,true);
+				Screen.DrawText(smallfont,SWWMCREDITSCOL1,12*CleanXFac_1,y,"<",DTA_CleanNoMove_1,true);
 			if ( curpage < numpages-1 )
-				Screen.DrawText(TewiFont,SWWMCREDITSCOL1,Screen.GetWidth()-18*CleanXFac_1,y,">",DTA_CleanNoMove_1,true);
+				Screen.DrawText(smallfont,SWWMCREDITSCOL1,Screen.GetWidth()-18*CleanXFac_1,y,">",DTA_CleanNoMove_1,true);
 			y += h*CleanYFac_1;
 		}
 		Super.Drawer();

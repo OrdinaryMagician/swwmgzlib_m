@@ -22,7 +22,7 @@ Enum EMiniHUDFontColor
 Class SWWMStatusBar : BaseStatusBar abstract
 {
 	TextureID ChatTex[6], MiniBox, PauseTex, bgtex;
-	HUDFont mTewiFont, mMiniwiFont, mMPlusFont, mk6x8Font, mMiniHUDFont;
+	HUDFont mMiniHUDFont;
 	int mhudfontcol[9];
 
 	Array<MsgLine> MainQueue, PickupQueue;
@@ -66,19 +66,6 @@ Class SWWMStatusBar : BaseStatusBar abstract
 
 	transient CVar pickduration, msgduration, chatduration, forcestats,
 		maxpickup, maxshownbig, maxshown, hudmargin, fuzz, mm_enable;
-
-	// if playing in Japanese, returns an alternate font of the same height
-	// Tewi -> MPlus
-	// Miniwi -> k6x8
-	Font LangFont( HUDFont req )
-	{
-		if ( language ~== "jp" )
-		{
-			if ( req == mMiniwiFont ) return mk6x8Font.mFont;
-			return mMPlusFont.mFont;
-		}
-		return req.mFont;
-	}
 
 	override void FlushNotify()
 	{
@@ -270,10 +257,6 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		PauseTex = TexMan.CheckForTexture("graphics/"..SWWMMODPREFIX.."pause.png",TexMan.Type_Any);
 		bgtex = TexMan.CheckForTexture("graphics/tempbg.png",TexMan.Type_Any);
 		mm_zoom = minimapzoom = oldminimapzoom = 1.;
-		mTewiFont = HUDFont.Create("TewiShaded");
-		mMiniwiFont = HUDFont.Create("MiniwiShaded");
-		mMPlusFont = HUDFont.Create("MPlusShaded");
-		mk6x8Font = HUDFont.Create("k6x8Shaded");
 		mMiniHudFont = HUDFont.Create("MiniHUD");
 		mhudfontcol[MCR_WHITE] = Font.FindFontColor("MiniWhite");
 		mhudfontcol[MCR_RED] = Font.FindFontColor("MiniRed");
@@ -292,8 +275,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 	override void DrawMyPos()
 	{
 		String str = String.Format("(%d,%d,%d)",CPlayer.mo.pos.X,CPlayer.mo.pos.Y,CPlayer.mo.pos.Z);
-		let fnt = LangFont(mMiniwiFont);
-		Screen.DrawText(fnt,Font.CR_GREEN,(ss.x-fnt.StringWidth(str))/2,4,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+		Screen.DrawText(smallfont2,Font.CR_GREEN,(ss.x-smallfont2.StringWidth(str))/2,4,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 	}
 
 	override void DrawAutomapHUD( double ticFrac )
@@ -544,7 +526,6 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		{
 			xx = int(ss.x-(margin+2));
 			String str;
-			Font fnt;
 			if ( automapactive || (fstats > 1) )
 			{
 				int label = am_showmaplabel;
@@ -553,44 +534,42 @@ Class SWWMStatusBar : BaseStatusBar abstract
 				if ( iof != -1 ) ln.Truncate(iof);
 				if ( !label || ((level.clusterflags&level.CLUSTER_HUB) && (label == 2)) ) str = ln;
 				else str = String.Format("%s - %s",level.mapname.MakeUpper(),ln);
-				fnt = LangFont(mTewiFont);
-				Screen.DrawText(fnt,Font.CR_FIRE,xx-fnt.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-				yy += fnt.GetHeight();
+				Screen.DrawText(smallfont,Font.CR_FIRE,xx-smallfont.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				yy += smallfont.GetHeight();
 			}
-			fnt = LangFont(mMiniwiFont);
 			if ( (level.total_monsters > 0) && am_showmonsters && !deathmatch )
 			{
 				str = String.Format("\cxK \c-%d\cu/\c-%d",level.killed_monsters,level.total_monsters);
-				Screen.DrawText(fnt,(level.killed_monsters>=level.total_monsters)?Font.CR_GOLD:Font.CR_WHITE,xx-fnt.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-				yy += fnt.GetHeight();
+				Screen.DrawText(smallfont2,(level.killed_monsters>=level.total_monsters)?Font.CR_GOLD:Font.CR_WHITE,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				yy += smallfont2.GetHeight();
 			}
 			if ( (level.total_items > 0) && am_showitems && !deathmatch )
 			{
 				str = String.Format("\cxI \c-%d\cu/\c-%d",level.found_items,level.total_items);
-				Screen.DrawText(fnt,(level.found_items>=level.total_items)?Font.CR_GOLD:Font.CR_WHITE,xx-fnt.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-				yy += fnt.GetHeight();
+				Screen.DrawText(smallfont2,(level.found_items>=level.total_items)?Font.CR_GOLD:Font.CR_WHITE,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				yy += smallfont2.GetHeight();
 			}
 			if ( (level.total_secrets > 0) && am_showsecrets && !deathmatch )
 			{
 				str = String.Format("\cxS \c-%d\cu/\c-%d",level.found_secrets,level.total_secrets);
-				Screen.DrawText(fnt,(level.found_secrets>=level.total_secrets)?Font.CR_GOLD:Font.CR_WHITE,xx-fnt.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-				yy += fnt.GetHeight();
+				Screen.DrawText(smallfont2,(level.found_secrets>=level.total_secrets)?Font.CR_GOLD:Font.CR_WHITE,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				yy += smallfont2.GetHeight();
 			}
 			int sec;
 			if ( am_showtime )
 			{
 				sec = Thinker.Tics2Seconds(level.maptime);
 				str = String.Format("\cxT \c-%02d\cu:\c-%02d\cu:\c-%02d",sec/3600,(sec%3600)/60,sec%60);
-				Screen.DrawText(fnt,((level.sucktime>0)&&(sec>=(level.sucktime*3600)))?Font.CR_RED:(sec<=level.partime)?Font.CR_GOLD:Font.CR_WHITE,xx-fnt.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-				yy += fnt.GetHeight();
+				Screen.DrawText(smallfont2,((level.sucktime>0)&&(sec>=(level.sucktime*3600)))?Font.CR_RED:(sec<=level.partime)?Font.CR_GOLD:Font.CR_WHITE,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				yy += smallfont2.GetHeight();
 			}
 			// don't show total time if it's equal to map time
 			if ( am_showtotaltime && (level.totaltime != level.maptime) )
 			{
 				sec = Thinker.Tics2Seconds(level.totaltime);
 				str = String.Format("\cxTT \c-%02d\cu:\c-%02d\cu:\c-%02d",sec/3600,(sec%3600)/60,sec%60);
-				Screen.DrawText(fnt,Font.CR_WHITE,xx-fnt.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-				yy += fnt.GetHeight();
+				Screen.DrawText(smallfont2,Font.CR_WHITE,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				yy += smallfont2.GetHeight();
 			}
 			yy += 3;
 		}
@@ -693,8 +672,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 
 	private void DrawPickups()
 	{
-		Font fnt = LangFont(mTewiFont);
-		int h = fnt.GetHeight();
+		int h = smallfont.GetHeight();
 		// draw nametags below them
 		double yy;
 		double nalph = 0.;
@@ -703,10 +681,10 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		{
 			nalph = clamp(tagtime/20.,0.,1.);
 			yy = ss.y-(margin+50);
-			int len = fnt.StringWidth(ntagstr);
+			int len = smallfont.StringWidth(ntagstr);
 			double xx = (ss.x-len)/2.;
 			Screen.Dim("Black",.8*nalph,int((xx-6)*hs.x),int(yy*hs.y),int((len+12)*hs.x),int((h+4)*hs.y));
-			Screen.DrawText(fnt,ntagcol,int(xx),yy+2,ntagstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,nalph);
+			Screen.DrawText(smallfont,ntagcol,int(xx),yy+2,ntagstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,nalph);
 		}
 		if ( PickupQueue.Size() <= 0 ) return;
 		// reverse order since they're drawn bottom to top
@@ -715,27 +693,27 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		int mend = max(0,PickupQueue.Size()-maxpickup.GetInt());
 		yy = ss.y-(margin+50);
 		// shift up if nametag is present
-		if ( nalph > 0. ) yy -= int((fnt.GetHeight()+6)*clamp(nalph*2.,0.,1.));
+		if ( nalph > 0. ) yy -= int((smallfont.GetHeight()+6)*clamp(nalph*2.,0.,1.));
 		for ( int i=PickupQueue.Size()-1; i>=mend; i-- )
 		{
 			String cstr = PickupQueue[i].str;
 			if ( PickupQueue[i].rep > 1 ) cstr.AppendFormat(" (x%d)",PickupQueue[i].rep);
 			double curtime = (PickupQueue[i].tic+GameTicRate*pickduration.GetInt())-(level.totaltime+fractic);
 			double alph = clamp(curtime/20.,0.,1.);
-			BrokenLines l = fnt.BreakLines(cstr,int(ss.x*.75));
+			BrokenLines l = smallfont.BreakLines(cstr,int(ss.x*.75));
 			int maxlen = 0;
 			for ( int j=0; j<l.Count(); j++ )
 			{
-				int len = fnt.StringWidth(l.StringAt(j));
+				int len = smallfont.StringWidth(l.StringAt(j));
 				if ( len > maxlen ) maxlen = len;
 			}
 			double xx = (ss.x-maxlen)/2.;
 			Screen.Dim("Black",.8*alph,int((xx-6)*hs.x),int((yy-h*(l.Count()-1))*hs.y),int((maxlen+12)*hs.x),int((h*l.Count()+4)*hs.y));
 			for ( int j=l.Count()-1; j>=0; j-- )
 			{
-				int len = fnt.StringWidth(l.StringAt(j));
+				int len = smallfont.StringWidth(l.StringAt(j));
 				xx = int((ss.x-len)/2.);
-				Screen.DrawText(fnt,msg0color,xx,yy+2,l.StringAt(j),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+				Screen.DrawText(smallfont,msg0color,xx,yy+2,l.StringAt(j),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
 				yy -= h;
 			}
 			l.Destroy();
@@ -745,7 +723,6 @@ Class SWWMStatusBar : BaseStatusBar abstract
 
 	private void DrawMessages( double boxalph = 1. )
 	{
-		Font fnt = LangFont(mTewiFont);
 		double xx, yy;
 		if ( midstr != "" )
 		{
@@ -754,19 +731,19 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			int col = (midtype&2)?msgmidcolor2:msgmidcolor;
 			double curtime = (midtic+int(GameTicRate*con_midtime))-(level.totaltime+fractic);
 			double alph = clamp(curtime/20.,0.,1.);
-			BrokenLines l = fnt.BreakLines(midstr,int(ss.x*ssp));
-			int h = fnt.GetHeight();
+			BrokenLines l = smallfont.BreakLines(midstr,int(ss.x*ssp));
+			int h = smallfont.GetHeight();
 			int maxlen = 0;
-			for ( int i=0; i<l.Count(); i++ ) maxlen = max(maxlen,fnt.StringWidth(l.StringAt(i)));
+			for ( int i=0; i<l.Count(); i++ ) maxlen = max(maxlen,smallfont.StringWidth(l.StringAt(i)));
 			xx = int((ss.x*ssp-maxlen)/2.);
 			yy = ss.y*ssp*.375;
 			yy -= (h*l.Count()+4)/2;	// center
 			Screen.Dim("Black",.8*alph,int((xx-6)*hs.x*hsp),int(yy*hs.y*hsp),int((maxlen+12)*hs.x*hsp),int((h*l.Count()+4)*hs.y*hsp));
 			for ( int i=0; i<l.Count(); i++ )
 			{
-				int len = fnt.StringWidth(l.StringAt(i));
+				int len = smallfont.StringWidth(l.StringAt(i));
 				xx = int((ss.x*ssp-len)/2.);
-				Screen.DrawText(fnt,col,int(xx),yy+2,l.StringAt(i),DTA_VirtualWidthF,ss.x*ssp,DTA_VirtualHeightF,ss.y*ssp,DTA_KeepRatio,true,DTA_Alpha,alph);
+				Screen.DrawText(smallfont,col,int(xx),yy+2,l.StringAt(i),DTA_VirtualWidthF,ss.x*ssp,DTA_VirtualHeightF,ss.y*ssp,DTA_KeepRatio,true,DTA_Alpha,alph);
 				yy += h;
 			}
 			l.Destroy();
@@ -794,11 +771,11 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			if ( MainQueue[i].type < PRINT_CHAT ) curtime += GameTicRate*msgduration.GetInt();
 			else curtime += GameTicRate*chatduration.GetInt();
 			double alph = clamp(curtime/20.,0.,1.);
-			BrokenLines l = fnt.BreakLines(cstr,smol?211:361);
+			BrokenLines l = smallfont.BreakLines(cstr,smol?211:361);
 			for ( int j=0; j<l.Count(); j++ )
 			{
 				Screen.DrawTexture(ChatTex[smol?4:1],false,xx,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,boxalph);
-				Screen.DrawText(fnt,col,xx+4,yy,l.StringAt(j),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+				Screen.DrawText(smallfont,col,xx+4,yy,l.StringAt(j),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
 				yy += 13;
 			}
 			l.Destroy();
@@ -815,19 +792,18 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		double yy = ss.y-14;
 		Screen.Dim("Black",.8,0,Screen.GetHeight()-int(15*hs.y),Screen.GetWidth(),int(15*hs.y));
 		String fullstr = String.Format("\cd(>\c- %s_",txt);
-		Font fnt = LangFont(mTewiFont);
 		// cut out to fit
-		int w = fnt.StringWidth(fullstr);
+		int w = smallfont.StringWidth(fullstr);
 		if ( w > ss.x-4 )
 		{
 			// draw trailing dots
-			Screen.DrawText(fnt,Font.CR_WHITE,xx,yy,"...",DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+			Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,"...",DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 			// shift back
 			xx -= w-(ss.x-4);
 			// draw trimmed
-			Screen.DrawText(fnt,Font.CR_WHITE,xx,yy,fullstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_ClipLeft,int(26*hs.x));
+			Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,fullstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_ClipLeft,int(26*hs.x));
 		}
-		else Screen.DrawText(fnt,Font.CR_WHITE,xx,yy,fullstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+		else Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,fullstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 		return true;
 	}
 
@@ -845,12 +821,11 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		Screen.DrawTexture(PauseTex,false,Screen.GetWidth()/2,Screen.GetHeight()/2,DTA_CleanNoMove,true,DTA_CenterOffset,true);
 		if ( multiplayer && (player != -1) )
 		{
-			Font fnt = LangFont(mTewiFont);
 			String str = String.Format(StringTable.Localize("$TXT_BY"),players[player].GetUserName());
 			Vector2 sz = TexMan.GetScaledSize(PauseTex);
-			double xx = (Screen.GetWidth()-fnt.StringWidth(str)*CleanXFac)/2;
+			double xx = (Screen.GetWidth()-smallfont.StringWidth(str)*CleanXFac)/2;
 			double yy = (Screen.GetHeight()+(sz.y+4)*CleanYFac)/2;
-			Screen.DrawText(fnt,Font.CR_WHITE,xx,yy,str,DTA_CleanNoMove,true);
+			Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,str,DTA_CleanNoMove,true);
 		}
 		// TODO draw something extra to make the screen more visually interesting, maybe
 		return true;
@@ -870,44 +845,39 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		double alph;
 		int len;
 		double xx, yy;
-		Font fnt;
 		double deadtimer = demo.deadtimer+fractic;
 		if ( demo.player.viewheight > 6 ) return 1.;
 		double dimalph = min(deadtimer/80.,1.);
 		Screen.Dim("Black",dimalph,0,0,Screen.GetWidth(),Screen.GetHeight());
 		alph = clamp((deadtimer-60)/60.,0.,1.);
 		str = StringTable.Localize("$SWWM_URDED");
-		fnt = LangFont(mTewiFont);
-		len = fnt.StringWidth(str);
+		len = bigfont.StringWidth(str);
 		xx = int((ss.x-len)/2.);
-		yy = (ss.y-fnt.GetHeight()*4)/2.;
-		Screen.DrawText(fnt,Font.CR_RED,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+		yy = (ss.y-bigfont.GetHeight()*4)/2.;
+		Screen.DrawText(bigfont,Font.CR_RED,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
 		if ( multiplayer || level.AllowRespawn || sv_singleplayerrespawn || G_SkillPropertyInt(SKILLP_PlayerRespawn) )
 		{
 			if ( sv_norespawn ) return (1.-dimalph);
 			alph = clamp((deadtimer-90)/60.,0.,1.);
 			str = String.Format(StringTable.Localize("$SWWM_URDEDMP"));
-			fnt = LangFont(mTewiFont);
-			len = fnt.StringWidth(str);
+			len = smallfont.StringWidth(str);
 			xx = int((ss.x-len)/2.);
 			yy = ss.y/2.;
-			Screen.DrawText(fnt,Font.CR_WHITE,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+			Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
 			return (1.-dimalph);
 		}
 		alph = clamp((deadtimer-140)/60.,0.,1.);
 		str = String.Format(StringTable.Localize("$SWWM_URDED2"));
-		fnt = LangFont(mTewiFont);
-		len = fnt.StringWidth(str);
+		len = smallfont.StringWidth(str);
 		xx = int((ss.x-len)/2.);
 		yy = ss.y/2.;
-		Screen.DrawText(fnt,Font.CR_WHITE,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+		Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
 		alph = clamp((deadtimer-160)/60.,0.,1.);
 		str = String.Format(StringTable.Localize("$SWWM_URDED3"));
-		fnt = LangFont(mTewiFont);
-		len = fnt.StringWidth(str);
+		len = smallfont.StringWidth(str);
 		xx = int((ss.x-len)/2.);
-		yy = (ss.y+fnt.GetHeight()*2)/2.;
-		Screen.DrawText(fnt,Font.CR_WHITE,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+		yy = (ss.y+smallfont.GetHeight()*2)/2.;
+		Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
 		return (1.-dimalph);
 	}
 

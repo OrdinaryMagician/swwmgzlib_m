@@ -5,7 +5,6 @@ Class PayRespects : HUDMessageBase
 {
 	Vector2 basepos;
 	int lifespan, initialspan, starttic;
-	transient Font TewiFont;
 	double scale;
 	Vector2 hs, ss;
 	int seed, seed2;
@@ -39,8 +38,7 @@ Class PayRespects : HUDMessageBase
 	override void Draw( int bottom, int visibility )
 	{
 		Vector2 realpos = (basepos.x*ss.x,basepos.y*ss.y);
-		if ( !TewiFont ) TewiFont = Font.GetFont('TewiShaded');
-		Vector2 fo = (TewiFont.StringWidth("F")/2.,-TewiFont.GetHeight());
+		Vector2 fo = (smallfont.StringWidth("F")/2.,-smallfont.GetHeight());
 		// F rise up
 		int initspd = (128-seed);
 		if ( (initspd >= 0) && (initspd < 32) ) initspd = 32;
@@ -50,7 +48,7 @@ Class PayRespects : HUDMessageBase
 		fo.x += (.15*initspd)*((initialspan-(lifespan-fractic))**.6);
 		fo.y += ((initialspan-(lifespan-fractic))**1.6)-boostup*sin((90./initialspan)*(level.maptime+fractic-starttic));
 		double alph = clamp((lifespan+fractic)/double(initialspan),0.,1.);
-		Screen.DrawText(TewiFont,Font.CR_GREEN,realpos.x-fo.x,realpos.y-fo.y,"F",DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+		Screen.DrawText(smallfont,Font.CR_GREEN,realpos.x-fo.x,realpos.y-fo.y,"F",DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
 	}
 }
 
@@ -99,7 +97,6 @@ Class SWWMWeaponTooltip : HUDMessageBase
 	TextureID icon;
 	String wpn, txt;
 	double tics, holdtics, fadeintics, fadeouttics;
-	transient Font tewifont, mplusfont, miniwifont, k6x8font;
 	transient BrokenLines l;
 	SWWMWeaponTooltip next;
 
@@ -126,17 +123,6 @@ Class SWWMWeaponTooltip : HUDMessageBase
 	override void Draw( int bottom, int visibility )
 	{
 		if ( tics <= 0 ) return;
-		if ( !tewifont ) tewifont = Font.GetFont('TewiShaded');
-		if ( !mplusfont ) mplusfont = Font.GetFont('MPlusShaded');
-		if ( !miniwifont ) miniwifont = Font.GetFont('MiniwiShaded');
-		if ( !k6x8font ) k6x8font = Font.GetFont('k6x8Shaded');
-		let fnt = tewifont;
-		let fnt2 = miniwifont;
-		if ( language ~== "jp" )
-		{
-			fnt = mplusfont;
-			fnt2 = k6x8font;
-		}
 		Vector2 hs = StatusBar.GetHUDScale();
 		hs.y = hs.x;
 		Vector2 ss = (Screen.GetWidth()/hs.x,Screen.GetHeight()/hs.y);
@@ -145,27 +131,27 @@ Class SWWMWeaponTooltip : HUDMessageBase
 		[w, h] = TexMan.GetSize(icon);
 		int w2 = w;
 		Vector2 pos = (int(ss.x/2),int(ss.y/2)+h/2);
-		w = fnt.StringWidth(wpn);
-		if ( !l ) l = fnt2.BreakLines(txt,600);
+		w = smallfont.StringWidth(wpn);
+		if ( !l ) l = smallfont2.BreakLines(txt,600);
 		int w1 = w;
 		w = 0;
 		for ( int i=0; i<l.Count(); i++ )
 		{
-			let lw = fnt2.StringWidth(l.StringAt(i));
+			let lw = smallfont2.StringWidth(l.StringAt(i));
 			if ( lw > w ) w = lw;
 		}
 		int cw = int(ceil((max(max(w1,w2),w)+8)/6.))*6;
-		Screen.Dim("Black",.5*alpha,int((pos.x-(cw+4)/2)*hs.x),int((pos.y-(h+6))*hs.y),int((cw+4)*hs.x),int((8+h+4+fnt.GetHeight()+8+fnt2.GetHeight()*l.Count())*hs.y));
+		Screen.Dim("Black",.5*alpha,int((pos.x-(cw+4)/2)*hs.x),int((pos.y-(h+6))*hs.y),int((cw+4)*hs.x),int((8+h+4+smallfont.GetHeight()+8+smallfont2.GetHeight()*l.Count())*hs.y));
 		Screen.DrawTexture(icon,false,pos.x,pos.y,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha,DTA_CenterBottomOffset,true);
 		pos.y += 4;
-		Screen.DrawText(fnt,Font.CR_FIRE,pos.x-w1/2,pos.y,wpn,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
+		Screen.DrawText(smallfont,Font.CR_FIRE,pos.x-w1/2,pos.y,wpn,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
 		for ( int i=0; i<cw; i+=6 )
-			Screen.DrawChar(fnt,Font.CR_FIRE,(pos.x-cw/2)+i,pos.y+6,0x5F,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
-		pos.y += fnt.GetHeight()+8;
+			Screen.DrawChar(smallfont,Font.CR_FIRE,(pos.x-cw/2)+i,pos.y+6,0x5F,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
+		pos.y += smallfont.GetHeight()+8;
 		for ( int i=0; i<l.Count(); i++ )
 		{
-			Screen.DrawText(fnt2,Font.CR_WHITE,pos.x-w/2,pos.y,l.StringAt(i),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
-			pos.y += fnt2.GetHeight();
+			Screen.DrawText(smallfont2,Font.CR_WHITE,pos.x-w/2,pos.y,l.StringAt(i),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
+			pos.y += smallfont2.GetHeight();
 		}
 	}
 }

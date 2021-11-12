@@ -6,8 +6,6 @@ Shared code and assets are added and tweaked as needed by the side mods. In most
 
 Functions that must be extended:
 
-- **`private void SWWMStaticHandler.PreloadModFonts()`**<br/>
-  Used for preloading any extra mod-specific fonts.
 - **`private ui void SWWMHandler.RenderShaders( RenderEvent e )`**<br/>
   Used for rendering mod-specific shaders.
 - **`static clearscope void SWWMHandler.ClearAllShaders( PlayerInfo p, bool noscope = false )`**<br/>

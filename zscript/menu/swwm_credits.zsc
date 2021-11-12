@@ -6,11 +6,10 @@ Class SWWMCreditsEntry ui
 	TextureID MariSprite[15];
 	int tics, cur;
 	BrokenLines btext;
-	Font fnt;
 	int width, height;
 	int titlecol, btextcol;
 
-	SWWMCreditsEntry Init( Font f, String t, String b = "", int c1 = SWWMCREDITSCOL1, int c2 = SWWMCREDITSCOL2, bool mari = false )
+	SWWMCreditsEntry Init( String t, String b = "", int c1 = SWWMCREDITSCOL1, int c2 = SWWMCREDITSCOL2, bool mari = false )
 	{
 		if ( mari )
 		{
@@ -20,7 +19,6 @@ Class SWWMCreditsEntry ui
 			tics = 3;
 			cur = 0;
 		}
-		fnt = f;
 		titlecol = c1;
 		btextcol = c2;
 		title = StringTable.Localize(t);
@@ -31,7 +29,7 @@ Class SWWMCreditsEntry ui
 			return self;
 		}
 		String b2 = StringTable.Localize(b);
-		btext = fnt.BreakLines(b2,320);
+		btext = smallfont.BreakLines(b2,320);
 		width = CalcWidth();
 		height = CalcHeight();
 		return self;
@@ -45,7 +43,7 @@ Class SWWMCreditsEntry ui
 
 	private int CalcWidth()
 	{
-		int len = fnt.StringWidth(title);
+		int len = smallfont.StringWidth(title);
 		if ( !btext ) return len;
 		for ( int i=0; i<btext.Count(); i++ )
 		{
@@ -59,10 +57,10 @@ Class SWWMCreditsEntry ui
 	{
 		int h = 0;
 		if ( MariHack ) h = 148;
-		h += fnt.GetHeight();
+		h += smallfont.GetHeight();
 		if ( !btext ) return h;
 		h += 6;
-		h += fnt.GetHeight()*btext.Count();
+		h += smallfont.GetHeight()*btext.Count();
 		return h;
 	}
 
@@ -87,21 +85,21 @@ Class SWWMCreditsEntry ui
 			yy += 148;
 			Screen.DrawTexture(MariSprite[cur],false,x,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 		}
-		int w = fnt.StringWidth(title);
+		int w = smallfont.StringWidth(title);
 		double xx = x-w/2;
-		Screen.DrawText(fnt,titlecol,xx,yy,title,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+		Screen.DrawText(smallfont,titlecol,xx,yy,title,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 		if ( !btext ) return height;
 		// underline
 		int cw = int(ceil((w+8)/6.))*6;
 		xx = x-cw/2;
 		for ( int i=0; i<cw; i+=6 )
-			Screen.DrawChar(fnt,titlecol,xx+i,yy+6,0x5F,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-		yy += fnt.GetHeight()+6;
+			Screen.DrawChar(smallfont,titlecol,xx+i,yy+6,0x5F,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+		yy += smallfont.GetHeight()+6;
 		for ( int i=0; i<btext.Count(); i++ )
 		{
 			xx = x-(btext.StringWidth(i))/2;
-			Screen.DrawText(fnt,btextcol,xx,yy,btext.StringAt(i),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-			yy += fnt.GetHeight();
+			Screen.DrawText(smallfont,btextcol,xx,yy,btext.StringAt(i),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+			yy += smallfont.GetHeight();
 		}
 		return height;
 	}
@@ -115,8 +113,6 @@ Class SWWMCreditsMenu : GenericMenu abstract
 	String stitle, stitle2;
 	String sdev, sassets, smusic, sfanart, slocal, spatrons, sthanks;
 	Array<SWWMCreditsEntry> cdev, cassets, cmusic, cfanart, clocal, cpatrons, cthanks;
-	String oldlang;
-	transient Font sfnt, bfnt;
 	Vector2 ss;
 	double hs;
 	int logow, logoh;
@@ -134,13 +130,6 @@ Class SWWMCreditsMenu : GenericMenu abstract
 	double spos, speed;
 	int theight;
 
-	void UpdateFonts()
-	{
-		String curlang = language;
-		if ( !sfnt || (curlang != oldlang) ) sfnt = (curlang ~== "jp")?Font.GetFont('MPlusShaded'):Font.GetFont('TewiShaded');
-		if ( !bfnt || (curlang != oldlang) ) bfnt = (curlang ~== "jp")?Font.GetFont('MPlusShadedOutline'):Font.GetFont('TewiShadedOutline');
-		oldlang = curlang;
-	}
 	void UpdateSize()
 	{
 		hs = max(1.,min(floor(Screen.GetWidth()/640),floor(Screen.GetHeight()/266)));
@@ -162,9 +151,8 @@ Class SWWMCreditsMenu : GenericMenu abstract
 	{
 		Super.Init(parent);
 		bgtex = TexMan.CheckForTexture("graphics/tempbg.png",TexMan.Type_Any);
-		dofuzz = CVar.FindCVar(SWWMMODPREFIX.."_fuzz").GetBool();
-		UpdateFonts();
 		UpdateSize();
+		dofuzz = CVar.FindCVar(SWWMMODPREFIX.."_fuzz").GetBool();
 		logo = TexMan.CheckForTexture("graphics/"..SWWMLOGONAME..".png",TexMan.Type_Any);
 		[logow, logoh] = TexMan.GetSize(logo);
 		stitle = StringTable.Localize("$"..SWWMMODPREFIX.."_CSTITLE");
@@ -176,96 +164,96 @@ Class SWWMCreditsMenu : GenericMenu abstract
 		slocal = StringTable.Localize("$SWWM_CLOCAL");
 		spatrons = StringTable.Localize("$SWWM_CPATRON");
 		sthanks = StringTable.Localize("$SWWM_CTHANK");
-		cdev.Push(new("SWWMCreditsEntry").Init(sfnt,"Marisa Kirisame","$SWWM_CDEV2",mari:true));
-		cassets.Push(new("SWWMCreditsEntry").Init(sfnt,"Bethesda Game Studios","Fallout: New Vegas\nFallout 4"));
-		cassets.Push(new("SWWMCreditsEntry").Init(sfnt,"Epic Games","Unreal\nUnreal Tournament\nUnreal Tournament 2004\nUnreal Tournament 3"));
-		cassets.Push(new("SWWMCreditsEntry").Init(sfnt,"Ion Storm","Deus Ex"));
-		cassets.Push(new("SWWMCreditsEntry").Init(sfnt,"Looking Glass Studios","Thief\nSystem Shock 2"));
-		clocal.Push(new("SWWMCreditsEntry").Init(sfnt,"Marisa Kirisame","$SWWM_LOCES"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"Snacks"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"john"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"Jonas Höglund"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"Alexa Jones-Gonzales"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"Corey Hectus"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"Dac"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"Pietro Gagliardi"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"Ryan Weatherman"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"Xada Xephron"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"John"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"VoanHead"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"NekoMithos"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"Ceyne Taikato"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"bouncytem"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"Brett Saltzer"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"Clint Walker"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"Figo"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"m8f"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"Namsan"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init(sfnt,"YaGirlJuniper"));
+		cdev.Push(new("SWWMCreditsEntry").Init("Marisa Kirisame","$SWWM_CDEV2",mari:true));
+		cassets.Push(new("SWWMCreditsEntry").Init("Bethesda Game Studios","Fallout: New Vegas\nFallout 4"));
+		cassets.Push(new("SWWMCreditsEntry").Init("Epic Games","Unreal\nUnreal Tournament\nUnreal Tournament 2004\nUnreal Tournament 3"));
+		cassets.Push(new("SWWMCreditsEntry").Init("Ion Storm","Deus Ex"));
+		cassets.Push(new("SWWMCreditsEntry").Init("Looking Glass Studios","Thief\nSystem Shock 2"));
+		clocal.Push(new("SWWMCreditsEntry").Init("Marisa Kirisame","$SWWM_LOCES"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("Snacks"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("john"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("Jonas Höglund"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("Alexa Jones-Gonzales"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("Corey Hectus"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("Dac"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("Pietro Gagliardi"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("Ryan Weatherman"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("Xada Xephron"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("John"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("VoanHead"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("NekoMithos"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("Ceyne Taikato"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("bouncytem"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("Brett Saltzer"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("Clint Walker"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("Figo"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("m8f"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("Namsan"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("YaGirlJuniper"));
 		ChildInit(parent);
 		// these have to appear after the mod-specific credits
-		cassets.Push(new("SWWMCreditsEntry").Init(sfnt,"Amuscaria","$SWWM_ASSBARONS"));
-		cassets.Push(new("SWWMCreditsEntry").Init(sfnt,"Ryan Cordell","$SWWM_ASSOTHERS"));
-		cassets.Push(new("SWWMCreditsEntry").Init(sfnt,"Blox","$SWWM_ASSEXTRA"));
-		cassets.Push(new("SWWMCreditsEntry").Init(sfnt,"SiFi270","$SWWM_ASSKEEN"));
-		cthanks.Push(new("SWWMCreditsEntry").Init(sfnt,"Marrub","$SWWM_CMAB2",Font.FindFontColor('Heliotrope'),Font.FindFontColor('BlushPink')));
-		cthanks.Push(new("SWWMCreditsEntry").Init(sfnt,"KynikossDragonn","$SWWM_CDRAGON2"));
-		cthanks.Push(new("SWWMCreditsEntry").Init(sfnt,"Lucy","$SWWM_CLUCY2"));
-		cthanks.Push(new("SWWMCreditsEntry").Init(sfnt,"Gutawer","$SWWM_CGUTA2"));
-		cthanks.Push(new("SWWMCreditsEntry").Init(sfnt,"KeksDose","$SWWM_CKEKS2"));
-		cthanks.Push(new("SWWMCreditsEntry").Init(sfnt,"ZZYZX & Nash","$SWWM_CZN2"));
-		cthanks.Push(new("SWWMCreditsEntry").Init(sfnt,"Val Pal","$SWWM_CVAL2"));
-		cthanks.Push(new("SWWMCreditsEntry").Init(sfnt,"Kaffy Kathy","$SWWM_CKATHY2"));
-		cthanks.Push(new("SWWMCreditsEntry").Init(sfnt,"BouncyTEM","$SWWM_CBOUNCY2"));
-		cthanks.Push(new("SWWMCreditsEntry").Init(sfnt,"\ctCptSledge\c- & \cdBunray\c-","$SWWM_CSLEDGE2"));
-		cthanks.Push(new("SWWMCreditsEntry").Init(sfnt,"a1337spy","$SWWM_CSPY2"));
-		cthanks.Push(new("SWWMCreditsEntry").Init(sfnt,"$SWWM_CINSP1","$SWWM_CINSP2"));
-		cthanks.Push(new("SWWMCreditsEntry").Init(sfnt,"$SWWM_CCOMMUNITY1","$SWWM_CCOMMUNITY2"));
-		cthanks.Push(new("SWWMCreditsEntry").Init(sfnt,"$SWWM_CDEVS1","$SWWM_CDEVS2"));
-		cthanks.Push(new("SWWMCreditsEntry").Init(sfnt,"$SWWM_CYOU1","$SWWM_CYOU2"));
+		cassets.Push(new("SWWMCreditsEntry").Init("Amuscaria","$SWWM_ASSBARONS"));
+		cassets.Push(new("SWWMCreditsEntry").Init("Ryan Cordell","$SWWM_ASSOTHERS"));
+		cassets.Push(new("SWWMCreditsEntry").Init("Blox","$SWWM_ASSEXTRA"));
+		cassets.Push(new("SWWMCreditsEntry").Init("SiFi270","$SWWM_ASSKEEN"));
+		cthanks.Push(new("SWWMCreditsEntry").Init("Marrub","$SWWM_CMAB2",Font.FindFontColor('Heliotrope'),Font.FindFontColor('BlushPink')));
+		cthanks.Push(new("SWWMCreditsEntry").Init("KynikossDragonn","$SWWM_CDRAGON2"));
+		cthanks.Push(new("SWWMCreditsEntry").Init("Lucy","$SWWM_CLUCY2"));
+		cthanks.Push(new("SWWMCreditsEntry").Init("Gutawer","$SWWM_CGUTA2"));
+		cthanks.Push(new("SWWMCreditsEntry").Init("KeksDose","$SWWM_CKEKS2"));
+		cthanks.Push(new("SWWMCreditsEntry").Init("ZZYZX & Nash","$SWWM_CZN2"));
+		cthanks.Push(new("SWWMCreditsEntry").Init("Val Pal","$SWWM_CVAL2"));
+		cthanks.Push(new("SWWMCreditsEntry").Init("Kaffy Kathy","$SWWM_CKATHY2"));
+		cthanks.Push(new("SWWMCreditsEntry").Init("BouncyTEM","$SWWM_CBOUNCY2"));
+		cthanks.Push(new("SWWMCreditsEntry").Init("\ctCptSledge\c- & \cdBunray\c-","$SWWM_CSLEDGE2"));
+		cthanks.Push(new("SWWMCreditsEntry").Init("a1337spy","$SWWM_CSPY2"));
+		cthanks.Push(new("SWWMCreditsEntry").Init("$SWWM_CINSP1","$SWWM_CINSP2"));
+		cthanks.Push(new("SWWMCreditsEntry").Init("$SWWM_CCOMMUNITY1","$SWWM_CCOMMUNITY2"));
+		cthanks.Push(new("SWWMCreditsEntry").Init("$SWWM_CDEVS1","$SWWM_CDEVS2"));
+		cthanks.Push(new("SWWMCreditsEntry").Init("$SWWM_CYOU1","$SWWM_CYOU2"));
 		speed = 16.;
 		spos = ss.y-logoh;
 		// calc total height
 		theight = logoh;
 		for ( int i=0; i<cdev.Size(); i++ )
 		{
-			if ( i == 0 ) theight += SECTION_PAD+bfnt.GetHeight()*3;
+			if ( i == 0 ) theight += SECTION_PAD+bigfont.GetHeight();
 			theight += ENTRY_PAD;
 			theight += cdev[i].height;
 		}
 		for ( int i=0; i<cassets.Size(); i++ )
 		{
-			if ( i == 0 ) theight += SECTION_PAD+bfnt.GetHeight()*3;
+			if ( i == 0 ) theight += SECTION_PAD+bigfont.GetHeight();
 			theight += ENTRY_PAD;
 			theight += cassets[i].height;
 		}
 		for ( int i=0; i<cmusic.Size(); i++ )
 		{
-			if ( i == 0 ) theight += SECTION_PAD+bfnt.GetHeight()*3;
+			if ( i == 0 ) theight += SECTION_PAD+bigfont.GetHeight();
 			theight += ENTRY_PAD;
 			theight += cmusic[i].height;
 		}
 		for ( int i=0; i<cfanart.Size(); i++ )
 		{
-			if ( i == 0 ) theight += SECTION_PAD+bfnt.GetHeight()*3;
+			if ( i == 0 ) theight += SECTION_PAD+bigfont.GetHeight();
 			theight += ENTRY_PAD;
 			theight += cfanart[i].height;
 		}
 		for ( int i=0; i<clocal.Size(); i++ )
 		{
-			if ( i == 0 ) theight += SECTION_PAD+bfnt.GetHeight()*3;
+			if ( i == 0 ) theight += SECTION_PAD+bigfont.GetHeight();
 			theight += ENTRY_PAD;
 			theight += clocal[i].height;
 		}
 		for ( int i=0; i<cpatrons.Size(); i++ )
 		{
-			if ( i == 0 ) theight += SECTION_PAD+bfnt.GetHeight()*3;
+			if ( i == 0 ) theight += SECTION_PAD+bigfont.GetHeight();
 			theight += ENTRY_PAD;
 			theight += cpatrons[i].height;
 		}
 		for ( int i=0; i<cthanks.Size(); i++ )
 		{
-			if ( i == 0 ) theight += SECTION_PAD+bfnt.GetHeight()*3;
+			if ( i == 0 ) theight += SECTION_PAD+bigfont.GetHeight();
 			theight += ENTRY_PAD;
 			theight += cthanks[i].height;
 		}
@@ -287,23 +275,23 @@ Class SWWMCreditsMenu : GenericMenu abstract
 		// don't draw if we're offscreen, saves time
 		if ( (y+logoh < 0) || (y > ss.y) ) return logoh;
 		Screen.DrawTexture(logo,true,x-logow/2,y,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-		Screen.DrawText(sfnt,SWWMCREDITSCOL1,x-sfnt.StringWidth(stitle)/2,y+(logoh-28),stitle,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+		Screen.DrawText(smallfont,SWWMCREDITSCOL1,x-smallfont.StringWidth(stitle)/2,y+(logoh-28),stitle,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 		// underline
-		int w = max(sfnt.StringWidth(stitle),sfnt.StringWidth(stitle2));
+		int w = max(smallfont.StringWidth(stitle),smallfont.StringWidth(stitle2));
 		int cw = int(ceil((w+8)/6.))*6;
 		double xx = x-cw/2;
 		for ( int i=0; i<cw; i+=6 )
-			Screen.DrawChar(sfnt,SWWMCREDITSCOL1,xx+i,y+(logoh-22),0x5F,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-		Screen.DrawText(sfnt,SWWMCREDITSCOL2,x-sfnt.StringWidth(stitle2)/2,y+(logoh-9),stitle2,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+			Screen.DrawChar(smallfont,SWWMCREDITSCOL1,xx+i,y+(logoh-22),0x5F,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+		Screen.DrawText(smallfont,SWWMCREDITSCOL2,x-smallfont.StringWidth(stitle2)/2,y+(logoh-9),stitle2,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 		return logoh;
 	}
 	double DrawSection( double x, double y, String txt )
 	{
 		// don't draw if we're offscreen, saves time
 		y += SECTION_SHIFT;
-		if ( (y+bfnt.GetHeight()*3 < 0) || (y > ss.y) ) return bfnt.GetHeight()*3;
-		Screen.DrawText(bfnt,SWWMCREDITSCOL0,x-bfnt.StringWidth(txt)*1.5,y,txt,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_ScaleX,3.,DTA_ScaleY,3.);
-		return bfnt.GetHeight()*3;
+		if ( (y+bigfont.GetHeight() < 0) || (y > ss.y) ) return bigfont.GetHeight();
+		Screen.DrawText(bigfont,SWWMCREDITSCOL0,x-bigfont.StringWidth(txt)/2,y,txt,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+		return bigfont.GetHeight();
 	}
 	override void Drawer()
 	{
@@ -316,7 +304,6 @@ Class SWWMCreditsMenu : GenericMenu abstract
 			Screen.DrawTexture(bgtex,false,(vsize.x-tsize.x)/2,(vsize.y-tsize.y)/2,DTA_VirtualWidthF,vsize.x,DTA_VirtualHeightF,vsize.y,DTA_KeepRatio,true,DTA_ColorOverlay,Color(192,0,0,0),DTA_Alpha,.8);
 		}
 		else Screen.Dim("Black",.8,0,0,Screen.GetWidth(),Screen.GetHeight());
-		UpdateFonts();
 		UpdateSize();
 		// logo
 		double yy = spos;
