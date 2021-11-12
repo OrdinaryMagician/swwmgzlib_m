@@ -14,9 +14,7 @@ Most of the work here is original, but there are some notable exceptions:
  - The anti-BD feature uses art and music by IOSYS, art was edited into the Doom palette.
  - The crash handler uses a short clip of the Curb Your Enthusiasm theme.
  - Tewi font by lucy (https://github.com/lucy/tewi-font). Modified to add gradients and drop shadow.
- - MPlus font by M⁺ FONTS PROJECT (http://mplus-fonts.osdn.jp/mplus-bitmap-fonts). Modified to add gradients and drop shadow.
  - Miniwi font by Josuah Demangeon (http://josuah.net). Modified to add gradients and drop shadow.
- - k6x8 font by littlelimit (https://littlelimit.net/k6x8.htm). Modified to add gradients and drop shadow.
  - Slope alignment utility code by ZZYZX & Nash.
  - Extra gib anims for vanilla monsters:
    * Ryan Cordell (Demon, Cacodemon, Revenant, Archvile)

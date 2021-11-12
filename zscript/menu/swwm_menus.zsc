@@ -592,6 +592,7 @@ class ListMenuItemSWWMTextItemM : ListMenuItemSelectable
 			double xx = x;
 			SWWMUtility.StripColor(text);
 			int tlen = text.CodePointCount();
+			int kern = font.GetDefaultKerning();
 			if ( w == ListMenuDescriptor.CleanScale )
 			{
 				SWWMUtility.AdjustClean_1(xx,y);
@@ -601,8 +602,7 @@ class ListMenuItemSWWMTextItemM : ListMenuItemSelectable
 					[ch, pos] = text.GetNextCodePoint(pos);
 					double yy = y+4*sin(32*i+8*Menu.MenuTime())*CleanYFac_1;
 					Screen.DrawChar(font,mColorSelected,xx,yy,ch,DTA_CleanNoMove_1,true);
-					if ( generic_ui ) xx += (font.GetCharWidth(ch)-1)*CleanXFac_1;	// account for newsmallfont kerning
-					else xx += (font.GetCharWidth(ch)-6)*CleanXFac_1;	// account for menu font kerning
+					xx += (font.GetCharWidth(ch)+kern)*CleanXFac_1;
 				}
 			}
 			else
@@ -613,8 +613,7 @@ class ListMenuItemSWWMTextItemM : ListMenuItemSelectable
 					[ch, pos] = text.GetNextCodePoint(pos);
 					double yy = y+4*sin(32*i+8*Menu.MenuTime());
 					Screen.DrawChar(mFont,mColorSelected,xx,yy,ch,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43);
-					if ( generic_ui ) xx += (font.GetCharWidth(ch)-1);	// account for newsmallfont kerning
-					else xx += (font.GetCharWidth(ch)-6);	// account for menu font kerning
+					xx += (font.GetCharWidth(ch)+kern);
 				}
 			}
 		}
