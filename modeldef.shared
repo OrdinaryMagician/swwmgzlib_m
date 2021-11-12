@@ -10,6 +10,20 @@ Model "Unknown"
 	FrameIndex UNKN A 0 0
 }
 
+Model "SWWMSparkTrail"
+{
+	Path "models/extra"
+
+	Model 0 "YBeam.obj"
+	Skin 0 "ChunkTrail.png"
+	Scale 1 1 0.6
+	USEACTORPITCH
+	USEACTORROLL
+	DONTCULLBACKFACES
+
+	FrameIndex XZW1 A 0 0
+}
+
 Model "SWWMChip"
 {
 	Path "models"
