@@ -1,0 +1,177 @@
+// generic version of this menu, supports arbitrary number of sections
+
+Class SWWMHelpMenu : GenericMenu
+{
+	int curpage, prevpage, numpages;
+	int fadetic;
+	TextureID bgtex;
+	transient Font TewiFont, MPlusFont;
+	transient CVar fuzz;
+	bool isrclick;
+	int pagedir;
+
+	// returns MPlus if we're playing in Japanese, otherwise returns the requested font
+	Font LangFont( Font req )
+	{
+		if ( language ~== "jp" ) return MPlusFont;
+		return req;
+	}
+
+	override void Init( Menu parent )
+	{
+		Super.Init(parent);
+		curpage = 0;
+		prevpage = -1;
+		fadetic = gametic;
+		pagedir = 0;
+		numpages = StringTable.Localize("$"..SWWMMODPREFIX.."_HELP_NPAGE").ToInt();
+		if ( numpages <= 0 ) ThrowAbortException("Tried to open SWWMHelpMenu with no help pages defined");
+		bgtex = TexMan.CheckForTexture("graphics/tempbg.png",TexMan.Type_Any);
+	}
+
+	override bool MenuEvent( int mkey, bool fromcontroller )
+	{
+		double alph = clamp((gametic-fadetic)*(5./GameTicRate),0.,1.);
+		switch ( mkey )
+		{
+		case MKEY_Enter:
+		case MKEY_Right:
+		case MKEY_Down:
+		case MKEY_PageDown:
+			if ( (curpage < numpages-1) && ((prevpage == -1) || (alph >= 1.)) )
+			{
+				MenuSound("menu/cursor");
+				prevpage = curpage;
+				curpage++;
+				pagedir = 1;
+				fadetic = gametic;
+			}
+			return true;
+			break;
+		case MKEY_Clear:
+		case MKEY_Left:
+		case MKEY_Up:
+		case MKEY_PageUp:
+			if ( (curpage > 0) && ((prevpage == -1) || (alph >= 1.)) )
+			{
+				MenuSound("menu/cursor");
+				prevpage = curpage;
+				curpage--;
+				pagedir = -1;
+				fadetic = gametic;
+			}
+			return true;
+			break;
+		}
+		return Super.MenuEvent(mkey,fromcontroller);
+	}
+
+	override bool MouseEvent( int type, int x, int y )
+	{
+		if ( (type == MOUSE_Click) && (y != -1) )
+			return MenuEvent(isrclick?MKEY_Clear:MKEY_Enter,true);
+		return false;
+	}
+
+	override bool OnUiEvent( UIEvent ev )
+	{
+		int y;
+		bool res;
+		switch ( ev.type )
+		{
+		case UIEvent.Type_WheelDown:
+			return MenuEvent(MKEY_Enter,true);
+			break;
+		case UIEvent.Type_WheelUp:
+			return MenuEvent(MKEY_Clear,true);
+			break;
+		case UIEvent.Type_LButtonDown:
+			isrclick = false;
+			return Super.OnUIEvent(ev);
+			break;
+		case UIEvent.Type_RButtonDown:
+			isrclick = true;
+			// copy over what base menus do for L click
+			y = ev.MouseY;
+			res = MouseEventBack(MOUSE_Click,ev.MouseX,y);
+			if ( res ) y = -1;
+			res |= MouseEvent(MOUSE_Click,ev.MouseX,y);
+			if ( res ) SetCapture(true);
+			return false;
+			break;
+		case UIEvent.Type_RButtonUp:
+			// copy over what base menus do for L release
+			if ( mMouseCapture )
+			{
+				SetCapture(false);
+				y = ev.MouseY;
+				res = MouseEventBack(MOUSE_Release,ev.MouseX,y);
+				if ( res ) y = -1;
+				res |= MouseEvent(MOUSE_Release,ev.MouseX,y);
+			}
+			return false;
+			break;
+		}
+		return Super.OnUIEvent(ev);
+	}
+
+	// big bulk of code
+	private void DrawPage( int page, double xofs = 0., double alpha = 1. )
+	{
+		Font fnt = LangFont(TewiFont);
+		int h = fnt.GetHeight();
+		String hdr = "", txt = "";
+		BrokenLines l;
+		int maxlen = 0, lh;
+		double y = 0;
+		hdr = StringTable.Localize("$"..SWWMMODPREFIX.."_HELP_PAGE"..(page+1));
+		txt = StringTable.Localize("$"..SWWMMODPREFIX.."_HELP_PAGE"..(page+1).."_TXT");
+		l = fnt.BreakLines(txt,600);
+		lh = l.Count()*h;
+		Screen.DrawText(fnt,SWWMCREDITSCOL0,xofs+(Screen.GetWidth()-fnt.StringWidth(hdr)*CleanXFac_1)/2,(Screen.GetHeight()-(h*3+lh)*CleanYFac_1)/2,hdr,DTA_CleanNoMove_1,true,DTA_Alpha,alpha);
+		for ( int i=0; i<l.Count(); i++ )
+		{
+			int len = l.StringWidth(i);
+			if ( len > maxlen ) maxlen = len;
+		}
+		for ( int i=0; i<l.Count(); i++ )
+		{
+			Screen.DrawText(fnt,SWWMCREDITSCOL2,xofs+(Screen.GetWidth()-maxlen*CleanXFac_1)/2,(Screen.GetHeight()-lh*CleanYFac_1)/2+y,l.StringAt(i),DTA_CleanNoMove_1,true,DTA_Alpha,alpha);
+			y += h*CleanYFac_1;
+		}
+		l.Destroy();
+	}
+
+	override void Drawer()
+	{
+		if ( !TewiFont ) TewiFont = Font.GetFont('TewiShaded');
+		if ( !MPlusFont ) MPlusFont = Font.GetFont('MPlusShaded');
+		if ( !fuzz ) fuzz = CVar.FindCVar(SWWMMODPREFIX.."_fuzz");
+		if ( fuzz.GetBool() )
+		{
+			Vector2 tsize = TexMan.GetScaledSize(bgtex);
+			double zoom = max(ceil(Screen.GetWidth()/tsize.x),ceil(Screen.GetHeight()/tsize.y));
+			Vector2 vsize = (Screen.GetWidth(),Screen.GetHeight())/zoom;
+			Screen.DrawTexture(bgtex,false,(vsize.x-tsize.x)/2,(vsize.y-tsize.y)/2,DTA_VirtualWidthF,vsize.x,DTA_VirtualHeightF,vsize.y,DTA_KeepRatio,true,DTA_ColorOverlay,Color(192,0,0,0),DTA_Alpha,.8);
+		}
+		else Screen.Dim("Black",.8,0,0,Screen.GetWidth(),Screen.GetHeight());
+		double alph = clamp((gametic-fadetic)*(5./GameTicRate),0.,1.);
+		if ( (prevpage == -1) || (alph >= 1.) ) DrawPage(curpage);
+		else
+		{
+			DrawPage(prevpage,-(pagedir*alph*32)*CleanXFac_1,(1.-alph)**3);
+			DrawPage(curpage,(pagedir*(1.-alph)*32)*CleanXFac_1,alph**3);
+		}
+		int h = TewiFont.GetHeight();
+		double y = Screen.GetHeight()/2-(h*2)*CleanYFac_1;
+		for ( int i=0; i<4; i++ )
+		{
+			if ( curpage > 0 )
+				Screen.DrawText(TewiFont,SWWMCREDITSCOL1,12*CleanXFac_1,y,"<",DTA_CleanNoMove_1,true);
+			if ( curpage < numpages-1 )
+				Screen.DrawText(TewiFont,SWWMCREDITSCOL1,Screen.GetWidth()-18*CleanXFac_1,y,">",DTA_CleanNoMove_1,true);
+			y += h*CleanYFac_1;
+		}
+		Super.Drawer();
+	}
+}

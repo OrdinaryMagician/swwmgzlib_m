@@ -73,6 +73,8 @@ Class SWWMOptionMenu : OptionMenu
 		// fetch the tooltip for whatever's selected (if any)
 		if ( mDesc.mSelectedItem == -1 ) return;
 		String mcvar = mDesc.mItems[mDesc.mSelectedItem].GetAction();
+		int pflen = SWWMMODPREFIX.Length()+1;
+		if ( mcvar.Left(pflen) ~== (SWWMMODPREFIX.."_") ) mcvar = "swwm_"..mcvar.Mid(pflen);
 		mcvar.Replace(" ","_");	// need to strip whitespace for command actions
 		String locstr = String.Format("TOOLTIP_%s",mcvar);
 		ttip = StringTable.Localize(locstr,false);

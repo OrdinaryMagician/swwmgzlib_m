@@ -58,38 +58,6 @@ extend Class SWWMHandler
 			ExtraGibDeaths.GibThis(e.Thing,"FatsoXDeath");
 	}
 
-	private void DoKeyTagFix( Actor a )
-	{
-		if ( a is 'RedCard' ) a.SetTag("$T_REDCARD");
-		else if ( a is 'BlueCard' ) a.SetTag("$T_BLUECARD");
-		else if ( a is 'YellowCard' ) a.SetTag("$T_YELLOWCARD");
-		else if ( a is 'RedSkull' ) a.SetTag("$T_REDSKULL");
-		else if ( a is 'BlueSkull' ) a.SetTag("$T_BLUESKULL");
-		else if ( a is 'YellowSkull' ) a.SetTag("$T_YELLOWSKULL");
-		else if ( a is 'KeyYellow' ) a.SetTag("$T_YELLOWKEY");
-		else if ( a is 'KeyGreen' ) a.SetTag("$T_GREENKEY");
-		else if ( a is 'KeyBlue' ) a.SetTag("$T_BLUEKEY");
-		else if ( a.GetClassName() == 'KeyRed' ) a.SetTag("$T_REDKEY");
-		else if ( a is 'KeySteel' ) a.SetTag("$T_KEYSTEEL");
-		else if ( a is 'KeyCave' ) a.SetTag("$T_KEYCAVE");
-		else if ( a is 'KeyAxe' ) a.SetTag("$T_KEYAXE");
-		else if ( a is 'KeyFire' ) a.SetTag("$T_KEYFIRE");
-		else if ( a is 'KeyEmerald' ) a.SetTag("$T_KEYEMERALD");
-		else if ( a is 'KeyDungeon' ) a.SetTag("$T_KEYDUNGEON");
-		else if ( a is 'KeySilver' ) a.SetTag("$T_KEYSILVER");
-		else if ( a is 'KeyRusted' ) a.SetTag("$T_KEYRUSTED");
-		else if ( a is 'KeyHorn' ) a.SetTag("$T_KEYHORN");
-		else if ( a is 'KeySwamp' ) a.SetTag("$T_KEYSWAMP");
-		else if ( a is 'KeyCastle' ) a.SetTag("$T_KEYCASTLE");
-	}
-
-	// tempfix keys have no tags
-	static void KeyTagFix( Actor a )
-	{
-		let hnd = SWWMHandler(Find("SWWMHandler"));
-		if ( hnd ) hnd.DoKeyTagFix(a);
-	}
-
 	// copies the floatbob of overlapping identical items, so it doesn't look weird
 	private void CopyFloatBob( Actor a )
 	{
@@ -139,7 +107,6 @@ extend Class SWWMHandler
 				p.SetStateLabel("Pickup");
 			}
 		}
-		if ( e.Thing is 'Key' ) DoKeyTagFix(e.Thing);
 		if ( !useshadows ) useshadows = CVar.FindCVar(SWWMMODPREFIX.."_shadows");
 		if ( useshadows.GetBool() && (e.Thing.bSHOOTABLE || e.Thing.bISMONSTER || (e.Thing is 'Inventory')) && ((e.Thing is 'SWWMPlayer') || (e.Thing.SpawnState.sprite == e.Thing.GetSpriteIndex('XZW1'))) )
 			SWWMShadow.Track(e.Thing);
