@@ -1,0 +1,12 @@
+Model "Omnisight"
+{
+	Path "models"
+	Model 0 "Omnisight_d.3d"
+	Skin 0 "Omnisight.png"
+	Scale 0.04 0.04 0.04
+	RollOffset 30
+	ZOffset 16
+	ROTATING
+
+	FrameIndex XZW1 A 0 0
+}

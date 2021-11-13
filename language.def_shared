@@ -2,6 +2,10 @@
 // tags, pickups
 T_EMBIGGENER = "Hammerspace Embiggener";
 T_BULKEMBIGGENER = "Bulk Hammerspace Embiggener";
+T_OMNISIGHT = "Omnisight";
+I_OMNISIGHT = "Omnisight Mapping Unit";
+T_BARRIER = "Elemental Coating";
+T_SAFETY = "Safety Tether";
 // shortened doom key pickup messages
 GOTBLUECARD = "Blue Keycard";
 GOTYELWCARD = "Yellow Keycard";
@@ -118,6 +122,8 @@ OB_HERESIARCH = "%o saw that coming.";
 OB_PIG = "%o angered the hams.";	// for when gzdoom fixes this (come on, graf)
 DEFOB_PIG = "$$OB_PIG";	// gzdoom will look this up since it has no obituary assigned
 // misc
+D_BARRIER = "The Elemental Coating wore off.";
+D_TETHERFAIL = "The Safety Tether link was obstructed.";
 SWWM_SWAPWEAPON = "\cjPress \cfUse\cj to swap \cf%s\cj for \cf%s\cj.\c-";
 SWWM_SETSLOTSTRICT = "\cg!!!WARNING!!!\c-\n\cj\"setslotstrict\" is enabled. This will cause SWWM GZ weapons to not have slots assigned. Please go into Miscellaneous Options and toggle the \"Strict KEYCONF Weapons/Players\" setting.\c-";
 // keybinds

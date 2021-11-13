@@ -1,0 +1,233 @@
+// separate Elemental Coating file, include if used
+
+Class BarrierLight : PointLightAttenuated
+{
+	Default
+	{
+		Args 32,72,0,80;
+	}
+	override void Tick()
+	{
+		Super.Tick();
+		if ( !target || !master )
+		{
+			Destroy();
+			return;
+		}
+		if ( target.player )
+			SetOrigin(target.Vec2OffsetZ(0,0,target.player.viewz),true);
+		else SetOrigin(target.Vec3Offset(0,0,target.height/2),true);
+		bDORMANT = Powerup(master).isBlinking();
+	}
+}
+Class BarrierSnd : Actor
+{
+	Default
+	{
+		+NOBLOCKMAP;
+		+NOGRAVITY;
+		+NOINTERACTION;
+	}
+	override void Tick()
+	{
+		if ( !target || !master )
+		{
+			Destroy();
+			return;
+		}
+		SetOrigin(target.pos,true);
+		if ( players[consoleplayer].Camera == target )
+		{
+			A_SoundVolume(CHAN_VOICE,0.);
+			A_SoundVolume(CHAN_7,.1);
+		}
+		else
+		{
+			A_SoundVolume(CHAN_VOICE,.06);
+			A_SoundVolume(CHAN_7,0.);
+		}
+	}
+	override void PostBeginPlay()
+	{
+		Super.PostBeginPlay();
+		A_StartSound("powerup/barrieract",CHAN_VOICE,CHANF_LOOP,.06,1.5);
+		A_StartSound("powerup/barrieract",CHAN_7,CHANF_LOOP,.1,ATTN_NONE);
+	}
+	override void OnDestroy()
+	{
+		Super.OnDestroy();
+		A_StopSound(CHAN_VOICE);
+		A_StopSound(CHAN_7);
+	}
+}
+
+Class BarrierPower : PowerIronFeet
+{
+	Mixin SWWMShadedPowerup;
+
+	Actor snd, l;
+
+	Default
+	{
+		Inventory.Icon "graphics/HUD/Icons/I_Barrier.png";
+		Powerup.Duration -60;
+		Powerup.Color "20 FF 00", 0.1;
+		Powerup.Mode "Full";	// no leaky damage
+		+INVENTORY.ADDITIVETIME;
+	}
+
+	override void ModifyDamage( int damage, Name damageType, out int newdamage, bool passive, Actor inflictor, Actor source, int flags )
+	{
+		if ( !passive ) return;
+		// negate elemental damage
+		if ( (damageType == 'Fire') || (damageType == 'Ice') || (damageType == 'Slime') || (damageType == 'Electric') || (damageType == 'Plasma') || (damageType == 'Radiation') || (damageType == 'Wind') || (damageType == 'Water') || (damageType == 'Corroded') || (damageType == 'Lava') )
+			newdamage = 0;
+	}
+
+	override void InitEffect()
+	{
+		Super.InitEffect();
+		if ( !Owner ) return;
+		l = Spawn("BarrierLight",Owner.pos);
+		l.target = Owner;
+		l.master = self;
+		if ( Owner is 'SWWMPlayer' )
+			SWWMPlayer(Owner).lastbump *= 0.95;
+	}
+	override void EndEffect()
+	{
+		Super.EndEffect();
+		if ( !Owner ) return;
+		Owner.A_StartSound("powerup/barrierend",CHAN_ITEMEXTRA,CHANF_OVERLAP);
+		if ( Owner is 'SWWMPlayer' )
+			SWWMPlayer(Owner).lastbump *= 0.95;
+		if ( (EffectTics <= 0) && Owner && Owner.CheckLocalView() ) Console.Printf(StringTable.Localize("$D_BARRIER"));
+	}
+
+	override void DoEffect()
+	{
+		// don't reset air supply like PowerIronFeet, call parent instead
+		Powerup.DoEffect();
+		if ( !Owner ) return;
+		if ( !snd ) snd = Spawn("BarrierSnd",Owner.pos);
+		snd.target = Owner;
+		snd.master = self;
+	}
+}
+
+Class EBarrier : Inventory
+{
+	Mixin SWWMAutoUseFix;
+	Mixin SWWMOverlapPickupSound;
+	Mixin SWWMUseToPickup;
+	Mixin SWWMRespawn;
+	Mixin SWWMPickupGlow;
+
+	int terrainwait;
+
+	override bool Use( bool pickup )
+	{
+		if ( pickup ) return false;
+		if ( pickup && ((Owner.player == players[consoleplayer]) || bBigPowerup) ) Owner.A_StartSound(UseSound,CHAN_ITEMEXTRA,CHANF_OVERLAP);
+		let b = BarrierPower(Owner.FindInventory("BarrierPower"));
+		if ( b )
+		{
+			b.EffectTics += b.default.EffectTics;
+			if ( Owner is 'SWWMPlayer' )
+				SWWMPlayer(Owner).lastbump *= 0.95;
+		}
+		else Owner.GiveInventory("BarrierPower",1);
+		return true;
+	}
+	override void PreTravelled()
+	{
+		if ( tracer ) tracer.Destroy();
+	}
+	override void Travelled()
+	{
+		Super.Travelled();
+		if ( tracer ) return;
+		tracer = Spawn("EBarrierX",pos);
+		tracer.angle = angle;
+		tracer.target = self;
+		tracer.FloatBobPhase = FloatBobPhase;
+	}
+	override void PostBeginPlay()
+	{
+		Super.PostBeginPlay();
+		tracer = Spawn("EBarrierX",pos);
+		tracer.angle = angle;
+		tracer.target = self;
+		tracer.FloatBobPhase = FloatBobPhase;
+	}
+	override void DoEffect()
+	{
+		Super.DoEffect();
+		// check terrain for auto-use
+		let b = Powerup(Owner.FindInventory("BarrierPower"));
+		if ( b && (b.EffectTics > 5) )
+		{
+			terrainwait = 20;
+			return;
+		}
+		bool damageterrain = false;
+		// check any 3d floors first
+		for ( int i=0; i<Owner.CurSector.Get3DFloorCount(); i++ )
+		{
+			F3DFloor ff = Owner.CurSector.Get3DFloor(i);
+			if ( !(ff.flags&(F3DFloor.FF_EXISTS|F3DFloor.FF_SWIMMABLE)) ) continue;
+			if ( (ff.model.DamageAmount <= 0) || (ff.model.damageinterval <= 0) ) continue;
+			if ( ff.top.ZAtPoint(Owner.pos.xy) <= Owner.pos.z ) continue;
+			if ( ff.bottom.ZAtPoint(Owner.pos.xy) >= (Owner.pos.z+Owner.Height) ) continue;
+			damageterrain = true;
+			break;
+		}
+		if ( !damageterrain && (Owner.pos.z <= Owner.floorz) )
+		{
+			if ( (Owner.floorsector.damageamount > 0) && (Owner.floorsector.damageinterval > 0) ) damageterrain = true;
+			else
+			{
+				let t = Owner.GetFloorTerrain();
+				if ( t && (t.DamageAmount > 0) && (t.DamageTimeMask > 0) )
+					damageterrain = true;
+			}
+		}
+		if ( !damageterrain )
+		{
+			terrainwait = max(0,terrainwait-1);
+			return;
+		}
+		else terrainwait++;
+		if ( terrainwait <= 20 ) return;
+		terrainwait = 0;
+		Owner.UseInventory(self);
+	}
+
+	Default
+	{
+		Tag "$T_BARRIER";
+		Inventory.Icon "graphics/HUD/Icons/I_Barrier.png";
+		Inventory.PickupSound "misc/p_pkup";
+		Inventory.UseSound "powerup/barrier";
+		Inventory.PickupMessage "$T_BARRIER";
+		Inventory.MaxAmount 5;
+		Inventory.InterHubAmount 5;
+		Inventory.PickupFlash "SWWMPurplePickupFlash";
+		+INVENTORY.ALWAYSPICKUP;
+		+INVENTORY.AUTOACTIVATE;
+		+INVENTORY.INVBAR;
+		+INVENTORY.BIGPOWERUP;
+		+FLOATBOB;
+		FloatBobStrength 0.25;
+		Radius 6;
+		Height 28;
+	}
+	States
+	{
+	Spawn:
+		XZW1 A -1;
+		Stop;
+	}
+}
+
+Class EBarrierX : SWWMItemOverlay {}

@@ -1,0 +1,24 @@
+Brightmap Texture "models/Barrier.png"
+{
+	Map "models/Barrier_bright.png"
+	DisableFullbright
+}
+HardwareShader PostProcess beforebloom
+{
+	Name "BarrierShader"
+	Shader "shaders/pp/Barrier.fp" 330
+	Texture WarpTex "textures/heattex.png"
+	Uniform float timer
+}
+
+PointLight BARRIERLIGHT
+{
+	Color 0.1 1.0 0.0
+	Size 40
+	Offset 0 16 0
+	Attenuate 1
+}
+Object EBarrier
+{
+	Frame "XZW1" { light "BARRIERLIGHT" }
+}

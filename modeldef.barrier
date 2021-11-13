@@ -1,0 +1,22 @@
+Model "EBarrier"
+{
+	Path "models"
+	Model 0 "Barrier_d.3d"
+	SurfaceSkin 0 0 "Barrier.png"
+	Scale 0.05 0.05 0.05
+	ZOffset 16
+	ROTATING
+
+	FrameIndex XZW1 A 0 0
+}
+Model "EBarrierX"
+{
+	Path "models"
+	Model 0 "Barrier_d.3d"
+	SurfaceSkin 0 1 "matcap/barriermap.png"
+	Scale 0.05 0.05 0.05
+	ZOffset 16
+	DONTCULLBACKFACES
+
+	FrameIndex XZW1 A 0 0
+}

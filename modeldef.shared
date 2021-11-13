@@ -85,38 +85,3 @@ Model "SWWMShadow"
 
 	FrameIndex XZW1 A 0 0
 }
-
-Model "HammerspaceEmbiggener"
-{
-	Path "models"
-
-	Model 0 "Embiggener_d.3d"
-	Skin 0 "Embiggener.png"
-	Scale 0.03 0.03 0.03
-	PitchOffset 20
-	ZOffset 16
-	ROTATING
-
-	FrameIndex XZW1 A 0 0
-}
-Model "BulkHammerspaceEmbiggener"
-{
-	Path "models"
-
-	Model 0 "Embiggener_d.3d"
-	Skin 0 "Embiggener.png"
-	Scale 0.03 0.03 0.03
-	PitchOffset 20
-	ZOffset 16
-	ROTATING
-
-	FrameIndex XZW1 A 0 0
-	Skin 0 "Embiggener_Tier2.png"
-	FrameIndex XZW1 B 0 0
-	Skin 0 "Embiggener_Tier3.png"
-	FrameIndex XZW1 C 0 0
-	Skin 0 "Embiggener_Tier4.png"
-	FrameIndex XZW1 D 0 0
-	Skin 0 "Embiggener_Tier5.png"
-	FrameIndex XZW1 E 0 0
-}

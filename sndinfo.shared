@@ -14,9 +14,9 @@ compat/warn	sounds/UTWARN.ogg
 hahaha/hahaha	sounds/HAHAHA.ogg
 
 // used by boss brain
-explodium/hit1		sounds/explodiumgun/expl_hit1.ogg
-explodium/hit2		sounds/explodiumgun/expl_hit2.ogg
-explodium/hit3		sounds/explodiumgun/expl_hit3.ogg
+explodium/hit1		sounds/general/genexplo1.ogg
+explodium/hit2		sounds/general/genexplo2.ogg
+explodium/hit3		sounds/general/genexplo3.ogg
 $random explodium/hit { explodium/hit1 explodium/hit2 explodium/hit3 }
 $limit explodium/hit 32
 
@@ -72,7 +72,24 @@ armor/hit5	sounds/items/hullhit5.ogg
 $random armor/hit { armor/hit1 armor/hit2 armor/hit3 armor/hit4 armor/hit5 }
 
 // shared powerups
+powerup/omnisight	sounds/items/omnisight.ogg
 powerup/embiggener	sounds/items/embiggen.ogg
+powerup/barrier		sounds/items/barrieron.ogg
+powerup/barrieract	sounds/items/barrieract.ogg
+powerup/barrierend	sounds/items/barrieroff.ogg
+powerup/tetheruse	sounds/items/tetheruse.ogg
+powerup/tetherfail	sounds/items/tetherfail.ogg
+powerup/tethererror	sounds/items/tethererror.ogg
+powerup/tethershock1	sounds/items/tethershock1.ogg
+powerup/tethershock2	sounds/items/tethershock2.ogg
+powerup/tethershock3	sounds/items/tethershock3.ogg
+$random powerup/tethershock { powerup/tethershock1 powerup/tethershock2 powerup/tethershock3 }
+$limit powerup/tethershock 8
+powerup/devastation	sounds/items/devaon.ogg
+powerup/devastationamb	sounds/items/devaamb.ogg
+powerup/devastationact	sounds/items/devaact.ogg
+powerup/devastationhit	sounds/items/devahit.ogg
+powerup/devastationend	sounds/items/devaoff.ogg
 
 newkeen/hit	sounds/keenhit.ogg
 newkeen/die	sounds/keendie.ogg

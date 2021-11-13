@@ -1,0 +1,12 @@
+Model "AngerySigil"
+{
+	Path "models"
+
+	Model 0 "DevaSigil_d.3d"
+	Skin 0 "DevaSigil.png"
+	Scale 0.07 0.07 0.07
+	ZOffset 20
+	ROTATING
+
+	FrameIndex XZW1 A 0 0
+}

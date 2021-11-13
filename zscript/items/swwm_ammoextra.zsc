@@ -194,6 +194,7 @@ Class HammerspaceEmbiggener : Inventory
 	Default
 	{
 		Tag "$T_EMBIGGENER";
+		Inventory.Icon "graphics/HUD/Icons/I_Embiggener.png";
 		Inventory.PickupMessage "$T_EMBIGGENER";
 		Inventory.MaxAmount SWWMMAXBACKPACK;
 		Inventory.InterHubAmount SWWMMAXBACKPACK;

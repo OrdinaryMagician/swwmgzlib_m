@@ -1,0 +1,29 @@
+Brightmap Texture "models/SafetyTether.png"
+{
+	map "models/SafetyTether_bright.png"
+	DisableFullbright
+}
+HardwareShader Texture "models/SafetyTether.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/SafetyTether_mask.png"
+	Texture "envtex" "models/matcap/silvermap.png"
+}
+HardwareShader Texture "models/SafetyTether_off.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/SafetyTether_mask.png"
+	Texture "envtex" "models/matcap/silvermap.png"
+}
+
+PointLight SAFETYLIGHT
+{
+	Color 0.2 1.0 0.3
+	Size 50
+	Attenuate 1
+}
+
+Object SafetyTether
+{
+	Frame "XZW1B" { light "SAFETYLIGHT" }
+}

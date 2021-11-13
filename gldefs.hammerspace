@@ -1,0 +1,50 @@
+Brightmap Texture "models/Embiggener.png"
+{
+	map "models/Embiggener_bright.png"
+}
+Brightmap Texture "models/Embiggener_Tier2.png"
+{
+	map "models/Embiggener_bright.png"
+}
+Brightmap Texture "models/Embiggener_Tier3.png"
+{
+	map "models/Embiggener_bright.png"
+}
+Brightmap Texture "models/Embiggener_Tier4.png"
+{
+	map "models/Embiggener_bright.png"
+}
+Brightmap Texture "models/Embiggener_Tier5.png"
+{
+	map "models/Embiggener_bright.png"
+}
+HardwareShader Texture "models/Embiggener.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/Embiggener_mask.png"
+	Texture "envtex" "models/matcap/redmap.png"
+}
+HardwareShader Texture "models/Embiggener_Tier2.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/Embiggener_mask.png"
+	Texture "envtex" "models/matcap/greenmap.png"
+}
+HardwareShader Texture "models/Embiggener_Tier3.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/Embiggener_mask.png"
+	Texture "envtex" "models/matcap/blumap.png"
+}
+HardwareShader Texture "models/Embiggener_Tier4.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/Embiggener_mask.png"
+	Texture "envtex" "models/matcap/purpmap.png"
+}
+HardwareShader Texture "models/Embiggener_Tier5.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/Embiggener_mask.png"
+	Texture "envtex" "models/matcap/glassmap.png"
+}

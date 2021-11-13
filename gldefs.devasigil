@@ -1,0 +1,30 @@
+HardwareShader Texture "models/DevaSigil.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/DevaSigil_mask.png"
+	Texture "envtex" "models/matcap/dekamap.png"
+}
+HardwareShader PostProcess scene
+{
+	Name "DevastationShader"
+	Shader "shaders/pp/Devascreen.fp" 330
+	Texture BumpTex "textures/heattex.png"
+	Texture WarpTex1 "textures/devawarp1.png"
+	Texture WarpTex2 "textures/devawarp2.png"
+	Texture NoiseTex "textures/graynoise.png"
+	Uniform float timer
+	Uniform float xtrastr
+}
+
+PointLight DEVASLIGHT
+{
+	Color 0.7 0.9 1.0
+	Size 90
+	Attenuate 1
+	Subtractive 1
+}
+
+Object AngerySigilX
+{
+	Frame "BLPS" { light "DEVASLIGHT" }
+}

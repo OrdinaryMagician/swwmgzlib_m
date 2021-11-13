@@ -1,0 +1,44 @@
+Model "SafetyTether"
+{
+	Path "models"
+
+	Model 0 "SafetyTether_d.3d"
+	Skin 0 "SafetyTether_off.png"
+	Scale 0.02 0.02 0.02
+	ZOffset 16
+	PitchOffset 30
+	ROTATING
+
+	FrameIndex XZW1 A 0 0
+	Skin 0 "SafetyTether.png"
+	FrameIndex XZW1 B 0 0
+}
+
+Model "TetherRadiusShockwave"
+{
+	Path "models/extra"
+	Model 0 "flat_d.3d"
+	Skin 0 "Shockwave.png"
+	Scale 1.0 0.06 0.015
+	RollOffset 90
+	AngleOffset 90
+	ZOffset 4
+	USEACTORPITCH
+	DONTCULLBACKFACES
+
+	FrameIndex XZW1 A 0 0
+}
+Model "TetherRadiusShockwaveTail"
+{
+	Path "models/extra"
+	Model 0 "flat_d.3d"
+	Skin 0 "Shockwave.png"
+	Scale 1.0 0.06 0.015
+	RollOffset 90
+	AngleOffset 90
+	ZOffset 4
+	USEACTORPITCH
+	DONTCULLBACKFACES
+
+	FrameIndex XZW1 A 0 0
+}

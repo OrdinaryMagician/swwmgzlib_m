@@ -1,0 +1,17 @@
+Brightmap Texture "models/Omnisight.png"
+{
+	Map "models/Omnisight_bright.png"
+	DisableFullbright
+}
+
+PointLight OMNISIGHTLIGHT
+{
+	Color 0.3 0.0 0.0
+	Size 20
+	Offset 0 16 0
+	Attenuate 1
+}
+Object Omnisight
+{
+	Frame "XZW1" { light "OMNISIGHTLIGHT" }
+}

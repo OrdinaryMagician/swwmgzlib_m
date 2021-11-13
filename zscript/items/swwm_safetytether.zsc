@@ -1,0 +1,278 @@
+// separate Safety Tether file, include if used
+
+Class TetherRadiusShockwaveTail : Actor
+{
+	Default
+	{
+		RenderStyle "Add";
+		Radius 16;
+		Height 8;
+		+NOBLOCKMAP;
+		+NOGRAVITY;
+		+DONTSPLASH;
+		+NOTELEPORT;
+		+NOINTERACTION;
+	}
+	States
+	{
+	Spawn:
+		XZW1 A 1
+		{
+			pitch = min(85,(pitch+2)*1.05);
+			A_FadeOut(.02);
+			A_SetScale(scale.x*1.08,scale.y);
+			vel *= .98;
+		}
+		Wait;
+	}
+}
+
+Class TetherRadiusShockwave : Actor
+{
+	Actor lasthit;
+
+	Default
+	{
+		RenderStyle "Add";
+		Speed 15;
+		DamageFunction int(200*alpha);
+		Radius 16;
+		Height 8;
+		Alpha .4;
+		XScale .65;
+		YScale 3.;
+		PROJECTILE;
+		+DONTSPLASH;
+		+STEPMISSILE;
+		+NOEXPLODEFLOOR;
+		+FLATSPRITE;
+		+RIPPER;
+		+BLOODLESSIMPACT;
+		-NOGRAVITY;
+	}
+	override int DoSpecialDamage( Actor target, int damage, Name damagetype )
+	{
+		if ( target == lasthit ) return 0;
+		lasthit = target;
+		if ( damage <= 0 ) return damage;
+		if ( (target.mass < LARGE_MASS) && !target.bDONTTHRUST )
+		{
+			target.vel.xy += vel.xy.unit()*(30000./max(50,target.mass))*alpha;
+			if ( (target.pos.z <= floorz) || !target.TestMobjZ() )
+				target.vel.z += (4000./max(50,target.mass))*alpha;
+		}
+		return damage;
+	}
+	States
+	{
+	Spawn:
+		XZW1 A 1
+		{
+			SetZ(floorz);
+			pitch = min(85,(pitch+2)*1.05);
+			if ( !Random[ExploS](0,3) )
+				Spawn("InvisibleSplasher",Vec3Offset(0,0,2));
+			let s = Spawn("TetherRadiusShockwaveTail",pos);
+			s.vel = vel*.35;
+			s.scale = scale;
+			s.alpha = alpha*.4;
+			s.angle = angle;
+			s.pitch = pitch;
+			s.roll = roll;
+			A_FadeOut(.015);
+			A_SetScale(scale.x*1.08,scale.y);
+			vel *= .98;
+		}
+		Wait;
+	Death:
+		XZW1 A 1
+		{
+			SetZ(floorz);
+			A_FadeOut(.05);
+			A_SetScale(scale.x*1.1,scale.y*.97);
+		}
+		Wait;
+	}
+}
+
+Class TetherShockwave : Actor
+{
+	Default
+	{
+		+NOGRAVITY;
+		+NOBLOCKMAP;
+		+NOTELEPORT;
+		+NODAMAGETHRUST;
+		+FORCERADIUSDMG;
+		+NOINTERACTION;
+		Radius .1;
+		Height 0.;
+	}
+	override void PostBeginPlay()
+	{
+		Super.PostBeginPlay();
+		A_QuakeEx(7,7,7,30,0,300+min(special1,50)*4,"",QF_RELATIVE|QF_SCALEDOWN,falloff:200,rollIntensity:1.5);
+		if ( target.player != players[consoleplayer] )
+		{
+			A_StartSound("powerup/tethershock",CHAN_FOOTSTEP,CHANF_OVERLAP,attenuation:.3);
+			A_StartSound("powerup/tethershock",CHAN_FOOTSTEP,CHANF_OVERLAP,attenuation:.2,pitch:.7);
+			A_StartSound("powerup/tethershock",CHAN_FOOTSTEP,CHANF_OVERLAP,attenuation:.1,pitch:.4);
+		}
+		SWWMUtility.DoExplosion(self,40+min(special1,120),100000+min(special1*2000,150000),100+min(special1*2,130),80,DE_BLAST|DE_EXTRAZTHRUST,ignoreme:target);
+		for ( int i=0; i<360; i+=5 )
+		{
+			Vector3 pvel = (FRandom[ExploS](-1,1),FRandom[ExploS](-1,1),FRandom[ExploS](-1,1)).unit()*FRandom[ExploS](1,3);
+			let s = Spawn("SWWMSmoke",Vec3Angle(4,i,8));
+			s.vel = pvel+(cos(i),sin(i),0)*7.;
+			s.SetShade(Color(1,1,1)*Random[ExploS](64,224));
+			s.special1 = Random[ExploS](1,4);
+			s.scale *= 1.5;
+			s.alpha *= .4;
+		}
+		if ( pos.z > floorz+16 ) return;
+		for ( int i=0; i<360; i+=5 )
+		{
+			let r = Spawn("TetherRadiusShockwave",Vec3Angle(5,i));
+			r.target = target;
+			r.angle = i;
+			r.vel.xy = (cos(i),sin(i))*(r.speed+min(special1*.15,30));
+			r.alpha *= .1+min(special1*.03,.9);
+		}
+		int numpt = Random[ExploS](10,20);
+		for ( int i=0; i<numpt; i++ )
+		{
+			Vector3 pvel = (FRandom[ExploS](-1,1),FRandom[ExploS](-1,1),FRandom[ExploS](-1,1)).unit()*FRandom[ExploS](2,12);
+			let s = Spawn("SWWMChip",pos);
+			s.vel = pvel;
+		}
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 140;
+		Stop;
+	}
+}
+
+Class SafetyTether : Inventory
+{
+	Mixin SWWMAutoUseFix;
+	Mixin SWWMOverlapPickupSound;
+	Mixin SWWMUseToPickup;
+	Mixin SWWMRespawn;
+
+	bool bPrimed, bFailed;
+	int primetim;
+	TextureID OnIcon[3];
+
+	override void Travelled()
+	{
+		Super.Travelled();
+		bPrimed = false;
+	}
+	override Inventory CreateTossable( int amt )
+	{
+		if ( bPrimed ) return null;	// can't drop while primed
+		let ret = Super.CreateTossable(amt);
+		// reattach our glow if we became a pickup
+		if ( (ret == self) && (PickupFlash is 'SWWMPickupFlash') )
+		{
+			let p = Spawn(PickupFlash,Vec3Offset(0,0,16));
+			p.target = self;
+			p.SetStateLabel("Pickup");
+		}
+		return ret;
+	}
+
+	override void DoEffect()
+	{
+		Super.DoEffect();
+		if ( !bPrimed ) return;
+		Icon = ((primetim%4)>=2)?default.Icon:(primetim>=6)?(bFailed?OnIcon[1]:OnIcon[2]):OnIcon[0];
+		if ( !bFailed && (primetim == 20) ) Owner.A_StartSound("hahaha/hahaha",CHAN_POWERUP,CHANF_OVERLAP);
+		primetim++;
+		if ( (primetim <= 20) || (!bFailed && (primetim <= 50)) ) return;
+		primetim = 0;
+		bPrimed = false;
+		Icon = default.Icon;
+		if ( bFailed ) return;
+		Vector3 safepos;
+		double safeangle;
+		if ( deathmatch ) [safepos, safeangle] = level.PickDeathmatchStart();
+		else [safepos, safeangle] = level.PickPlayerStart(Owner.PlayerNumber());
+		Vector3 oldpos = Owner.pos;
+		if ( !Owner.Teleport(safepos,safeangle,0) )
+		{
+			if ( Owner is 'SWWMPlayer' )
+				SWWMPlayer(Owner).lastbump *= .95;
+			Owner.A_StartSound("powerup/tethererror",CHAN_ITEMEXTRA,CHANF_OVERLAP);
+			if ( Owner.player == players[consoleplayer] ) Console.Printf(StringTable.Localize("$D_TETHERFAIL"));
+			return;
+		}
+		let s = Spawn("TetherShockwave",oldpos);
+		s.target = Owner;
+		s.special1 = 120;
+		s.A_AlertMonsters();
+		s = Spawn("TetherShockwave",Owner.pos);
+		s.target = Owner;
+		s.special1 = 120;
+		s.A_AlertMonsters();
+		if ( Owner.player == players[consoleplayer] )
+		{
+			Owner.A_StartSound("powerup/tethershock",CHAN_FOOTSTEP,CHANF_OVERLAP);
+			Owner.A_StartSound("powerup/tethershock",CHAN_FOOTSTEP,CHANF_OVERLAP,pitch:.7);
+			Owner.A_StartSound("powerup/tethershock",CHAN_FOOTSTEP,CHANF_OVERLAP,pitch:.4);
+		}
+		SWWMHandler.DoFlash(Owner,Color(255,255,255,255),10);
+		SWWMHandler.DoFlash(Owner,Color(255,128,192,255),30);
+		Owner.GiveBody(-100);
+		Amount--;
+		if ( Amount <= 0 ) DepleteOrDestroy();
+	}
+
+	override bool Use( bool pickup )
+	{
+		if ( pickup || bPrimed ) return false;
+		if ( !OnIcon[0] ) OnIcon[0] = TexMan.CheckForTexture("graphics/HUD/Icons/I_SafetyOn.png");
+		if ( !OnIcon[1] ) OnIcon[1] = TexMan.CheckForTexture("graphics/HUD/Icons/I_SafetyNo.png");
+		if ( !OnIcon[2] ) OnIcon[2] = TexMan.CheckForTexture("graphics/HUD/Icons/I_SafetyYes.png");
+		bPrimed = true;
+		primetim = 0;
+		Vector3 safepos;
+		if ( deathmatch ) safepos = level.PickDeathmatchStart();
+		else safepos = level.PickPlayerStart(Owner.PlayerNumber());
+		bFailed = (level.Vec3Diff(Owner.pos,safepos).length() < 400);
+		if ( (Owner.player == players[consoleplayer]) || bBigPowerup ) Owner.A_StartSound(bFailed?"powerup/tetherfail":"powerup/tetheruse",CHAN_ITEMEXTRA,CHANF_OVERLAP);
+		// don't consume on use, will happen later
+		Amount++;
+		return true;
+	}
+
+	Default
+	{
+		Tag "$T_SAFETY";
+		Inventory.Icon "graphics/HUD/Icons/I_Safety.png";
+		Inventory.PickupSound "misc/p_pkup";
+		Inventory.UseSound "";
+		Inventory.PickupMessage "$T_SAFETY";
+		Inventory.MaxAmount 5;
+		Inventory.InterHubAmount 5;
+		Inventory.PickupFlash "SWWMPurplePickupFlash";
+		+INVENTORY.ALWAYSPICKUP;
+		+INVENTORY.AUTOACTIVATE;
+		+INVENTORY.INVBAR;
+		+COUNTITEM;
+		+INVENTORY.BIGPOWERUP;
+		+FLOATBOB;
+		FloatBobStrength 0.25;
+		Radius 5;
+		Height 23;
+	}
+	States
+	{
+	Spawn:
+		XZW1 A 33;
+		XZW1 B 2;
+		Loop;
+	}
+}
