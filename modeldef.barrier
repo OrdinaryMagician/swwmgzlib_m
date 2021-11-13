@@ -18,5 +18,5 @@ Model "EBarrierX"
 	ZOffset 16
 	DONTCULLBACKFACES
 
-	FrameIndex XZW1 A 0 0
+	FrameIndex XZW0 A 0 0
 }
