@@ -6,6 +6,7 @@ T_OMNISIGHT = "Omnisight";
 I_OMNISIGHT = "Omnisight Mapping Unit";
 T_BARRIER = "Elemental Coating";
 T_SAFETY = "Safety Tether";
+T_DEVASTATION = "Devastation Sigil";
 // shortened doom key pickup messages
 GOTBLUECARD = "Blue Keycard";
 GOTYELWCARD = "Yellow Keycard";
@@ -35,7 +36,7 @@ CRASHMSG8B = "That sure wasn't supposed to happen.";
 // Additional tags
 FN_BOSSBRAIN = "Marisa Kirisame";
 FN_KEEN = "Commander Keen";
-FN_VOODOO = "Voodoo doll of %s";
+FN_VOODOO = "Voodoo doll";
 // edited vanilla obituaries
 OB_SUICIDE = "%o commited suikoden.";
 OB_FALLING = "%o sprained everything.";
@@ -123,9 +124,12 @@ OB_PIG = "%o angered the hams.";	// for when gzdoom fixes this (come on, graf)
 DEFOB_PIG = "$$OB_PIG";	// gzdoom will look this up since it has no obituary assigned
 // misc
 D_BARRIER = "The Elemental Coating wore off.";
+D_DEVASTATION = "The Sigil's power is no more.";
 D_TETHERFAIL = "The Safety Tether link was obstructed.";
 SWWM_SWAPWEAPON = "\cjPress \cfUse\cj to swap \cf%s\cj for \cf%s\cj.\c-";
 SWWM_SETSLOTSTRICT = "\cg!!!WARNING!!!\c-\n\cj\"setslotstrict\" is enabled. This will cause SWWM GZ weapons to not have slots assigned. Please go into Miscellaneous Options and toggle the \"Strict KEYCONF Weapons/Players\" setting.\c-";
+// weapon tooltips
+SWWM_TTNOTE = "Note: Weapon tooltips can be deactivated in the mod options.";
 // keybinds
 SWWM_MINIMAPIN = "Minimap Zoom In";
 SWWM_MINIMAPOUT = "Minimap Zoom Out";
@@ -241,7 +245,6 @@ SWWM_CMAB2 = "For being an amazing friend who believes in me, and for inspiring 
 SWWM_CDRAGON2 = "For being a good pet dragon who cares about me.";
 SWWM_CLUCY2 = "For the Tewi font, which I've used for many many years. I hope you're doing well, wherever you are.";
 SWWM_CGUTA2 = "For the Gutamatics library, and for helping me with learning ZScript.";
-SWWM_CMIKO2 = "For the VERY useful ZPolyobject library.";
 SWWM_CKEKS2 = "For assistance with exception handling code, and also for being such a cool Touhou nerd.";
 SWWM_CZN2 = "For slope alignment code, and to Nash also for being a cool smart cactus dude.";
 SWWM_CVAL2 = "For the custom Nashgore footprints, and for being a good friend and cute bun.";
