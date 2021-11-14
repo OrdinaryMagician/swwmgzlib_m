@@ -63,6 +63,7 @@ misc/ricochet1	sounds/general/ric1.ogg
 misc/ricochet2	sounds/general/ric2.ogg
 misc/ricochet3	sounds/general/ric3.ogg
 $random misc/ricochet { misc/ricochet1 misc/ricochet2 misc/ricochet3 }
+$limit misc/ricochet 32
 
 armor/hit1	sounds/items/hullhit.ogg
 armor/hit2	sounds/items/hullhit2.ogg
