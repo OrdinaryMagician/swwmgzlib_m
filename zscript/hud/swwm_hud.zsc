@@ -64,6 +64,10 @@ Class SWWMStatusBar : BaseStatusBar abstract
 	int mm_colorset;
 	Color mm_backcolor, mm_cdwallcolor, mm_efwallcolor, mm_fdwallcolor, mm_interlevelcolor, mm_intralevelcolor, mm_lockedcolor, mm_notseencolor, mm_portalcolor, mm_secretsectorcolor, mm_secretwallcolor, mm_specialwallcolor, mm_tswallcolor, mm_unexploredsecretcolor, mm_wallcolor, mm_yourcolor;
 
+	// top stuff colors
+	int tclabel, tcvalue, tcextra, tccompl, tcsucks;
+	String tclabel_s, tcextra_s;
+
 	transient CVar pickduration, msgduration, chatduration, forcestats,
 		maxpickup, maxshownbig, maxshown, hudmargin, fuzz, mm_enable;
 
@@ -271,6 +275,14 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		GetMinimapColors();
 		hnd = SWWMHandler(EventHandler.Find("SWWMHandler"));
 		PrevFrame = MSTime();
+		// fallback colors
+		tclabel = Font.CR_FIRE;
+		tcvalue = Font.CR_WHITE;
+		tcextra = Font.CR_DARKGRAY;
+		tccompl = Font.CR_GOLD;
+		tcsucks = FONT.CR_RED;
+		tclabel_s = "x";
+		tcextra_s = "u";
 	}
 
 	override void DrawMyPos()
@@ -535,41 +547,41 @@ Class SWWMStatusBar : BaseStatusBar abstract
 				if ( iof != -1 ) ln.Truncate(iof);
 				if ( !label || ((level.clusterflags&level.CLUSTER_HUB) && (label == 2)) ) str = ln;
 				else str = String.Format("%s - %s",level.mapname.MakeUpper(),ln);
-				Screen.DrawText(smallfont,Font.CR_FIRE,xx-smallfont.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				Screen.DrawText(smallfont,tclabel,xx-smallfont.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 				yy += smallfont.GetHeight();
 			}
 			if ( (level.total_monsters > 0) && am_showmonsters && !deathmatch )
 			{
-				str = String.Format("\cxK \c-%d\cu/\c-%d",level.killed_monsters,level.total_monsters);
-				Screen.DrawText(smallfont2,(level.killed_monsters>=level.total_monsters)?Font.CR_GOLD:Font.CR_WHITE,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				str = String.Format("\c"..tclabel_s.."K \c-%d\c"..tcextra_s.."/\c-%d",level.killed_monsters,level.total_monsters);
+				Screen.DrawText(smallfont2,(level.killed_monsters>=level.total_monsters)?tccompl:tcvalue,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 				yy += smallfont2.GetHeight();
 			}
 			if ( (level.total_items > 0) && am_showitems && !deathmatch )
 			{
-				str = String.Format("\cxI \c-%d\cu/\c-%d",level.found_items,level.total_items);
-				Screen.DrawText(smallfont2,(level.found_items>=level.total_items)?Font.CR_GOLD:Font.CR_WHITE,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				str = String.Format("\c"..tclabel_s.."I \c-%d\c"..tcextra_s.."/\c-%d",level.found_items,level.total_items);
+				Screen.DrawText(smallfont2,(level.found_items>=level.total_items)?tccompl:tcvalue,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 				yy += smallfont2.GetHeight();
 			}
 			if ( (level.total_secrets > 0) && am_showsecrets && !deathmatch )
 			{
-				str = String.Format("\cxS \c-%d\cu/\c-%d",level.found_secrets,level.total_secrets);
-				Screen.DrawText(smallfont2,(level.found_secrets>=level.total_secrets)?Font.CR_GOLD:Font.CR_WHITE,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				str = String.Format("\c"..tclabel_s.."S \c-%d\c"..tcextra_s.."/\c-%d",level.found_secrets,level.total_secrets);
+				Screen.DrawText(smallfont2,(level.found_secrets>=level.total_secrets)?tccompl:tcvalue,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 				yy += smallfont2.GetHeight();
 			}
 			int sec;
 			if ( am_showtime )
 			{
 				sec = Thinker.Tics2Seconds(level.maptime);
-				str = String.Format("\cxT \c-%02d\cu:\c-%02d\cu:\c-%02d",sec/3600,(sec%3600)/60,sec%60);
-				Screen.DrawText(smallfont2,((level.sucktime>0)&&(sec>=(level.sucktime*3600)))?Font.CR_RED:(sec<=level.partime)?Font.CR_GOLD:Font.CR_WHITE,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				str = String.Format("\c"..tclabel_s.."T \c-%02d\c"..tcextra_s..":\c-%02d\c"..tcextra_s..":\c-%02d",sec/3600,(sec%3600)/60,sec%60);
+				Screen.DrawText(smallfont2,((level.sucktime>0)&&(sec>=(level.sucktime*3600)))?tcsucks:(sec<=level.partime)?tccompl:tcvalue,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 				yy += smallfont2.GetHeight();
 			}
 			// don't show total time if it's equal to map time
 			if ( am_showtotaltime && (level.totaltime != level.maptime) )
 			{
 				sec = Thinker.Tics2Seconds(level.totaltime);
-				str = String.Format("\cxTT \c-%02d\cu:\c-%02d\cu:\c-%02d",sec/3600,(sec%3600)/60,sec%60);
-				Screen.DrawText(smallfont2,Font.CR_WHITE,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				str = String.Format("\c"..tclabel_s.."TT \c-%02d\c"..tcextra_s..":\c-%02d\c"..tcextra_s..":\c-%02d",sec/3600,(sec%3600)/60,sec%60);
+				Screen.DrawText(smallfont2,tcvalue,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 				yy += smallfont2.GetHeight();
 			}
 			yy += 3;
