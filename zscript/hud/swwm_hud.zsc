@@ -68,6 +68,11 @@ Class SWWMStatusBar : BaseStatusBar abstract
 	int tclabel, tcvalue, tcextra, tccompl, tcsucks;
 	String tclabel_s, tcextra_s;
 
+	// hints (mainly for Kirin mod)
+	bool bAlwaysDrawInv,		// always draws the inventory box, even if empty
+		bAlwaysAboveInv;	// powerups are always drawn above the inventory box, even when shifted to the right
+	int AboveInvOffset;		// (Saya mod) additional offset applied to displays over inventory box
+
 	transient CVar pickduration, msgduration, chatduration, forcestats,
 		maxpickup, maxshownbig, maxshown, hudmargin, fuzz, mm_enable;
 
@@ -649,7 +654,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		// active items (armor / powerups)
 		double xx = margin+2;
 		double yy = ss.y-(margin+invy);
-		if ( CPlayer.mo.InvSel && !isInventoryBarVisible() ) yy -= 24;
+		if ( bAlwaysDrawInv || (CPlayer.mo.InvSel && !isInventoryBarVisible()) ) yy -= 24+AboveInvOffset;
 		bool drewarmor = false;
 		for ( Inventory i=CPlayer.mo.Inv; i; i=i.Inv )
 		{
@@ -659,8 +664,13 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			drewarmor = true;
 		}
 		yy = ss.y-(margin+invy);
-		if ( drewarmor ) xx += 30;
-		else if ( CPlayer.mo.InvSel && !isInventoryBarVisible() ) yy -= 24;
+		if ( drewarmor )
+		{
+			xx += 30;
+			if ( bAlwaysAboveInv && (bAlwaysDrawInv || (CPlayer.mo.InvSel && !isInventoryBarVisible())) )
+				yy -= 24+AboveInvOffset;
+		}
+		else if ( bAlwaysDrawInv || (CPlayer.mo.InvSel && !isInventoryBarVisible()) ) yy -= 24;
 		for ( Inventory i=CPlayer.mo.Inv; i; i=i.Inv )
 		{
 			if ( !(i is 'Powerup') || (Powerup(i).EffectTics <= 0) || !(Powerup(i).Icon) ) continue;
@@ -668,7 +678,12 @@ Class SWWMStatusBar : BaseStatusBar abstract
 				yy -= 24;
 		}
 		// inventory box / bar
-		if ( !CPlayer.mo.InvSel ) return;
+		if ( !CPlayer.mo.InvSel )
+		{
+			if ( bAlwaysDrawInv )
+				Screen.DrawTexture(InventoryTex,false,margin,ss.y-(margin+invy+2),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+			return;
+		}
 		if ( isInventoryBarVisible() )
 		{
 			Array<Inventory> bar;

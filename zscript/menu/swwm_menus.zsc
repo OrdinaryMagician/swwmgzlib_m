@@ -410,7 +410,7 @@ class ListMenuItemSWWMLogo : ListMenuItem
 		int w = desc?desc.DisplayWidth():ListMenuDescriptor.CleanScale;
 		int h = desc?desc.DisplayHeight():-1;
 		Vector2 vs = TexMan.GetScaledSize(mTexture);
-		double scl = 256./vs.x;
+		double scl = 128./vs.y;
 		vs *= scl;
 		double x;
 		if ( w == ListMenuDescriptor.CleanScale )
