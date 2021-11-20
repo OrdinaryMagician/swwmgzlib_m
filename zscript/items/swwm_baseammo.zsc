@@ -172,7 +172,7 @@ Class SWWMAmmo : Ammo
 	override bool HandlePickup( Inventory item )
 	{
 		// drop excess ammo
-		if ( (item is 'Ammo') && (Ammo(item).GetParentAmmo() == GetParentAmmo()) )
+		if ( !bUNDROPPABLE && !bUNTOSSABLE && (item is 'Ammo') && (Ammo(item).GetParentAmmo() == GetParentAmmo()) )
 		{
 			int excess = Amount+item.Amount;
 			if ( excess > MaxAmount ) excess -= MaxAmount;
@@ -215,7 +215,7 @@ Class SWWMAmmo : Ammo
 	{
 		Super.DoEffect();
 		// drop excess ammo
-		if ( !sv_infiniteammo && !Owner.FindInventory('PowerInfiniteAmmo') )
+		if ( !bUNDROPPABLE && !bUNTOSSABLE && !sv_infiniteammo && !Owner.FindInventory('PowerInfiniteAmmo') )
 		{
 			int excess = Amount-MaxAmount;
 			if ( excess > 0 ) CreateTossable(excess);
@@ -359,7 +359,7 @@ Class MagAmmo : Inventory abstract
 	override bool HandlePickup( Inventory item )
 	{
 		// see if the mag can be split apart (only for droppable mag ammo)
-		if ( !bUNDROPPABLE && (item is 'Ammo') && (ParentAmmo == Ammo(item).GetParentAmmo()) )
+		if ( !bUNDROPPABLE && !bUNTOSSABLE && (item is 'Ammo') && (ParentAmmo == Ammo(item).GetParentAmmo()) )
 		{
 			// double-check that parent ammo exists
 			if ( !pamo )
@@ -390,7 +390,7 @@ Class MagAmmo : Inventory abstract
 		// drop excess mag ammo
 		if ( (item is 'MagAmmo') && (MagAmmo(item).GetParentMagAmmo() == GetClass()) )
 		{
-			if ( bUNDROPPABLE )
+			if ( bUNDROPPABLE || bUNTOSSABLE )
 			{
 				// undroppable mag ammo only drops full mags.
 				// due to the way this works, we theoretically
@@ -539,7 +539,7 @@ Class MagAmmo : Inventory abstract
 	{
 		Super.DoEffect();
 		// drop excess ammo
-		if ( !bUNDROPPABLE && !sv_infiniteammo && !Owner.FindInventory('PowerInfiniteAmmo') )
+		if ( !bUNDROPPABLE && !bUNTOSSABLE && !sv_infiniteammo && !Owner.FindInventory('PowerInfiniteAmmo') )
 		{
 			int excess = Amount-MaxAmount;
 			if ( excess > 0 ) CreateTossable(excess);
