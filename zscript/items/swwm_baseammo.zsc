@@ -275,6 +275,8 @@ Class SWWMAmmo : Ammo
 	{
 		+INVENTORY.IGNORESKILL;
 		Inventory.PickupFlash "SWWMPickupFlash";
+		+FLOATBOB;
+		FloatBobStrength 0.25;
 	}
 }
 
@@ -290,10 +292,12 @@ Class MagAmmo : Inventory abstract
 	int ClipSize;
 	int countdown;
 	String PickupTag;
+	int BackpackAmount;
 
 	Property ParentAmmo : ParentAmmo;
 	Property ClipSize : ClipSize;
 	Property PickupTag : PickupTag;
+	Property BackpackAmount : BackpackAmount;
 
 	default
 	{
@@ -301,6 +305,8 @@ Class MagAmmo : Inventory abstract
 		Inventory.PickupSound "misc/bullet_pkup";
 		Inventory.Amount 1;
 		Inventory.PickupFlash "SWWMPickupFlash";
+		+FLOATBOB;
+		FloatBobStrength 0.25;
 	}
 
 	virtual Class<MagAmmo> GetParentMagAmmo()
@@ -560,6 +566,18 @@ Class MagAmmo : Inventory abstract
 		MagFill();
 	}
 
+	override void AttachToOwner( Actor other )
+	{
+		Super.AttachToOwner(other);
+		pamo = Ammo(other.FindInventory(ParentAmmo));
+		if ( !pamo )
+		{
+			pamo = Ammo(Spawn(ParentAmmo));
+			pamo.AttachToOwner(other);
+			pamo.Amount = 0;
+		}
+	}
+
 	bool MagFill()
 	{
 		// double-check that parent ammo exists
@@ -631,7 +649,14 @@ Class MagAmmo : Inventory abstract
 	override void ModifyDropAmount( int dropamount )
 	{
 		Super.ModifyDropAmount(dropamount);
-		Amount = min(Random[ShellDrop](1,ClipSize),Amount);
+		int maxdrop = 1;
+		for ( int i=0; i<AllActorClasses.Size(); i++ )
+		{
+			if ( !(AllActorClasses[i] is GetParentMagAmmo()) ) continue;
+			let def = GetDefaultByType((Class<MagAmmo>)(AllActorClasses[i]));
+			maxdrop = max(maxdrop,def.amount);
+		}
+		Amount = Random[ShellDrop](1,clamp(dropamount,1,maxdrop));
 	}
 }
 
