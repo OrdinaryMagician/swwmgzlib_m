@@ -1092,9 +1092,8 @@ Class SWWMUtility
 	// multi-weapon spawn stuff
 	static private Class<Inventory> PickPair( Class<Inventory> a, Class<Inventory> b, int weight = 1 )
 	{
-		if ( CheckNeedsItem(a) ) return a;
-		if ( CheckNeedsItem(b) ) return b;
-		return Random[Replacements](weight,0)?a:b;
+		if ( ItemExists(a,mapstart:true) ) return b;
+		return Random[Replacements](0,1)?a:b;
 	}
 
 	// individual PickSlot definitions should be put on an extend

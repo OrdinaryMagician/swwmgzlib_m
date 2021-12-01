@@ -207,19 +207,34 @@ Class SWWMAmmo : Ammo
 					}
 				}
 			}
+			else if ( MagAmmoType && !GetDefaultByType(MagAmmoType).bUNDROPPABLE && !GetDefaultByType(MagAmmoType).bUNTOSSABLE )
+			{
+				// can we split it into mag ammo?
+				let ma = MagAmmo(Owner.FindInventory(MagAmmoType));
+				if ( !ma )
+				{
+					ma = MagAmmo(Spawn(MagAmmoType));
+					ma.Amount = 0;
+					ma.AttachToOwner(Owner);
+				}
+				if ( ma.Amount < ma.MaxAmount )
+				{
+					// split into bullets
+					for ( int i=0; i<item.Amount; i++ )
+					{
+						int bul = ma.ClipSize;
+						int maxgiveamt = min(ma.MaxAmount-ma.Amount,bul);
+						int dropamt = bul-maxgiveamt;
+						if ( dropamt > 0 ) ma.CreateTossable(dropamt);
+						if ( (bul == ma.ClipSize) && (Amount < MaxAmount) ) Amount++;
+						else ma.Amount = min(ma.MaxAmount,ma.Amount+bul);
+					}
+					item.bPickupGood = true;
+					return true;
+				}
+			}
 		}
 		return Super.HandlePickup(item);
-	}
-
-	override void DoEffect()
-	{
-		Super.DoEffect();
-		// drop excess ammo
-		if ( !bUNDROPPABLE && !bUNTOSSABLE && !sv_infiniteammo && !Owner.FindInventory('PowerInfiniteAmmo') )
-		{
-			int excess = Amount-MaxAmount;
-			if ( excess > 0 ) CreateTossable(excess);
-		}
 	}
 
 	override bool CanPickup( Actor toucher )
@@ -364,35 +379,6 @@ Class MagAmmo : Inventory abstract
 
 	override bool HandlePickup( Inventory item )
 	{
-		// see if the mag can be split apart (only for droppable mag ammo)
-		if ( !bUNDROPPABLE && !bUNTOSSABLE && (item is 'Ammo') && (ParentAmmo == Ammo(item).GetParentAmmo()) )
-		{
-			// double-check that parent ammo exists
-			if ( !pamo )
-			{
-				pamo = Ammo(Owner.FindInventory(ParentAmmo));
-				if ( !pamo )
-				{
-					pamo = Ammo(Spawn(ParentAmmo));
-					pamo.AttachToOwner(Owner);
-					pamo.Amount = 0;
-				}
-			}
-			if ( (pamo.Amount >= pamo.MaxAmount) && (Amount < MaxAmount) )
-			{
-				// split
-				for ( int i=0; i<item.Amount; i++ )
-				{
-					int bul = ClipSize;
-					int maxgiveamt = min(MaxAmount-Amount,bul);
-					int dropamt = bul-maxgiveamt;
-					if ( dropamt > 0 ) CreateTossable(dropamt);
-					Amount = min(MaxAmount,Amount+bul);
-				}
-				item.bPickupGood = true;
-				return true;
-			}
-		}
 		// drop excess mag ammo
 		if ( (item is 'MagAmmo') && (MagAmmo(item).GetParentMagAmmo() == GetClass()) )
 		{
@@ -401,14 +387,13 @@ Class MagAmmo : Inventory abstract
 				// undroppable mag ammo only drops full mags.
 				// due to the way this works, we theoretically
 				// should never end up with ammo "disappearing"
-				bool given = false;
 				while ( Amount+item.Amount >= MaxAmount )
 				{
 					if ( Amount < ClipSize ) break;
 					// first of all, see if we can INCREASE
 					// parent ammo, rather than drop a mag
 					if ( pamo.Amount < pamo.MaxAmount ) pamo.Amount++;
-					else DoDrop(ParentAmmo);
+					else if ( !pamo.bUNDROPPABLE && !pamo.bUNTOSSABLE ) DoDrop(ParentAmmo);
 					Amount -= ClipSize;
 				}
 			}
@@ -544,12 +529,6 @@ Class MagAmmo : Inventory abstract
 	override void DoEffect()
 	{
 		Super.DoEffect();
-		// drop excess ammo
-		if ( !bUNDROPPABLE && !bUNTOSSABLE && !sv_infiniteammo && !Owner.FindInventory('PowerInfiniteAmmo') )
-		{
-			int excess = Amount-MaxAmount;
-			if ( excess > 0 ) CreateTossable(excess);
-		}
 		if ( !pamo )
 		{
 			pamo = Ammo(Owner.FindInventory(ParentAmmo));
