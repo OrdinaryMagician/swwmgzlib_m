@@ -535,12 +535,6 @@ Class mkFlyingGib : Actor
 			Vector3 ppos = level.Vec3Offset(oldpos,ndiff*i)-pos;
 			A_SpawnParticle(shadecol,0,40,20.*scale.x*FRandom[Blood](.6,1.4),0,ppos.x,ppos.y,ppos.z,vel.x*.1+FRandom[Blood](-1.,1.),vel.y*.1+FRandom[Blood](-1.,1.),vel.z*.1+FRandom[Blood](-1.,1.),0,0,-.25,.5*alpha,-1,-.5*scale.x);
 		}
-		if ( !Random[Blood](0,2) )
-		{
-			let s = Spawn("mkBloodSmoke",pos);
-			s.SetShade(shadecol);
-			s.special1 += Random[Gibs](1,2);
-		}
 	}
 
 	override bool CanCollideWith(Actor other, bool passive)
@@ -563,20 +557,6 @@ Class mkFlyingGib : Actor
 		invoker.rollvel = FRandom[Gibs](10,50)*RandomPick[Gibs](-1,1)*clamp(vel.length()/10.,.25,4.);
 		if ( invoker.lastbleed > level.maptime ) return;
 		invoker.lastbleed = level.maptime+5;
-		double ang;
-		double pt;
-		Vector3 dir;
-		int numpt = Random[Blood](2,4);
-		for ( int i=0; i<numpt; i++ )
-		{
-			let b = Spawn("mkBloodDrop",pos);
-			ang = FRandom[Gibs](0,360);
-			pt = FRandom[Gibs](-60,30);
-			dir = (cos(pt)*cos(ang),cos(pt)*sin(ang),sin(-pt));
-			b.vel = dir*FRandom[Gibs](0.3,2.2)*vel.length();
-			b.scale *= 2.0;
-			b.SetShade(invoker.shadecol);
-		}
 		TraceBleedAngle(int(vel.length()),angle+180,-pitch);
 	}
 
@@ -628,6 +608,10 @@ Class mkFlyingGib : Actor
 			if ( abs(roll) < abs(180-roll) ) roll = Random[Gibs](-5,5);
 			else roll = Random[Gibs](175,185);
 			A_Stop();
+			// floor drop
+			let b = Spawn("mkBloodDrop",pos);
+			b.scale *= 2.0;
+			b.SetShade(invoker.shadecol);
 		}
 		Stop;
 	}
@@ -651,8 +635,18 @@ Class mkGibber : Actor
 		double ang, pt;
 		Vector3 dir;
 		bool dummy;
+		int bloodthrottle = 0, gibthrottle = 0;
+		let hnd = SWWMHandler(EventHandler.Find("SWWMHandler"));
+		if ( hnd )
+		{
+			if ( hnd.oldmaxblood != 0 )
+				bloodthrottle = (hnd.blods_realcnt-hnd.oldmaxblood)/100;
+			if ( hnd.oldmaxgibs != 0 )
+				gibthrottle = (hnd.meats_realcnt-hnd.oldmaxgibs)/100;
+		}
 		for ( int i=0; i<gibsize; i++ )
 		{
+			if ( bloodthrottle && (!i || (i%bloodthrottle)) ) continue;
 			a = Spawn("mkBloodSmoke2",pos+(FRandom[Gibs](-.8,.8)*radius,FRandom[Gibs](-.8,.8)*radius,FRandom[Gibs](0.,.9)*height));
 			ang = FRandom[Gibs](0,360);
 			pt = FRandom[Gibs](-90,90);
@@ -665,6 +659,7 @@ Class mkGibber : Actor
 		}
 		for ( int i=0; i<gibsize; i++ )
 		{
+			if ( gibthrottle && (!i || (i%gibthrottle)) ) continue;
 			[dummy, a] = A_SpawnItemEx(gibtype,FRandom[Gibs](-.5,.5)*radius,FRandom[Gibs](-.5,.5)*radius,FRandom[Gibs](.1,.9)*height,flags:SXF_ABSOLUTEANGLE|SXF_USEBLOODCOLOR);
 			a.translation = translation;
 			a.CopyBloodColor(self);
@@ -681,6 +676,7 @@ Class mkGibber : Actor
 		}
 		for ( int i=0; i<gibsize; i++ )
 		{
+			if ( bloodthrottle && (!i || (i%bloodthrottle)) ) continue;
 			[dummy, a] = A_SpawnItemEx("mkBloodDrop",FRandom[Gibs](-.8,.8)*radius,FRandom[Gibs](-.8,.8)*radius,FRandom[Gibs](0.,.9)*height,flags:SXF_ABSOLUTEANGLE|SXF_USEBLOODCOLOR);
 			ang = FRandom[Gibs](0,360);
 			pt = FRandom[Gibs](-90,90);

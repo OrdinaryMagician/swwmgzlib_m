@@ -24,7 +24,19 @@ extend Class SWWMHandler
 
 	override void NetworkProcess( ConsoleEvent e )
 	{
-		ModNetworkProcess(e);
+		if ( e.Name ~== "swwmcleareffects" )
+		{
+			if ( multiplayer && (e.player != Net_Arbitrator) )
+			{
+				if ( e.player == consoleplayer )
+					Console.Printf("Only the net arbitrator can call this event.");
+				return;
+			}
+			int n = casings_cnt+chips_cnt+blods_cnt+meats_cnt;
+			CleanQueues();
+			Console.Printf("%d effects cleared.",n);
+		}
+		else ModNetworkProcess(e);
 	}
 
 	override bool InputProcess( InputEvent e )

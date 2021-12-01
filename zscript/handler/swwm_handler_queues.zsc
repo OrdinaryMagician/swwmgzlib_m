@@ -9,9 +9,9 @@ extend Class SWWMHandler
 	int chips_cnt, oldmaxdebris;
 	// gore
 	mkBloodDrop blods, blods_end;
-	int blods_cnt, oldmaxblood;
+	int blods_cnt, oldmaxblood, blods_realcnt;
 	mkFlyingGib meats, meats_end;
-	int meats_cnt, oldmaxgibs;
+	int meats_cnt, oldmaxgibs, meats_realcnt;
 	// cvars
 	transient CVar maxcasings, maxdebris, maxblood, maxgibs;
 
@@ -154,6 +154,14 @@ extend Class SWWMHandler
 		m.killme = true;
 		m.prevmeat = null;
 		m.nextmeat = null;
+	}
+
+	private void CleanQueues()
+	{
+		while ( casings ) DeQueueCasing(casings);
+		while ( chips ) DeQueueChip(chips);
+		while ( blods ) DeQueueBlod(blods);
+		while ( meats ) DeQueueMeat(meats);
 	}
 
 	private void RecheckQueues()
