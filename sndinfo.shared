@@ -20,6 +20,8 @@ explodium/hit3		sounds/general/genexplo3.ogg
 $random explodium/hit { explodium/hit1 explodium/hit2 explodium/hit3 }
 $limit explodium/hit 32
 
+misc/secret		sounds/CTF5.ogg
+misc/keytry		sounds/LOCKDOOR.ogg
 misc/w_pkup		sounds/general/wpickup.ogg
 misc/w_pkup_vip		sounds/general/wpickup_vip.ogg
 misc/p_pkup		sounds/general/ppickup.ogg
@@ -34,6 +36,10 @@ misc/armor_pkup		sounds/general/spickup.ogg
 misc/health_pkup	sounds/general/hpickup.ogg
 misc/spawn		sounds/CORK.ogg
 misc/teleport		sounds/general/teleport.ogg
+misc/chat		sounds/CHATBEEP.ogg
+misc/frag		sounds/GFRAG.ogg
+misc/invchange		sounds/INVSEL.ogg
+misc/invuse		sounds/INVUSE.ogg
 misc/gibber1		sounds/general/Gib1.ogg
 misc/gibber2		sounds/general/Gib2.ogg
 misc/gibber3		sounds/general/Gib3.ogg
@@ -108,7 +114,6 @@ menu/choose	sounds/hmenu/hmenu2.ogg
 menu/clear	sounds/hmenu/hmenu2.ogg
 menu/advance	sounds/hmenu/hmenu1.ogg
 
-UseArtifact	DSEMPTY
 StartupTick	DSEMPTY
 
 world/watersplash	sounds/terrain/DSSPLASH.ogg

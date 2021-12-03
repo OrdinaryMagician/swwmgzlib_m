@@ -40,17 +40,13 @@ Class SWWMWeapon : Weapon abstract
 
 	override void Touch( Actor toucher )
 	{
-		// cannot pick up swapweapon unless explicitly pressing use
+		// show prompt to swap weapon, and prevent normal pickup
 		SWWMWeapon sw;
 		if ( bSPECIAL && (sw = HasSwapWeapon(toucher)) )
 		{
+			// we can simplify things here since no side mods have dual-wieldable swapweapons
 			if ( toucher.CheckLocalView() )
-			{
-				// use sisterweapon tag for dual wield (slot 2 weapons)
-				if ( sw.SisterWeapon && (sw.Amount > 1) )
-					Console.MidPrint(SmallFont,String.Format(StringTable.Localize("$SWWM_SWAPWEAPON"),sw.SisterWeapon.GetTag(),GetTag()));
-				else Console.MidPrint(SmallFont,String.Format(StringTable.Localize("$SWWM_SWAPWEAPON"),sw.GetTag(),GetTag()));
-			}
+				Console.MidPrint(SmallFont,String.Format(StringTable.Localize("$SWWM_SWAPWEAPON"),sw.GetTag(),GetTag()));
 			return;
 		}
 		Super.Touch(toucher);
@@ -71,21 +67,15 @@ Class SWWMWeapon : Weapon abstract
 		SWWMWeapon sw;
 		if ( sw = HasSwapWeapon(user) )
 		{
-			if ( (sw == user.player.ReadyWeapon) || (sw.SisterWeapon && (sw.SisterWeapon == user.player.ReadyWeapon)) )
+			// simplified compared to upstream, since no mod uses dual-wieldable swapweapons
+			// (we can even have the swap be seamless by placing the weapon in the same spot)
+			if ( sw == user.player.ReadyWeapon )
 				swapto = true;
-			int ngun = sw.Amount;
-			double ang = -15*(ngun-1);
-			for ( int i=0; i<ngun; i++ )
-			{
-				let d = user.DropInventory(sw);
-				if ( !d || (ngun <= 1) ) continue;
-				// adjust angle for multi-drops
-				d.angle = user.angle+ang;
-				d.vel.xy = RotateVector((5,0),d.angle);
-				d.vel.z = 1;
-				d.vel += user.vel;
-				ang += 30;
-			}
+			let d = user.DropInventory(sw);
+			d.SetOrigin(pos,false);
+			d.angle = angle;
+			d.vel = vel;
+			d.FloatBobPhase = FloatBobPhase;
 			// don't autoswitch just yet (hacky)
 			if ( swapto )
 			{
