@@ -146,6 +146,31 @@ Class SWWMUtility
 		return c;
 	}
 
+	// not sure if I should use this, looks a bit ugly
+	static clearscope void ThousandsStr( out String s )
+	{
+		String nstr = s;
+		s.Truncate(0);
+		int len = nstr.CodePointCount();
+		int t = len;
+		if ( nstr.Left(1) == "-" ) t++;
+		for ( int i=0, pos=0; i<len; i++ )
+		{
+			int ch;
+			[ch, pos] = nstr.GetNextCodePoint(pos);
+			s.AppendCharacter(ch);
+			t = (t-1)%3;
+			if ( (pos < len) && !t )
+				s.AppendCharacter(0x2C); // comma
+		}
+	}
+	static clearscope String ThousandsNum( int n )
+	{
+		String nstr = String.Format("%d",n);
+		ThousandsStr(nstr);
+		return nstr;
+	}
+
 	// this can probably be simplified, but I'm lazy
 	static clearscope Vector3 HSVtoRGB( Vector3 hsv )
 	{
