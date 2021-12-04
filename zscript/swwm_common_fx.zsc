@@ -15,7 +15,7 @@ Class PaletteLight : PointLight
 	}
 	private void UpdateLight()
 	{
-		int index = clamp(255-((255*ReactionTime)/abs(InitialReactionTime)),0,255);
+		int index = clamp(255-((255*ReactionTime)/InitialReactionTime),0,255);
 		args[LIGHT_RED] = pal[index].r;
 		args[LIGHT_GREEN] = pal[index].g;
 		args[LIGHT_BLUE] = pal[index].b;
@@ -23,7 +23,6 @@ Class PaletteLight : PointLight
 	override void PostBeginPlay()
 	{
 		Super.PostBeginPlay();
-		InitialReactionTime = ReactionTime;
 		String palname = GetTag();
 		int sep = palname.IndexOf(",");
 		int palnum = 0;
@@ -43,9 +42,10 @@ Class PaletteLight : PointLight
 		}
 		if ( ReactionTime < 0 )
 		{
-			ReactionTime = -ReactionTime;
+			ReactionTime = abs(ReactionTime)-1;
 			IsLooping = true;
 		}
+		InitialReactionTime = ReactionTime;
 		UpdateLight();
 	}
 	override void Tick()
