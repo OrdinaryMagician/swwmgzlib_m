@@ -17,6 +17,16 @@ Class SWWMPlayer : PlayerPawn
 		UNDER_LAVA
 	};
 
+	// what happens after death
+	enum EResType
+	{
+		RT_NONE,	// reload the save
+		RT_REVIVE,	// get back up
+		RT_RESPAWN	// destroy the body and respawn
+	};
+	int restype;
+	Property ResurrectType : restype;
+
 	int lastunder;
 	Color undercol;
 	int deadtimer;

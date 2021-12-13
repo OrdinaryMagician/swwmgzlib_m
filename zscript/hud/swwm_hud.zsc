@@ -900,7 +900,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		double xx, yy;
 		double deadtimer = demo.deadtimer+fractic;
 		if ( demo.player.viewheight > 6 ) return 1.;
-		double dimalph = min(deadtimer/80.,1.);
+		double dimalph = min(deadtimer/80.,.8);
 		Screen.Dim("Black",dimalph,0,0,Screen.GetWidth(),Screen.GetHeight());
 		alph = clamp((deadtimer-60)/60.,0.,1.);
 		str = StringTable.Localize("$SWWM_URDED");
@@ -920,16 +920,12 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			return (1.-dimalph);
 		}
 		alph = clamp((deadtimer-140)/60.,0.,1.);
-		str = String.Format(StringTable.Localize("$SWWM_URDED2"));
+		if ( demo.restype == SWWMPlayer.RT_REVIVE ) str = String.Format(StringTable.Localize("$SWWM_URDED2"));
+		else if ( demo.restype == SWWMPlayer.RT_RESPAWN ) str = String.Format(StringTable.Localize("$SWWM_URDED3"));
+		else str = String.Format(StringTable.Localize("$SWWM_URDED4"));
 		len = smallfont.StringWidth(str);
 		xx = int((ss.x-len)/2.);
 		yy = ss.y/2.;
-		Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
-		alph = clamp((deadtimer-160)/60.,0.,1.);
-		str = String.Format(StringTable.Localize("$SWWM_URDED3"));
-		len = smallfont.StringWidth(str);
-		xx = int((ss.x-len)/2.);
-		yy = (ss.y+smallfont.GetHeight()*2)/2.;
 		Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
 		return (1.-dimalph);
 	}

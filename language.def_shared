@@ -126,6 +126,11 @@ DEFOB_PIG = "$$OB_PIG";	// gzdoom will look this up since it has no obituary ass
 D_BARRIER = "The Elemental Coating wore off.";
 D_DEVASTATION = "The Sigil's power is no more.";
 D_TETHERFAIL = "The Safety Tether link was obstructed.";
+SWWM_URDED = "YOU ARE DEAD";
+SWWM_URDED2 = "Press \cfUse\c- to get back up and kick more ass";
+SWWM_URDED3 = "Press \cfUse\c- to abandon your body and try again";
+SWWM_URDED4 = "Press \cfUse\c- to restart from the most recent save";
+SWWM_URDEDMP = "Press \cfUse\c- to respawn";
 SWWM_SWAPWEAPON = "\cjPress \cfUse\cj to swap \cf%s\cj for \cf%s\cj.\c-";
 SWWM_SETSLOTSTRICT = "\cg!!!WARNING!!!\c-\n\cj\"setslotstrict\" is enabled. This will cause SWWM GZ weapons to not have slots assigned. Please go into Miscellaneous Options and toggle the \"Strict KEYCONF Weapons/Players\" setting.\c-";
 // weapon tooltips
