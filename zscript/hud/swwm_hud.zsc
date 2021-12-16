@@ -22,7 +22,7 @@ Enum EMiniHUDFontColor
 Class SWWMStatusBar : BaseStatusBar abstract
 {
 	TextureID ChatTex[6], MiniBox, PauseTex, InventoryTex, bgtex;
-	HUDFont mMiniHUDFont;
+	Font MiniHUDFont;
 	int mhudfontcol[9];
 
 	Array<MsgLine> MainQueue, PickupQueue;
@@ -267,7 +267,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		PauseTex = TexMan.CheckForTexture("graphics/"..SWWMMODPREFIX.."pause.png",TexMan.Type_Any);
 		bgtex = TexMan.CheckForTexture("graphics/tempbg.png",TexMan.Type_Any);
 		mm_zoom = minimapzoom = oldminimapzoom = 1.;
-		mMiniHudFont = HUDFont.Create("MiniHUD");
+		MiniHudFont = Font.GetFont("MiniHUD");
 		mhudfontcol[MCR_WHITE] = Font.FindFontColor("MiniWhite");
 		mhudfontcol[MCR_RED] = Font.FindFontColor("MiniRed");
 		mhudfontcol[MCR_GREEN] = Font.FindFontColor("MiniGreen");
@@ -633,8 +633,8 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		{
 			Screen.DrawTexture(i.Icon,false,dx,dy,DTA_VirtualWidthF,dw,DTA_VirtualHeightF,dh,DTA_KeepRatio,true,DTA_Alpha,Powerup(i).IsBlinking()?alpha*.5:alpha,DTA_TopOffset,0,DTA_LeftOffset,0);
 			String nstr = String.Format("%ds",Powerup(i).EffectTics/GameTicRate);
-			int len = mMiniHUDFont.mFont.StringWidth(nstr);
-			Screen.DrawText(mMiniHUDFont.mFont,mhudfontcol[MCR_BRASS],(xx+20)-len,(yy+20)-7,nstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,Powerup(i).IsBlinking()?alpha*.5:alpha);
+			int len = MiniHUDFont.StringWidth(nstr);
+			Screen.DrawText(MiniHUDFont,mhudfontcol[MCR_BRASS],(xx+20)-len,(yy+20)-7,nstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,Powerup(i).IsBlinking()?alpha*.5:alpha);
 			return true;
 		}
 		Screen.DrawTexture(i.Icon,false,dx,dy,DTA_VirtualWidthF,dw,DTA_VirtualHeightF,dh,DTA_KeepRatio,true,DTA_Alpha,alpha,DTA_TopOffset,0,DTA_LeftOffset,0,DTA_ColorOverlay,(i.Amount<=0)?Color(128,0,0,0):Color(0,0,0,0));
@@ -643,8 +643,8 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			String nstr;
 			if ( (i.Amount > 99999) && !forceamt ) nstr = "99999";
 			else nstr = String.Format("%d",i.Amount);
-			int len = mMiniHUDFont.mFont.StringWidth(nstr);
-			Screen.DrawText(mMiniHUDFont.mFont,mhudfontcol[(i.Amount<=0)?MCR_RED:selected?MCR_BRASS:MCR_WHITE],(xx+20)-len,(yy+20)-6,nstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
+			int len = MiniHUDFont.StringWidth(nstr);
+			Screen.DrawText(MiniHUDFont,mhudfontcol[(i.Amount<=0)?MCR_RED:selected?MCR_BRASS:MCR_WHITE],(xx+20)-len,(yy+20)-6,nstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
 		}
 		return true;
 	}
