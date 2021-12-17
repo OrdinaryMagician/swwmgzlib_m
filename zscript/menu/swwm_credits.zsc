@@ -116,6 +116,7 @@ Class SWWMCreditsMenu : GenericMenu abstract
 	Vector2 ss;
 	double hs;
 	int logow, logoh;
+	int logoyofs;
 	bool dofuzz;
 
 	String oldmus;
@@ -155,6 +156,8 @@ Class SWWMCreditsMenu : GenericMenu abstract
 		dofuzz = CVar.FindCVar(SWWMMODPREFIX.."_fuzz").GetBool();
 		logo = TexMan.CheckForTexture("graphics/"..SWWMLOGONAME..".png",TexMan.Type_Any);
 		[logow, logoh] = TexMan.GetSize(logo);
+		Vector2 ofs = TexMan.GetScaledOffset(logo);
+		logoyofs = int(ofs.y);
 		stitle = StringTable.Localize("$"..SWWMMODPREFIX.."_CSTITLE");
 		stitle2 = StringTable.Localize("$"..SWWMMODPREFIX.."_CSTITLE2");
 		sdev = StringTable.Localize("$SWWM_CLEAD");
@@ -272,8 +275,11 @@ Class SWWMCreditsMenu : GenericMenu abstract
 	}
 	double DrawLogo( double x, double y )
 	{
+		// get the offsets so we know where it actually cuts off
+		double ly = max(logoyofs,0);
+		double hy = -min(-logoyofs,0);
 		// don't draw if we're offscreen, saves time
-		if ( (y+logoh < 0) || (y > ss.y) ) return logoh;
+		if ( (y+logoh+hy < 0) || (y-ly > ss.y) ) return logoh;
 		Screen.DrawTexture(logo,true,x-logow/2,y,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 		Screen.DrawText(smallfont,SWWMCREDITSCOL1,x-smallfont.StringWidth(stitle)/2,y+(logoh-28),stitle,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 		// underline
@@ -295,7 +301,6 @@ Class SWWMCreditsMenu : GenericMenu abstract
 	}
 	override void Drawer()
 	{
-		Super.Drawer();
 		if ( dofuzz )
 		{
 			Vector2 tsize = TexMan.GetScaledSize(bgtex);
@@ -304,6 +309,7 @@ Class SWWMCreditsMenu : GenericMenu abstract
 			Screen.DrawTexture(bgtex,false,(vsize.x-tsize.x)/2,(vsize.y-tsize.y)/2,DTA_VirtualWidthF,vsize.x,DTA_VirtualHeightF,vsize.y,DTA_KeepRatio,true,DTA_ColorOverlay,Color(192,0,0,0),DTA_Alpha,.8);
 		}
 		else Screen.Dim("Black",.8,0,0,Screen.GetWidth(),Screen.GetHeight());
+		Super.Drawer();
 		UpdateSize();
 		// logo
 		double yy = spos;
@@ -390,8 +396,8 @@ Class SWWMCreditsMenu : GenericMenu abstract
 	override void Ticker()
 	{
 		spos -= speed/GameTicRate;
-		if ( spos < -theight ) spos = ss.y;
-		if ( spos > ss.y ) spos = -theight;
+		if ( spos < -theight ) spos = ss.y+max(logoyofs,0);
+		if ( spos > ss.y+max(logoyofs,0) ) spos = -theight;
 		cdev[0].Ticker();
 	}
 	override bool TranslateKeyboardEvents()
