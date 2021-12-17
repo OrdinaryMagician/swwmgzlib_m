@@ -811,7 +811,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		yy = margin;
 		bool smol = (ss.x<640);
 		Screen.DrawTexture(ChatTex[smol?3:0],false,xx,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,boxalph);
-		yy++;
+		yy += 2;
 		for ( int i=mstart; i<MainQueue.Size(); i++ )
 		{
 			int col = msg2color;

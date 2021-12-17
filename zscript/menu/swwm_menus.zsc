@@ -584,9 +584,8 @@ class ListMenuItemSWWMTextItemM : ListMenuItemSelectable
 		if ( w == ListMenuDescriptor.CleanScale ) x = (320-font.StringWidth(text))/2;
 		else x = (w-font.StringWidth(text))/2;
 		double y = mYpos;
-		// slight baseline offset
-		if ( generic_ui ) y += 4.;
-		else y -= 4.5;
+		// offset text so it's centered
+		y += (mHeight-font.GetHeight())/2;
 		if ( selected )
 		{
 			double xx = x;
