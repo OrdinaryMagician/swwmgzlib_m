@@ -6,7 +6,8 @@ Class PayRespects : HUDMessageBase
 	Vector2 basepos;
 	int lifespan, initialspan, starttic;
 	double scale;
-	Vector2 hs, ss;
+	double hs;
+	Vector2 ss;
 	int seed, seed2;
 
 	static PayRespects PressF()
@@ -30,9 +31,8 @@ Class PayRespects : HUDMessageBase
 
 	override void ScreenSizeChanged()
 	{
-		hs = StatusBar.GetHUDScale()*scale;
-		hs.y = hs.x;
-		ss = (Screen.GetWidth()/hs.x,Screen.GetHeight()/hs.y);
+		hs = CleanXFac*scale;
+		ss = (Screen.GetWidth(),Screen.GetHeight())/hs;
 	}
 
 	override void Draw( int bottom, int visibility )
@@ -99,6 +99,7 @@ Class SWWMWeaponTooltip : HUDMessageBase
 	double tics, holdtics, fadeintics, fadeouttics;
 	transient BrokenLines l;
 	SWWMWeaponTooltip next;
+	transient CVar hudscale;
 
 	SWWMWeaponTooltip Init( Class<SWWMWeapon> weapon )
 	{
@@ -123,9 +124,11 @@ Class SWWMWeaponTooltip : HUDMessageBase
 	override void Draw( int bottom, int visibility )
 	{
 		if ( tics <= 0 ) return;
-		Vector2 hs = StatusBar.GetHUDScale();
-		hs.y = hs.x;
-		Vector2 ss = (Screen.GetWidth()/hs.x,Screen.GetHeight()/hs.y);
+		if ( !hudscale ) hudscale = CVar.FindCVar(SWWMMODPREFIX.."_hudscale");
+		double hs;
+		if ( hudscale.GetBool() ) hs = CleanXFac_1;
+		else hs = max(floor(Screen.GetWidth()/640.),1.);
+		Vector2 ss = (Screen.GetWidth(),Screen.GetHeight())/hs;
 		double alpha = (tics<fadeintics)?(tics/fadeintics):(tics<(fadeintics+holdtics))?1.:(1.-(tics-(fadeintics+holdtics))/fadeouttics);
 		int w, h;
 		[w, h] = TexMan.GetSize(icon);
@@ -141,7 +144,7 @@ Class SWWMWeaponTooltip : HUDMessageBase
 			if ( lw > w ) w = lw;
 		}
 		int cw = int(ceil((max(max(w1,w2),w)+8)/6.))*6;
-		Screen.Dim("Black",.5*alpha,int((pos.x-(cw+4)/2)*hs.x),int((pos.y-(h+6))*hs.y),int((cw+4)*hs.x),int((8+h+4+smallfont.GetHeight()+8+smallfont2.GetHeight()*l.Count())*hs.y));
+		Screen.Dim("Black",.5*alpha,int((pos.x-(cw+4)/2)*hs),int((pos.y-(h+6))*hs),int((cw+4)*hs),int((8+h+4+smallfont.GetHeight()+8+smallfont2.GetHeight()*l.Count())*hs));
 		Screen.DrawTexture(icon,false,pos.x,pos.y,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha,DTA_CenterBottomOffset,true);
 		pos.y += 4;
 		Screen.DrawText(smallfont,Font.CR_FIRE,pos.x-w1/2,pos.y,wpn,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);

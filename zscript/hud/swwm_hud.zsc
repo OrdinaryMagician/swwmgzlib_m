@@ -31,7 +31,8 @@ Class SWWMStatusBar : BaseStatusBar abstract
 	SWWMHandler hnd;
 
 	// shared stuff
-	Vector2 ss, hs;
+	double hs;
+	Vector2 ss;
 	int margin;
 	double FracTic;
 	double FrameTime;
@@ -74,7 +75,8 @@ Class SWWMStatusBar : BaseStatusBar abstract
 	int AboveInvOffset;		// (Saya mod) additional offset applied to displays over inventory box
 
 	transient CVar pickduration, msgduration, chatduration, forcestats,
-		maxpickup, maxshownbig, maxshown, hudmargin, fuzz, mm_enable;
+		maxpickup, maxshownbig, maxshown, hudmargin, hudscale, fuzz,
+		mm_enable;
 
 	override void FlushNotify()
 	{
@@ -451,8 +453,8 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			[visible, rv1, rv2] = SWWMUtility.LiangBarsky((-1,-1)*zoomclip,(1,1)*zoomclip,rv1,rv2);
 			if ( !visible ) continue;
 			// scale to minimap frame
-			rv1 *= (HALFMAPSIZE/zoomclip)*hs.x;
-			rv2 *= (HALFMAPSIZE/zoomclip)*hs.x;
+			rv1 *= (HALFMAPSIZE/zoomclip)*hs;
+			rv2 *= (HALFMAPSIZE/zoomclip)*hs;
 			// offset to minimap center
 			rv1 += basepos;
 			rv2 += basepos;
@@ -509,9 +511,9 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			if ( isportal )
 			{
 				col = Color((col.r+mm_portalcolor.r*7)/8,(col.g+mm_portalcolor.g*7)/8,(col.b+mm_portalcolor.b*7)/8);
-				Screen.DrawThickLine(int(rv1.x),int(rv1.y),int(rv2.x),int(rv2.y),max(1.,hs.x*.25),col);
+				Screen.DrawThickLine(int(rv1.x),int(rv1.y),int(rv2.x),int(rv2.y),max(1.,hs*.25),col);
 			}
-			else Screen.DrawThickLine(int(rv1.x),int(rv1.y),int(rv2.x),int(rv2.y),max(1.,hs.x*.5),col);
+			else Screen.DrawThickLine(int(rv1.x),int(rv1.y),int(rv2.x),int(rv2.y),max(1.,hs*.5),col);
 		}
 	}
 
@@ -525,16 +527,16 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			xx = int(ss.x-(margin+(HALFMAPSIZE+2)*2));
 			Screen.DrawTexture(MiniBox,false,xx,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 			Vector2 basemappos = (xx+HALFMAPSIZE+2,yy+HALFMAPSIZE+2);
-			Screen.Dim(mm_backcolor,1.,int((basemappos.x-HALFMAPSIZE)*hs.x),int((basemappos.y-HALFMAPSIZE)*hs.x),int(HALFMAPSIZE*2*hs.x),int(HALFMAPSIZE*2*hs.x));
+			Screen.Dim(mm_backcolor,1.,int((basemappos.x-HALFMAPSIZE)*hs),int((basemappos.y-HALFMAPSIZE)*hs),int(HALFMAPSIZE*2*hs),int(HALFMAPSIZE*2*hs));
 			// draw dat stuff
-			DrawMapLines(basemappos*hs.x);
+			DrawMapLines(basemappos*hs);
 			// draw the player arrow
 			Vector2 tv[3];
 			tv[0] = (0,-4);
 			tv[1] = (-3,2);
 			tv[2] = (3,2);
-			for ( int i=0; i<3; i++ ) tv[i] = (tv[i]+basemappos)*hs.x;
-			for ( int i=0; i<3; i++ ) Screen.DrawThickLine(int(tv[i].x),int(tv[i].y),int(tv[(i+1)%3].x),int(tv[(i+1)%3].y),max(1.,hs.x*.5),mm_yourcolor);
+			for ( int i=0; i<3; i++ ) tv[i] = (tv[i]+basemappos)*hs;
+			for ( int i=0; i<3; i++ ) Screen.DrawThickLine(int(tv[i].x),int(tv[i].y),int(tv[(i+1)%3].x),int(tv[(i+1)%3].y),max(1.,hs*.5),mm_yourcolor);
 			yy += ((HALFMAPSIZE+2)*2)+3;
 		}
 		// draw stats and timer when automap is open
@@ -736,7 +738,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			yy = ss.y-(margin+50);
 			int len = smallfont.StringWidth(ntagstr);
 			double xx = (ss.x-len)/2.;
-			Screen.Dim("Black",.8*nalph,int((xx-6)*hs.x),int(yy*hs.y),int((len+12)*hs.x),int((h+4)*hs.y));
+			Screen.Dim("Black",.8*nalph,int((xx-6)*hs),int(yy*hs),int((len+12)*hs),int((h+4)*hs));
 			Screen.DrawText(smallfont,ntagcol,int(xx),yy+2,ntagstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,nalph);
 		}
 		if ( PickupQueue.Size() <= 0 ) return;
@@ -761,7 +763,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 				if ( len > maxlen ) maxlen = len;
 			}
 			double xx = (ss.x-maxlen)/2.;
-			Screen.Dim("Black",.8*alph,int((xx-6)*hs.x),int((yy-h*(l.Count()-1))*hs.y),int((maxlen+12)*hs.x),int((h*l.Count()+4)*hs.y));
+			Screen.Dim("Black",.8*alph,int((xx-6)*hs),int((yy-h*(l.Count()-1))*hs),int((maxlen+12)*hs),int((h*l.Count()+4)*hs));
 			for ( int j=l.Count()-1; j>=0; j-- )
 			{
 				int len = smallfont.StringWidth(l.StringAt(j));
@@ -791,7 +793,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			xx = int((ss.x*ssp-maxlen)/2.);
 			yy = ss.y*ssp*.375;
 			yy -= (h*l.Count()+4)/2;	// center
-			Screen.Dim("Black",.8*alph,int((xx-6)*hs.x*hsp),int(yy*hs.y*hsp),int((maxlen+12)*hs.x*hsp),int((h*l.Count()+4)*hs.y*hsp));
+			Screen.Dim("Black",.8*alph,int((xx-6)*hs*hsp),int(yy*hs*hsp),int((maxlen+12)*hs*hsp),int((h*l.Count()+4)*hs*hsp));
 			for ( int i=0; i<l.Count(); i++ )
 			{
 				int len = smallfont.StringWidth(l.StringAt(i));
@@ -843,7 +845,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		chatopen = gametic+1;	// have to add 1 because DrawChat is called after everything else
 		double xx = 2;
 		double yy = ss.y-14;
-		Screen.Dim("Black",.8,0,Screen.GetHeight()-int(15*hs.y),Screen.GetWidth(),int(15*hs.y));
+		Screen.Dim("Black",.8,0,Screen.GetHeight()-int(15*hs),Screen.GetWidth(),int(15*hs));
 		String fullstr = String.Format("\cd(>\c- %s_",txt);
 		// cut out to fit
 		int w = smallfont.StringWidth(fullstr);
@@ -854,7 +856,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			// shift back
 			xx -= w-(ss.x-4);
 			// draw trimmed
-			Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,fullstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_ClipLeft,int(26*hs.x));
+			Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,fullstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_ClipLeft,int(26*hs));
 		}
 		else Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,fullstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 		return true;
@@ -944,9 +946,10 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		if ( !(players[consoleplayer].Camera is 'PlayerPawn') ) camhidden = true;
 		else camhidden = false;
 		BeginHUD();
-		hs = GetHUDScale();
-		hs.y = hs.x;
-		ss = (Screen.GetWidth()/hs.x,Screen.GetHeight()/hs.y);
+		if ( !hudscale ) hudscale = CVar.FindCVar(SWWMMODPREFIX.."_hudscale");
+		if ( hudscale.GetBool() ) hs = CleanXFac_1;
+		else hs = max(floor(Screen.GetWidth()/640.),1.);
+		ss = (Screen.GetWidth(),Screen.GetHeight())/hs;
 		if ( !hudmargin ) hudmargin = CVar.FindCVar(SWWMMODPREFIX.."_hudmargin");
 		margin = clamp(hudmargin.GetInt(),0,40);
 		FracTic = TicFrac;

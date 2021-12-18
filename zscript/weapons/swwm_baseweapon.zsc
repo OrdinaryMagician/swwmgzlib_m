@@ -208,7 +208,7 @@ Class SWWMWeapon : Weapon abstract
 		return Super.GetObituary(victim,inflictor,mod,playerattack);
 	}
 	// draw weapon status on hud
-	virtual ui void DrawWeapon( double TicFrac, double bx, double by, Vector2 hs, Vector2 ss )
+	virtual ui void DrawWeapon( double TicFrac, double bx, double by, double hs, Vector2 ss )
 	{
 	}
 	// HUD-side ticking
