@@ -369,7 +369,7 @@ Class SWWMWeapon : Weapon abstract
 			return null;
 		let ret = Super.CreateTossable(amt);
 		// reattach our glow if we became a pickup
-		if ( (ret == self) && (PickupFlash is 'SWWMPickupFlash') && swwm_itemglows )
+		if ( (ret == self) && (PickupFlash is 'SWWMPickupFlash') )
 		{
 			let p = Spawn(PickupFlash,Vec3Offset(0,0,16));
 			p.target = self;

@@ -81,7 +81,6 @@ Class AngeryPower : Powerup
 	{
 		Super.InitEffect();
 		if ( !Owner ) return;
-		Owner.A_AlertMonsters(swwm_uncapalert?0:5000);
 		SWWMHandler.DoFlash(Owner,Color(64,224,0,255),30);
 		Owner.A_QuakeEx(8,8,8,20,0,1,"",QF_RELATIVE|QF_SCALEDOWN,rollIntensity:1.);
 		lasteffect = int.min;
@@ -117,7 +116,6 @@ Class AngeryPower : Powerup
 	void DoHitFX()
 	{
 		if ( level.maptime <= lasteffect+5 ) return;
-		Owner.A_AlertMonsters(swwm_uncapalert?0:5000);
 		SWWMHandler.DoFlash(Owner,Color(64,224,0,255),10);
 		Owner.A_QuakeEx(8,8,8,Random[Rage](3,8),0,1,"",QF_RELATIVE|QF_SCALEDOWN,rollIntensity:1.);
 		Owner.A_StartSound("powerup/devastationhit",CHAN_POWERUP,CHANF_OVERLAP);
