@@ -39,6 +39,8 @@ Class SWWMStatusBar : BaseStatusBar abstract
 	int PrevFrame;
 	int chatopen;
 	bool camhidden;
+	int pausetime;
+	Vector2 pausepos, pausedir;
 
 	// shared from renderunderlay, needed for proper interpolation of some things
 	Vector3 viewpos, viewrot;
@@ -186,6 +188,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 	override void Tick()
 	{
 		Super.Tick();
+		pausetime = gametic;
 		if ( !pickduration ) pickduration = CVar.FindCVar(SWWMMODPREFIX.."_pickduration");
 		if ( !msgduration ) msgduration = CVar.FindCVar(SWWMMODPREFIX.."_msgduration");
 		if ( !chatduration ) chatduration = CVar.FindCVar(SWWMMODPREFIX.."_chatduration");
@@ -873,16 +876,43 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			Screen.DrawTexture(bgtex,false,(vsize.x-tsize.x)/2,(vsize.y-tsize.y)/2,DTA_VirtualWidthF,vsize.x,DTA_VirtualHeightF,vsize.y,DTA_KeepRatio,true,DTA_ColorOverlay,Color(192,0,0,0),DTA_Alpha,.5);
 		}
 		else Screen.Dim("Black",.5,0,0,Screen.GetWidth(),Screen.GetHeight());
-		Screen.DrawTexture(PauseTex,false,Screen.GetWidth()/2,Screen.GetHeight()/2,DTA_CleanNoMove,true,DTA_CenterOffset,true);
+		String str = StringTable.Localize("$SWWM_PAUSE");
+		if ( gametic < pausetime+1000 )
+		{
+			pausepos.x = Screen.GetWidth()/2;
+			pausepos.y = Screen.GetHeight()/2;
+			pausedir = (1,1);
+		}
+		else
+		{
+			pausepos.x += pausedir.x*CleanXFac;
+			pausepos.y += pausedir.y*CleanYFac;
+			if ( pausepos.x >= Screen.GetWidth()-((bigfont.StringWidth(str)+8)*CleanXFac/2) )
+				pausedir.x = -1;
+			if ( pausepos.x < ((bigfont.StringWidth(str)+8)*CleanXFac/2) )
+				pausedir.x = 1;
+			if ( pausepos.y >= Screen.GetHeight()-((bigfont.GetHeight()+8)*CleanYFac/2) )
+				pausedir.y = -1;
+			if ( pausepos.y < ((bigfont.GetHeight()+8)*CleanYFac/2) )
+				pausedir.y = 1;
+		}
+		double xx = pausepos.x-bigfont.StringWidth(str)*CleanXFac/2;
+		double yy = pausepos.y-bigfont.GetHeight()*CleanYFac/2;
+		int tlen = str.CodePointCount();
+		for ( int i=0, pos=0; i<tlen; i++ )
+		{
+			int ch;
+			[ch, pos] = str.GetNextCodePoint(pos);
+			Screen.DrawChar(bigfont,SWWMCREDITSCOL0,xx,yy+4*sin(32*i+8*gametic)*CleanYFac,ch,DTA_CleanNoMove,true);
+			xx += (bigfont.GetCharWidth(ch)+bigfont.GetDefaultKerning())*CleanXFac;
+		}
+		yy += bigfont.GetHeight()*CleanYFac;
 		if ( multiplayer && (player != -1) )
 		{
-			String str = String.Format(StringTable.Localize("$TXT_BY"),players[player].GetUserName());
-			Vector2 sz = TexMan.GetScaledSize(PauseTex);
-			double xx = (Screen.GetWidth()-smallfont.StringWidth(str)*CleanXFac)/2;
-			double yy = (Screen.GetHeight()+(sz.y+4)*CleanYFac)/2;
+			str = String.Format(StringTable.Localize("$TXT_BY"),players[player].GetUserName());
+			xx = pausepos.x-smallfont.StringWidth(str)*CleanXFac/2;
 			Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,str,DTA_CleanNoMove,true);
 		}
-		// TODO draw something extra to make the screen more visually interesting, maybe
 		return true;
 	}
 

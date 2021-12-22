@@ -133,6 +133,7 @@ SWWM_URDED4 = "Press \cfUse\c- to restart from the most recent save";
 SWWM_URDEDMP = "Press \cfUse\c- to respawn";
 SWWM_SWAPWEAPON = "\cjPress \cfUse\cj to swap \cf%s\cj for \cf%s\cj.\c-";
 SWWM_SETSLOTSTRICT = "\cg!!!WARNING!!!\c-\n\cj\"setslotstrict\" is enabled. This will cause SWWM GZ weapons to not have slots assigned. Please go into Miscellaneous Options and toggle the \"Strict KEYCONF Weapons/Players\" setting.\c-";
+SWWM_PAUSE = "PAUSED";
 // weapon tooltips
 SWWM_TTNOTE = "Note: Weapon tooltips can be deactivated in the mod options.";
 // keybinds
