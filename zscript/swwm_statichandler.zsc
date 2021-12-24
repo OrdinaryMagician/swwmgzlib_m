@@ -3,7 +3,7 @@
 // save version holder
 Class SWWMSaveVerData : Thinker
 {
-	String ver;
+	String ver, modver;
 }
 
 Class SWWMStaticHandler : StaticEventHandler
@@ -17,12 +17,9 @@ Class SWWMStaticHandler : StaticEventHandler
 	ui TextureID scr;
 	// versioning
 	bool tainted;
-	String taintver;
-	bool mptaint[MAXPLAYERS];
-	bool mprecv[MAXPLAYERS];
-	String mpver[MAXPLAYERS];
+	String taintver, taintmodver;
 	int checktic;
-	ui bool mpsent, checked;
+	ui bool checked;
 	int maptime;
 	bool unloading;
 
@@ -32,6 +29,7 @@ Class SWWMStaticHandler : StaticEventHandler
 		let svd = new("SWWMSaveVerData");
 		svd.ChangeStatNum(Thinker.STAT_STATIC);
 		svd.ver = StringTable.Localize("$SWWM_SHORTVER");
+		svd.modver = StringTable.Localize("$"..SWWMMODPREFIX.."_SHORTVER");
 	}
 
 	override void WorldUnloaded( WorldEvent e )
@@ -70,13 +68,16 @@ Class SWWMStaticHandler : StaticEventHandler
 		{
 			tainted = true;
 			taintver = "\cg(no version info)\c-";
+			taintmodver = "\cg(no version info)\c-";
 			return;
 		}
 		String cver = StringTable.Localize("$SWWM_SHORTVER");
-		if ( svd.ver != cver )
+		String cmodver = StringTable.Localize("$"..SWWMMODPREFIX.."_SHORTVER");
+		if ( (svd.ver != cver) || (svd.modver != cmodver) )
 		{
 			tainted = true;
 			taintver = svd.ver;
+			taintmodver = svd.modver;
 		}
 	}
 
@@ -210,23 +211,10 @@ Class SWWMStaticHandler : StaticEventHandler
 		{
 			let ti = ThinkerIterator.Create("SWWMSaveVerData",Thinker.STAT_STATIC);
 			let svd = SWWMSaveVerData(ti.Next());
-			if ( svd ) Console.Printf("\cj%s\c-",svd.ver);
+			if ( svd ) Console.Printf("\cjLibrary: %s\c-\n\cjMod: %s\c-",svd.ver,svd.modver);
 			else Console.Printf("\cg(no version data)\c-");
 			if ( tainted ) Console.Printf("\cgversion mismatched\c-");
 			else Console.Printf("\cdversion not mismatched\c-");
-		}
-	}
-
-	override void NetworkProcess( ConsoleEvent e )
-	{
-		if ( e.IsManual ) return;
-		if ( e.Name.Left(12) ~== "swwmversion." )
-		{
-			String verstr = e.Name.Mid(12);
-			mprecv[e.Player] = true;
-			mpver[e.Player] = verstr;
-			if ( verstr != StringTable.Localize("$SWWM_SHORTVER") )
-				mptaint[e.Player] = true;
 		}
 	}
 
@@ -239,24 +227,10 @@ Class SWWMStaticHandler : StaticEventHandler
 			pt.SetInt(ct+1);
 		}
 		if ( gamestate != GS_LEVEL ) return;
-		if ( !mpsent )
-		{
-			EventHandler.SendNetworkEvent("swwmversion."..StringTable.Localize("$SWWM_SHORTVER"));
-			mpsent = true;
-			return;
-		}
 		if ( checked || (gametic < checktic) ) return;
-		if ( multiplayer )
-		{
-			for ( int i=0; i<MAXPLAYERS; i++ )
-			{
-				if ( !playeringame[i] || mprecv[i] ) continue;
-				// waiting for version info from all players
-				return;
-			}
-		}
 		checked = true;
 		String cver = StringTable.Localize("$SWWM_SHORTVER");
+		String cmodver = StringTable.Localize("$"..SWWMMODPREFIX.."_SHORTVER");
 		if ( tainted )
 		{
 			let ti = ThinkerIterator.Create("SWWMSaveVerData",Thinker.STAT_STATIC);
@@ -265,23 +239,8 @@ Class SWWMStaticHandler : StaticEventHandler
 			else
 			{
 				Console.Printf("\cgWARNING:\n \cjVersion mismatch with save data. Issues may happen.\c-");
-				Console.Printf("\cgSaved:\n \cj"..svd.ver.."\c-");
-				Console.Printf("\cgCurrent:\n \cj"..cver.."\c-");
-			}
-		}
-		if ( multiplayer )
-		{
-			bool found = false;
-			for ( int i=0; i<MAXPLAYERS; i++ )
-			{
-				if ( !playeringame[i] || (i == consoleplayer) || (!mptaint[i] && (mpver[i] != "")) ) continue;
-				if ( !found )
-				{
-					Console.Printf("\cfWARNING:\n \cjVersion mismatch between players. Desyncs will happen.\c-");
-					Console.Printf("\cgYou:\n \cj"..cver.."\c-");
-				}
-				found = true;
-				Console.Printf("\cgPlayer %d (\c-%s\cg):\n \cj%s\c-",i+1,players[i].GetUserName(),(mpver[i]=="")?"\cg(no version data)\c-":mpver[i]);
+				Console.Printf("\cgSaved:\n \cjLibrary: "..svd.ver.."\c-\n \cjMod: "..svd.modver.."\c-");
+				Console.Printf("\cgCurrent:\n \cjLibrary: "..cver.."\c-\n \cjMod: "..cmodver.."\c-");
 			}
 		}
 	}
@@ -328,8 +287,8 @@ Class SWWMStaticHandler : StaticEventHandler
 			{
 				if ( isbd ) Console.Printf("\cfYou shouldn't have tried running this with Brutal Doom.\c-");
 				else Console.Printf("\cfYou should probably screenshot this error and show it to Marisa.\c-");
-				Console.Printf("\cfLoaded Version:\n \cj%s\c-",StringTable.Localize("$SWWM_SHORTVER"));
-				if ( tainted ) Console.Printf("\cfSavegame Version:\n \cj%s\c-",taintver);
+				Console.Printf("\cfLoaded Version:\n \cjLibrary: %s\c-\n \cjMod: %s\c-",StringTable.Localize("$SWWM_SHORTVER"),StringTable.Localize("$"..SWWMMODPREFIX.."SHORTVER"));
+				if ( tainted ) Console.Printf("\cfSavegame Version:\n \cjLibrary: %s\c-\n \cjMod: %s\c-",taintver,taintmodver);
 			}
 			timer++;
 		}
