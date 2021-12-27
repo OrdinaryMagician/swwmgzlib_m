@@ -1,0 +1,96 @@
+// SHAMEFUL DISPLAY
+
+// At this point there's no clearer way to tell people to stop combining
+// incompatible mods.
+// The BD crowd never listens, never learns, you can't just mix up gameplay
+// mods and expect everything to work.
+// You also can't expect modders to put in the effort needed to go and add
+// compatibility for a mod that wouldn't even make any sense to add
+// compatibility for because both replace the same things and are entirely
+// different beasts with different styles altogether.
+// Just stop. Put that gray matter to use. Do you really think it's worth it?
+// Don't do this shit.
+Class SWWMBrutalHandler : StaticEventHandler
+{
+	ui int timer;
+	ui TextureID scr[85];
+	bool detected;
+
+	override void OnRegister()
+	{
+		// check for brutal doom
+		for ( int i=0; i<AllActorClasses.size(); i++ )
+		{
+			if ( (AllActorClasses[i].GetClassName() != "BrutalWeapon")
+				&& (AllActorClasses[i].GetClassName() != "BrutalDoomer") ) continue;
+			detected = true;
+			let shnd = SWWMStaticHandler(StaticEventHandler.Find("SWWMStaticHandler"));
+			shnd.isbd = true;
+			Console.Printf(
+				"\cx┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\c-\n"
+				"\cx┃   \cfIf you have BD on your autoload you really shouldn't.   \cx┃\c-\n"
+				"\cx┃  \cfIf you manually loaded it with this mod, why would you?  \cx┃\c-\n"
+				"\cx┃         \cfThey're not compatible and never will be.         \cx┃\c-\n"
+				"\cx┃    \cfThis mod will now shit the bed once you go in-game,    \cx┃\c-\n"
+				"\cx┃            \cfand trust me, it's better this way.            \cx┃\c-\n"
+				"\cx┃             \cf<See you again, have a nice day>              \cx┃\c-\n"
+				"\cx┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\c-");
+			S_StartSound("compat/warn",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+			break;
+		}
+	}
+
+	override void WorldLoaded( WorldEvent e )
+	{
+		// get rid of ourselves if not needed
+		if ( !detected && !bDestroyed )
+			Destroy();
+	}
+
+	override void UiTick()
+	{
+		if ( !detected || (gamestate != GS_LEVEL) )
+		{
+			timer = 0;
+			return;
+		}
+		if ( timer == 35 )
+		{
+			S_StartSound("misc/spawn",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+			S_StartSound("misc/spawn",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+		}
+		else if ( timer == 140 )
+		{
+			for ( int i=0; i<85; i++ )
+				scr[i] = TexMan.CheckForTexture(String.Format("graphics/BDScreen/BDSCR%03d.jpg",i+1),TexMan.Type_Any);
+			S_ChangeMusic("",force:true);
+			S_StartSound("brutal/bdscreen",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+			S_StartSound("brutal/bdscreen",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+		}
+		else if ( timer == 484 ) ThrowAbortException("This manual abort is for your own safety");
+		timer++;
+	}
+
+	override void WorldTick()
+	{
+		if ( !detected ) return;
+		for ( int i=0; i<MAXPLAYERS; i++ ) if ( playeringame[i] ) players[i].cheats |= CF_TOTALLYFROZEN;
+	}
+
+	override void RenderOverlay( RenderEvent e )
+	{
+		if ( !detected ) return;
+		if ( timer < 35 ) return;
+		Screen.Dim("Black",clamp(((timer+e.fractic)-35.)/70.,0.,1.),0,0,Screen.GetWidth(),Screen.GetHeight());
+		if ( timer < 140 )
+		{
+			String str = "Can I run this with \cgBrutal Doom\c-?";
+			Screen.DrawText(bigfont,Font.CR_WHITE,(Screen.GetWidth()-bigfont.StringWidth(str)*CleanXFac_1)/2,(Screen.GetHeight()-bigfont.GetHeight()*CleanYFac_1)/2,str,DTA_CleanNoMove_1,true);
+			return;
+		}
+		int frameno = clamp((timer-140)/4,0,84);
+		double scl = max(floor(Screen.GetWidth()/320.),1.);
+		Screen.DrawTexture(scr[frameno],false,(Screen.GetWidth()-320*scl)/2,(Screen.GetHeight()-132*scl)/2,DTA_ScaleX,scl,DTA_ScaleY,scl);
+	}
+}
+

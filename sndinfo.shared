@@ -9,7 +9,7 @@ crash/crash6	sounds/ONO.ogg
 $random crash/crash { crash/crash1 crash/crash2 crash/crash3 crash/crash4 crash/crash5 crash/crash6 }
 crash/glass	sounds/GLASSCRK.ogg
 crash/curb	sounds/CURB.ogg
-brutal/ezmodo	sounds/EASYMODO.ogg
+brutal/bdscreen	sounds/BDSCREEN.ogg
 compat/warn	sounds/UTWARN.ogg
 hahaha/hahaha	sounds/HAHAHA.ogg
 

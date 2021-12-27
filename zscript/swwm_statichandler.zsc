@@ -13,8 +13,6 @@ Class SWWMStaticHandler : StaticEventHandler
 	ui int timer, msgpick;
 	// broccoli doccoli
 	bool isbd;
-	ui int bdtimer;
-	ui TextureID scr;
 	// versioning
 	bool tainted;
 	String taintver, taintmodver;
@@ -83,24 +81,6 @@ Class SWWMStaticHandler : StaticEventHandler
 
 	override void OnRegister()
 	{
-		// check for brutal doom
-		for ( int i=0; i<AllActorClasses.size(); i++ )
-		{
-			if ( (AllActorClasses[i].GetClassName() != "BrutalWeapon")
-				&& (AllActorClasses[i].GetClassName() != "BrutalDoomer") ) continue;
-			isbd = true;
-			Console.Printf(
-				"\cx┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\c-\n"
-				"\cx┃   \cfIf you have BD on your autoload you really shouldn't.   \cx┃\c-\n"
-				"\cx┃  \cfIf you manually loaded it with this mod, why would you?  \cx┃\c-\n"
-				"\cx┃         \cfThey're not compatible and never will be.         \cx┃\c-\n"
-				"\cx┃    \cfThis mod will now shit the bed once you go in-game,    \cx┃\c-\n"
-				"\cx┃            \cfand trust me, it's better this way.            \cx┃\c-\n"
-				"\cx┃             \cf<See you again, have a nice day>              \cx┃\c-\n"
-				"\cx┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\c-");
-			S_StartSound("compat/warn",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
-			break;
-		}
 		// warning for unsupported
 		if ( Wads.FindLump("swwmgamesupported.txt") != -1 ) return;
 		Console.Printf(
@@ -133,21 +113,6 @@ Class SWWMStaticHandler : StaticEventHandler
 			String str = "UNSUPPORTED RENDER MODE - PLEASE SWITCH TO HARDWARE RENDERING";
 			Screen.DrawText(newsmallfont,Font.CR_RED,(Screen.GetWidth()-newsmallfont.StringWidth(str)*CleanXFac_1)/2,yy,str,DTA_CleanNoMove_1,true);
 		}
-		if ( !isbd ) return;
-		if ( !scr ) scr = TexMan.CheckForTexture("graphics/bdscreen.png",TexMan.Type_Any);
-		Screen.Dim("Red",(bdtimer/350.)-.2,0,0,Screen.GetWidth(),Screen.GetHeight());
-		double ar = Screen.GetAspectRatio();
-		Vector2 tsize = TexMan.GetScaledSize(scr);
-		Vector2 vsize = (Screen.GetWidth(),Screen.GetHeight());
-		if ( (tsize.x > vsize.x) || (tsize.y > vsize.y) )
-		{
-			double sar = tsize.x/tsize.y;
-			if ( sar > ar ) vsize = (tsize.x,tsize.x/ar);
-			else if ( sar < ar ) vsize = (tsize.y*ar,tsize.y);
-			else vsize = tsize;
-		}
-		Screen.DrawTexture(scr,false,(vsize.x-tsize.x)/2.+FRandom[bdscreen](-1,1)*max(bdtimer-40,0)**3*.000003,(vsize.y-tsize.y)/2.+FRandom[bdscreen](-1,1)*max(bdtimer-40,0)**3*.000003,DTA_VirtualWidthF,vsize.x,DTA_VirtualHeightF,vsize.y,DTA_KeepRatio,true,DTA_Alpha,min(1.,bdtimer/50.));
-		Screen.Dim("Red",(bdtimer/70.)-3.5,0,0,Screen.GetWidth(),Screen.GetHeight());
 	}
 
 	override void ConsoleProcess( ConsoleEvent e )
@@ -247,17 +212,6 @@ Class SWWMStaticHandler : StaticEventHandler
 
 	override void UiTick()
 	{
-		if ( isbd && (gamestate == GS_LEVEL) )
-		{
-			if ( bdtimer == 1 )
-			{
-				S_StartSound("brutal/ezmodo",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
-				S_StartSound("brutal/ezmodo",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
-			}
-			else if ( bdtimer == 350 ) ThrowAbortException("This manual abort is for your own safety");
-			bdtimer++;
-		}
-		else bdtimer = 0;
 		// Fancy crash effect
 		if ( (gamestate == GS_LEVEL) || (gamestate == GS_TITLELEVEL) )
 		{
@@ -287,7 +241,7 @@ Class SWWMStaticHandler : StaticEventHandler
 			{
 				if ( isbd ) Console.Printf("\cfYou shouldn't have tried running this with Brutal Doom.\c-");
 				else Console.Printf("\cfYou should probably screenshot this error and show it to Marisa.\c-");
-				Console.Printf("\cfLoaded Version:\n \cjLibrary: %s\c-\n \cjMod: %s\c-",StringTable.Localize("$SWWM_SHORTVER"),StringTable.Localize("$"..SWWMMODPREFIX.."SHORTVER"));
+				Console.Printf("\cfLoaded Version:\n \cjLibrary: %s\c-\n \cjMod: %s\c-",StringTable.Localize("$SWWM_SHORTVER"),StringTable.Localize("$"..SWWMMODPREFIX.."_SHORTVER"));
 				if ( tainted ) Console.Printf("\cfSavegame Version:\n \cjLibrary: %s\c-\n \cjMod: %s\c-",taintver,taintmodver);
 			}
 			timer++;

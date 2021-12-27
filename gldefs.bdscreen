@@ -1,0 +1,341 @@
+HardwareShader Texture "graphics/BDScreen/BDSCR001.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR002.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR003.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR004.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR005.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR006.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR007.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR008.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR009.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR010.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR011.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR012.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR013.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR014.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR015.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR016.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR017.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR018.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR019.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR020.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR021.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR022.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR023.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR024.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR025.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR026.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR027.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR028.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR029.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR030.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR031.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR032.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR033.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR034.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR035.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR036.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR037.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR038.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR039.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR040.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR041.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR042.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR043.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR044.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR045.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR046.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR047.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR048.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR049.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR050.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR051.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR052.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR053.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR054.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR055.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR056.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR057.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR058.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR059.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR060.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR061.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR062.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR063.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR064.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR065.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR066.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR067.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR068.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR069.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR070.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR071.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR072.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR073.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR074.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR075.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR076.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR077.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR078.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR079.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR080.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR081.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR082.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR083.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR084.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+HardwareShader Texture "graphics/BDScreen/BDSCR085.jpg"
+{
+	Shader "shaders/glsl/Oversample.fp"
+}
+
