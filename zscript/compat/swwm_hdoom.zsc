@@ -1,0 +1,110 @@
+// HORNY
+
+// Unlike the base mod, we can't have actual compat here, so enjoy getting
+// bonked, you pervy perv
+Class SWWMHDoomHandler : StaticEventHandler
+{
+	ui int timer;
+	ui TextureID bonker, bonk, bonked;
+	bool detected;
+	ui int rss;
+
+	private ui int GetUIRandom()
+	{
+		return (rss = (rss<<1)*35447+(rss/87));
+	}
+
+	private ui double RandomShiver()
+	{
+		int sd = GetUIRandom();
+		return ((abs(sd)%11)-5)*.1;
+	}
+
+	override void OnRegister()
+	{
+		for ( int i=0; i<AllActorClasses.size(); i++ )
+		{
+			if ( AllActorClasses[i].GetClassName() != "HDoomPlayer" ) continue;
+			detected = true;
+			break;
+		}
+		if ( !detected )
+			return;
+		SetRandomSeed[hdscreen](Random[hdscreen]()+consoleplayer+MSTime());
+		Console.Printf(
+			"\cx┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\c-\n"
+			"\cx┃        \cfOh my, someone appears to be \cgH \ckO \cdR \cvN \chY \ct♥        \cx┃\c-\n"
+			"\cx┃  \cfWell too bad, this mod isn't compatible with H-Doom,  \cx┃\c-\n"
+			"\cx┃  \cfso please wait while Demo-chan gets the horny stick,  \cx┃\c-\n"
+			"\cx┃       \cfbecause someone needs to get bonked, hard.       \cx┃\c-\n"
+			"\cx┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\c-");
+		S_StartSound("compat/warn",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+	}
+
+	override void WorldLoaded( WorldEvent e )
+	{
+		// get rid of ourselves if not needed
+		if ( !detected && !bDestroyed )
+			Destroy();
+	}
+
+	static bool IsSexyTime( Actor a )
+	{
+		Class p = a.GetClass();
+		while ( p.GetParentClass() && (p.GetParentClass() != 'Actor') )
+		{
+			p = p.GetParentClass();
+			if ( (p.GetClassName() == 'SexActor') || (p.GetClassName() == 'StaticSexActor') )
+				return true;
+		}
+		return false;
+	}
+
+	override void WorldThingSpawned( WorldEvent e )
+	{
+		// no interaction available
+		if ( IsSexyTime(e.Thing) ) e.Thing.bUSESPECIAL = false;
+	}
+
+	override void UiTick()
+	{
+		if ( !detected || (gamestate != GS_LEVEL) )
+		{
+			timer = 0;
+			return;
+		}
+		if ( timer == 24 )
+		{
+			S_StartSound("misc/spawn",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+			S_StartSound("misc/spawn",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+			bonker = TexMan.CheckForTexture("graphics/HDoom_Bonker.png",TexMan.Type_Any);
+			bonk = TexMan.CheckForTexture("graphics/HDoom_Bonk.png",TexMan.Type_Any);
+			bonked = TexMan.CheckForTexture("graphics/HDoom_Bonked.png",TexMan.Type_Any);
+		}
+		else if ( (timer >= 32) && !(timer%16) )
+		{
+			double ptch = FRandom[hdscreen](.95,1.05);
+			S_StartSound("hdoom/bonk",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE,ptch);
+			S_StartSound("hdoom/bonk",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE,ptch);
+		}
+		timer++;
+	}
+
+	override void RenderOverlay( RenderEvent e )
+	{
+		if ( !detected || (timer < 24) ) return;
+		double scl = max(min(floor(Screen.GetWidth()/120.),floor(Screen.GetHeight()/100)),1.);
+		double ox = Screen.GetWidth()/2;
+		double oy = Screen.GetHeight()/2-4*scl;
+		String str = "HORNY";
+		double alf = clamp(16-((timer%16)+e.FracTic)*2,0,16)/16.;
+		rss = int(MSTime()/10);
+		Vector2 ofs = (RandomShiver(),RandomShiver())*3.*scl*alf;
+		Screen.DrawText(BigFont,SWWMCREDITSCOL0,ox-(BigFont.StringWidth(str)*scl)/2+ofs.x,oy+6*scl+ofs.y,str,DTA_ScaleX,scl,DTA_ScaleY,scl);
+		Screen.DrawText(BigFont,Font.FindFontColor('MiniFlash'),ox-(BigFont.StringWidth(str)*scl)/2+ofs.x,oy+6*scl+ofs.y,str,DTA_ScaleX,scl,DTA_ScaleY,scl,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alf);
+		double phase = cos(((timer+e.FracTic)-32)*22.5)*.5+.5;
+		Screen.DrawTexture(bonker,false,ox+18*scl,oy,DTA_ScaleX,scl,DTA_ScaleY,scl,DTA_Rotate,-15+phase*5);
+		Screen.DrawTexture(bonked,false,ox-22*scl,oy,DTA_ScaleX,scl,DTA_ScaleY,scl*(1.-max(phase-.8,0.)),DTA_Rotate,5-phase*5);
+		Screen.DrawTexture(bonk,false,ox+10*scl,oy+2*scl,DTA_ScaleX,scl,DTA_ScaleY,scl,DTA_Rotate,-45+phase*45);
+	}
+}

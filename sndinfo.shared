@@ -10,6 +10,7 @@ $random crash/crash { crash/crash1 crash/crash2 crash/crash3 crash/crash4 crash/
 crash/glass	sounds/GLASSCRK.ogg
 crash/curb	sounds/CURB.ogg
 brutal/bdscreen	sounds/BDSCREEN.ogg
+hdoom/bonk	sounds/BONK.ogg
 compat/warn	sounds/UTWARN.ogg
 hahaha/hahaha	sounds/HAHAHA.ogg
 

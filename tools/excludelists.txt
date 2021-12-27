@@ -52,9 +52,12 @@ zscript/items/swwm_omnisight.zsc
 gldefs.omnisight
 modeldef.omnisight
 
-# bd handling
+# SHAMEFUL DISPLAYS
 
-graphics/HUD/BDScreen
+graphics/BDScreen
+graphics/HDoom_*
 sounds/BDSCREEN.ogg
+sounds/BONK.ogg
 gldefs.bdscreen
 zscript/compat/swwm_shame.zsc
+zscript/compat/swwm_hdoom.zsc
