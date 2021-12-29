@@ -4,6 +4,7 @@ Class SWWMAmmo : Ammo
 	Mixin SWWMOverlapPickupSound;
 	Mixin SWWMUseToPickup;
 	Mixin SWWMRespawn;
+	Mixin SWWMCountNoPickup;
 
 	String PickupTag;
 	Class<MagAmmo> MagAmmoType;
@@ -34,6 +35,7 @@ Class SWWMAmmo : Ammo
 	// get how much the max ammo should increase at a specific Embiggener count
 	int GetEmbiggenMaxAmount( int amt )
 	{
+		if ( (amt >= 8) && EmbiggenMaxAmount8 ) return EmbiggenMaxAmount8;
 		if ( (amt >= 7) && EmbiggenMaxAmount7 ) return EmbiggenMaxAmount7;
 		if ( (amt >= 6) && EmbiggenMaxAmount6 ) return EmbiggenMaxAmount6;
 		if ( (amt >= 5) && EmbiggenMaxAmount5 ) return EmbiggenMaxAmount5;
@@ -237,30 +239,6 @@ Class SWWMAmmo : Ammo
 		return Super.HandlePickup(item);
 	}
 
-	override bool CanPickup( Actor toucher )
-	{
-		// don't allow picking up ammo for weapons we can't pick up
-		if ( !Super.CanPickup(toucher) ) return false;
-		for ( int i=0; i<AllActorClasses.Size(); i++ )
-		{
-			let w = (Class<Weapon>)(AllActorClasses[i]);
-			if ( !w ) continue;
-			if ( w is 'SWWMWeapon' )
-			{
-				let def = GetDefaultByType((Class<SWWMWeapon>)(w));
-				if ( !def.UsesAmmo(GetClass()) ) continue;
-				if ( !def.CanPickup(toucher) ) return false;
-			}
-			else
-			{
-				let def = GetDefaultByType(w);
-				if ( (def.AmmoType1 != GetClass()) && (def.AmmoType2 != GetClass()) ) continue;
-				if ( !def.CanPickup(toucher) ) return false;
-			}
-		}
-		return true;
-	}
-
 	override void AttachToOwner( Actor other )
 	{
 		Super.AttachToOwner(other);
@@ -301,6 +279,7 @@ Class MagAmmo : Inventory abstract
 	Mixin SWWMOverlapPickupSound;
 	Mixin SWWMUseToPickup;
 	Mixin SWWMRespawn;
+	Mixin SWWMCountNoPickup;
 
 	Class<Ammo> ParentAmmo;
 	Ammo pamo;
@@ -482,14 +461,6 @@ Class MagAmmo : Inventory abstract
 		return copy;
 	}
 
-	override bool CanPickup( Actor toucher )
-	{
-		// don't allow picking up ammo for weapons we can't pick up
-		if ( !Super.CanPickup(toucher) ) return false;
-		let def = GetDefaultByType(ParentAmmo);
-		return def.CanPickup(toucher);
-	}
-
 	private Inventory DoDrop( Class<Inventory> type )
 	{
 		let copy = Inventory(Spawn(type,Owner.Pos,NO_REPLACE));
@@ -642,7 +613,7 @@ Class MagAmmo : Inventory abstract
 // Ref class for ammo spawners, used by on-demand replacers
 Class SWWMAmmoSpawner : Inventory abstract
 {
-	virtual void SpawnAmmo() {}
+	abstract void SpawnAmmo();
 
 	override void PostBeginPlay()
 	{
@@ -669,5 +640,53 @@ Class SWWMAmmoSpawner : Inventory abstract
 		+NOTELEPORT;
 		+DONTSPLASH;
 		-SPECIAL;
+	}
+}
+
+// on-demand ammo spawners (must define a PickAmmo function)
+Mixin Class SWWMOndemandAmmoSpawner
+{
+	Actor dropper;
+	bool enemydrop;
+	int dropamount;
+
+	// MUST define (used by replacers too)
+	//static Class<Ammo> PickAmmo();
+
+	override void ModifyDropAmount( int amt )
+	{
+		dropamount = amt;
+	}
+
+	override bool SpecialDropAction( Actor dropper )
+	{
+		self.dropper = dropper;
+		enemydrop = true;
+		return false;
+	}
+
+	override void SpawnAmmo()
+	{
+		let ac = PickAmmo();
+		if ( !ac ) return;
+		let a = Spawn(ac,pos);
+		if ( enemydrop )
+		{
+			a.bDropped = true;
+			a.bNoGravity = false;
+			if ( !(level.compatflags&COMPATF_NOTOSSDROPS) )
+				a.TossItem();
+			if ( a is 'Inventory' )
+			{
+				let i = Inventory(a);
+				i.bTossed = true;
+				if ( i.SpecialDropAction(dropper) )
+				{
+					i.Destroy();
+					return;
+				}
+			}
+		}
+		SWWMUtility.TransferItemProp(self,a);
 	}
 }

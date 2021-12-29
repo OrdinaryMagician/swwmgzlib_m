@@ -56,6 +56,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 	SWWMWeaponTooltip ctip;
 
 	double mm_zoom;
+	transient ThinkerIterator mi;	// for map markers
 	// for interpolation
 	double minimapzoom, oldminimapzoom;
 	// minimap constants
@@ -520,6 +521,94 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		}
 	}
 
+	private void DrawMapMarkers( Vector2 basepos )
+	{
+		double zoomlevel = oldminimapzoom*(1.-FracTic)+minimapzoom*FracTic;
+		double zoomview = MAPVIEWDIST*zoomlevel, zoomclip = CLIPDIST*zoomlevel;
+		Vector2 cpos = players[consoleplayer].Camera.prev.xy*(1.-FracTic)+players[consoleplayer].Camera.pos.xy*FracTic;
+		Sector csec = players[consoleplayer].Camera.CurSector;
+		if ( !mi ) mi = ThinkerIterator.Create("MapMarker",Thinker.STAT_MAPMARKER);
+		else mi.Reinit();
+		MapMarker m;
+		while ( m = MapMarker(mi.Next()) )
+		{
+			if ( m.bDORMANT ) continue;
+			if ( m.args[1] && !(m.CurSector.moreflags&Sector.SECMF_DRAWN) ) continue;
+			TextureID tx;
+			if ( m.picnum.IsValid() ) tx = m.picnum;
+			else tx = m.CurState.GetSpriteTexture(1);
+			Vector2 sz = TexMan.GetScaledSize(tx);
+			Vector2 scl;
+			// seems to match automap scaling somewhat
+			if ( m.Args[2] ) scl = (m.Scale/zoomlevel)*.15;
+			else scl = m.Scale*.5;
+			sz.x *= scl.x;
+			sz.y *= scl.y;
+			double radius = max(sz.x,sz.y);	// naive, I know
+			if ( m.args[0] )
+			{
+				// oh bother, this will be dicks
+				let ai = level.CreateActorIterator(m.args[0]);
+				Actor a;
+				while ( a = ai.Next() )
+				{
+					Vector2 rv = a.pos.xy-cpos;
+					bool isportal = false;
+					Sector sec = level.PointInSector(a.pos.xy);
+					if ( sec.portalgroup != csec.portalgroup )
+					{
+						isportal = true;
+						// portal displacement
+						rv -= SWWMUtility.PortalDisplacement(csec,sec);
+					}
+					if ( min(abs(rv.x)-radius,abs(rv.y)-radius) > zoomview )
+						continue;
+					// flip Y
+					rv.y *= -1;
+					// rotate by view
+					rv = Actor.RotateVector(rv,ViewRot.x-90);
+					// scale to minimap frame
+					rv *= (HALFMAPSIZE/zoomclip)*hs;
+					// offset to minimap center
+					rv += basepos;
+					// draw
+					int clipleft = int((basepos.x-HALFMAPSIZE)*hs);
+					int cliptop = int((basepos.y-HALFMAPSIZE)*hs);
+					int clipright = int(clipleft+HALFMAPSIZE*2*hs);
+					int clipbottom = int(cliptop+HALFMAPSIZE*2*hs);
+					Screen.DrawTexture(tx,false,rv.x,rv.y,DTA_ColorOverlay,isportal?Color(128,0,0,0):Color(0,0,0,0),DTA_ScaleX,hs*scl.x,DTA_ScaleY,hs*scl.y,DTA_LegacyRenderStyle,m.GetRenderStyle(),DTA_Alpha,m.Alpha,DTA_FillColor,m.FillColor,DTA_TranslationIndex,m.Translation,DTA_ClipLeft,clipleft,DTA_ClipTop,cliptop,DTA_ClipRight,clipright,DTA_ClipBottom,clipbottom);
+				}
+				ai.Destroy();
+				continue;
+			}
+			Vector2 rv = m.pos.xy-cpos;
+			bool isportal = false;
+			Sector sec = level.PointInSector(m.pos.xy);
+			if ( sec.portalgroup != csec.portalgroup )
+			{
+				isportal = true;
+				// portal displacement
+				rv -= SWWMUtility.PortalDisplacement(csec,sec);
+			}
+			if ( min(abs(rv.x)-radius,abs(rv.y)-radius) > zoomview )
+				continue;
+			// flip Y
+			rv.y *= -1;
+			// rotate by view
+			rv = Actor.RotateVector(rv,ViewRot.x-90);
+			// scale to minimap frame
+			rv *= (HALFMAPSIZE/zoomclip)*hs;
+			// offset to minimap center
+			rv += basepos;
+			// draw
+			int clipleft = int(basepos.x-HALFMAPSIZE*hs);
+			int cliptop = int(basepos.y-HALFMAPSIZE*hs);
+			int clipright = int(clipleft+HALFMAPSIZE*2*hs);
+			int clipbottom = int(cliptop+HALFMAPSIZE*2*hs);
+			Screen.DrawTexture(tx,false,rv.x,rv.y,DTA_ColorOverlay,isportal?Color(128,0,0,0):Color(0,0,0,0),DTA_ScaleX,hs*scl.x,DTA_ScaleY,hs*scl.y,DTA_LegacyRenderStyle,m.GetRenderStyle(),DTA_Alpha,m.Alpha,DTA_FillColor,m.FillColor,DTA_TranslationIndex,m.Translation,DTA_ClipLeft,clipleft,DTA_ClipTop,cliptop,DTA_ClipRight,clipright,DTA_ClipBottom,clipbottom);
+		}
+	}
+
 	private void DrawTopStuff()
 	{
 		// obviously, don't draw the minimap if the automap is open
@@ -533,6 +622,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			Screen.Dim(mm_backcolor,1.,int((basemappos.x-HALFMAPSIZE)*hs),int((basemappos.y-HALFMAPSIZE)*hs),int(HALFMAPSIZE*2*hs),int(HALFMAPSIZE*2*hs));
 			// draw dat stuff
 			DrawMapLines(basemappos*hs);
+			DrawMapMarkers(basemappos*hs);
 			// draw the player arrow
 			Vector2 tv[3];
 			tv[0] = (0,-4);
@@ -627,7 +717,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		}
 	}
 
-	protected bool DrawInvIcon( Inventory i, double xx, double yy, double alpha = 1., bool forceamt = false, bool selected = false )
+	protected bool DrawInvIcon( Inventory i, double xx, double yy, double alpha = 1., bool forceamt = false, bool selected = false, bool aspowerup = false )
 	{
 		if ( !i || !i.Icon.IsValid() ) return false;
 		Vector2 scl = TexMan.GetScaledSize(i.Icon);
@@ -640,6 +730,14 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			String nstr = String.Format("%ds",Powerup(i).EffectTics/GameTicRate);
 			int len = MiniHUDFont.StringWidth(nstr);
 			Screen.DrawText(MiniHUDFont,mhudfontcol[MCR_BRASS],(xx+20)-len,(yy+20)-7,nstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,Powerup(i).IsBlinking()?alpha*.5:alpha);
+			return true;
+		}
+		if ( (i is 'SWWMChargeItem') && aspowerup )
+		{
+			Screen.DrawTexture(i.Icon,false,dx,dy,DTA_VirtualWidthF,dw,DTA_VirtualHeightF,dh,DTA_KeepRatio,true,DTA_Alpha,Powerup(i).IsBlinking()?alpha*.5:alpha,DTA_TopOffset,0,DTA_LeftOffset,0);
+			String nstr = String.Format("%ds",SWWMChargeItem(i).Charge);
+			int len = MiniHUDFont.StringWidth(nstr);
+			Screen.DrawText(MiniHUDFont,mhudfontcol[MCR_BRASS],(xx+20)-len,(yy+20)-7,nstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,SWWMChargeItem(i).IsBlinking()?alpha*.5:alpha);
 			return true;
 		}
 		Screen.DrawTexture(i.Icon,false,dx,dy,DTA_VirtualWidthF,dw,DTA_VirtualHeightF,dh,DTA_KeepRatio,true,DTA_Alpha,alpha,DTA_TopOffset,0,DTA_LeftOffset,0,DTA_ColorOverlay,(i.Amount<=0)?Color(128,0,0,0):Color(0,0,0,0));
@@ -678,8 +776,9 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		else if ( bAlwaysDrawInv || (CPlayer.mo.InvSel && !isInventoryBarVisible()) ) yy -= 24;
 		for ( Inventory i=CPlayer.mo.Inv; i; i=i.Inv )
 		{
-			if ( !(i is 'Powerup') || (Powerup(i).EffectTics <= 0) || !(Powerup(i).Icon) ) continue;
-			if ( DrawInvIcon(i,xx,yy,selected:true) )
+			if ( !((i is 'SWWMChargeItem') && SWWMChargeItem(i).bActivated) && !((i is 'Powerup') && (Powerup(i).EffectTics > 0)) )
+				continue;
+			if ( DrawInvIcon(i,xx,yy,selected:true,aspowerup:true) )
 				yy -= 24;
 		}
 		// inventory box / bar

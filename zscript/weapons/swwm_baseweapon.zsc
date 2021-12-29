@@ -3,6 +3,7 @@ Class SWWMWeapon : Weapon abstract
 {
 	Mixin SWWMOverlapPickupSound;
 	Mixin SWWMRespawn;
+	Mixin SWWMCountNoPickup;
 
 	bool wasused;
 	private int SWeaponFlags;

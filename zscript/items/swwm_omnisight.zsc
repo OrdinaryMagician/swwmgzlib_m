@@ -15,6 +15,7 @@ Class Omnisight : Inventory
 			if ( Owner is 'SWWMPlayer' )
 				SWWMPlayer(Owner).lastbump *= 1.1;
 			level.allmap = true;
+			SWWMUtility.SpawnExitMarkers();
 		}
 		// not used up, must be kept so the hud can detect it in order to amplify minimap range
 		return false;

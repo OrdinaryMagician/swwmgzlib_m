@@ -144,18 +144,17 @@ Class BarrierPower : PowerIronFeet
 
 Class EBarrier : Inventory
 {
-	Mixin SWWMAutoUseFix;
 	Mixin SWWMOverlapPickupSound;
 	Mixin SWWMUseToPickup;
 	Mixin SWWMRespawn;
 	Mixin SWWMPickupGlow;
+	Mixin SWWMCountNoPickup;
 
 	int terrainwait;
 
 	override bool Use( bool pickup )
 	{
 		if ( pickup ) return false;
-		if ( pickup && ((Owner.player == players[consoleplayer]) || bBigPowerup) ) Owner.A_StartSound(UseSound,CHAN_ITEMEXTRA,CHANF_OVERLAP);
 		let b = BarrierPower(Owner.FindInventory("BarrierPower"));
 		if ( b )
 		{
@@ -245,11 +244,8 @@ Class EBarrier : Inventory
 		Inventory.PickupMessage "$T_BARRIER";
 		Inventory.MaxAmount 5;
 		Inventory.InterHubAmount 5;
-		Inventory.PickupFlash "SWWMPurplePickupFlash";
-		+INVENTORY.ALWAYSPICKUP;
-		+INVENTORY.AUTOACTIVATE;
+		Inventory.PickupFlash "SWWMCyanPickupFlash";
 		+INVENTORY.INVBAR;
-		+INVENTORY.BIGPOWERUP;
 		+FLOATBOB;
 		FloatBobStrength 0.25;
 		Radius 6;

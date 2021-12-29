@@ -14,41 +14,10 @@ Class HammerspaceEmbiggener : Inventory
 		if ( !traded ) other.A_StartSound("powerup/embiggener",CHAN_ITEMEXTRA);
 		// Find every unique type of ammoitem. Give it to the player if
 		// they don't have it already, and increase its maximum capacity.
-		// first we must build an array of all valid weapons, this saves time instead of doing recursive loops
-		Array<Class<Weapon> > validweapons;
-		for ( int i=0; i<AllActorClasses.Size(); i++ )
-		{
-			let type2 = (class<Weapon>)(AllActorClasses[i]);
-			if ( !type2 ) continue;
-			let rep = GetReplacement(type2);
-			if ( (rep != type2) && !(rep is "DehackedPickup") ) continue;
-			readonly<Weapon> weap = GetDefaultByType(type2);
-			if ( !other.player || !other.player.weapons.LocateWeapon(type2) || weap.bCheatNotWeapon || !weap.CanPickup(other) ) continue;
-			let ready = weap.FindState("Ready");
-			if ( !ready || !ready.ValidateSpriteFrame() ) continue;
-			validweapons.Push(type2);
-		}
 		for ( int i=0; i<AllActorClasses.Size(); i++ )
 		{
 			let type = (class<Ammo>)(AllActorClasses[i]);
 			if ( !type || (type.GetParentClass() != 'SWWMAmmo') ) continue;
-			// check that it's for a valid weapon
-			bool isvalid = false;
-			for ( int j=0; j<validweapons.Size(); j++ )
-			{
-				readonly<Weapon> weap = GetDefaultByType(validweapons[j]);
-				if ( (validweapons[j] is 'SWWMWeapon') && SWWMWeapon(weap).UsesAmmo(type) )
-				{
-					isvalid = true;
-					break;
-				}
-				if ( (weap.AmmoType1 == type) || (weap.AmmoType2 == type) )
-				{
-					isvalid = true;
-					break;
-				}
-			}
-			if ( !isvalid ) continue;
 			let ammoitem = Ammo(other.FindInventory(type));
 			int amount = GetDefaultByType(type).BackpackAmount*self.Amount;
 			if ( traded ) amount = 0;
@@ -92,24 +61,6 @@ Class HammerspaceEmbiggener : Inventory
 		{
 			let type = (class<MagAmmo>)(AllActorClasses[i]);
 			if ( !type || (type.GetParentClass() != 'MagAmmo') ) continue;
-			let type2 = GetDefaultByType(type).ParentAmmo;
-			// check that it's for a valid weapon
-			bool isvalid = false;
-			for ( int j=0; j<validweapons.Size(); j++ )
-			{
-				readonly<Weapon> weap = GetDefaultByType(validweapons[j]);
-				if ( (validweapons[j] is 'SWWMWeapon') && SWWMWeapon(weap).UsesAmmo(type2) )
-				{
-					isvalid = true;
-					break;
-				}
-				if ( (weap.AmmoType1 == type2) || (weap.AmmoType2 == type2) )
-				{
-					isvalid = true;
-					break;
-				}
-			}
-			if ( !isvalid ) continue;
 			let magitem = MagAmmo(other.FindInventory(type));
 			int amount = GetDefaultByType(type).BackpackAmount*self.Amount;
 			if ( traded ) amount = 0;

@@ -156,10 +156,10 @@ Class TetherShockwave : Actor
 
 Class SafetyTether : Inventory
 {
-	Mixin SWWMAutoUseFix;
 	Mixin SWWMOverlapPickupSound;
 	Mixin SWWMUseToPickup;
 	Mixin SWWMRespawn;
+	Mixin SWWMCountNoPickup;
 
 	bool bPrimed, bFailed;
 	int primetim;
@@ -242,7 +242,7 @@ Class SafetyTether : Inventory
 		if ( deathmatch ) safepos = level.PickDeathmatchStart();
 		else safepos = level.PickPlayerStart(Owner.PlayerNumber());
 		bFailed = (level.Vec3Diff(Owner.pos,safepos).length() < 400);
-		if ( (Owner.player == players[consoleplayer]) || bBigPowerup ) Owner.A_StartSound(bFailed?"powerup/tetherfail":"powerup/tetheruse",CHAN_ITEMEXTRA,CHANF_OVERLAP);
+		Owner.A_StartSound(bFailed?"powerup/tetherfail":"powerup/tetheruse",CHAN_ITEMEXTRA,CHANF_OVERLAP);
 		// don't consume on use, will happen later
 		Amount++;
 		return true;
@@ -257,12 +257,9 @@ Class SafetyTether : Inventory
 		Inventory.PickupMessage "$T_SAFETY";
 		Inventory.MaxAmount 5;
 		Inventory.InterHubAmount 5;
-		Inventory.PickupFlash "SWWMPurplePickupFlash";
-		+INVENTORY.ALWAYSPICKUP;
-		+INVENTORY.AUTOACTIVATE;
+		Inventory.PickupFlash "SWWMCyanPickupFlash";
 		+INVENTORY.INVBAR;
 		+COUNTITEM;
-		+INVENTORY.BIGPOWERUP;
 		+FLOATBOB;
 		FloatBobStrength 0.25;
 		Radius 5;

@@ -81,11 +81,11 @@ Class SWWMArmor : Armor abstract
 // gives armor when used
 Class SWWMSpareArmor : Inventory abstract
 {
-	Mixin SWWMAutoUseFix;
 	Mixin SWWMUseToPickup;
 	Mixin SWWMOverlapPickupSound;
 	Mixin SWWMRespawn;
 	Mixin SWWMPickupGlow;
+	Mixin SWWMCountNoPickup;
 
 	Class<SWWMArmor> giveme;
 	int giveamt;
@@ -98,7 +98,6 @@ Class SWWMSpareArmor : Inventory abstract
 		let cur = Owner.FindInventory(giveme);
 		if ( !cur || (!pickup && (cur.Amount < cur.MaxAmount)) || (giveamt+cur.Amount <= cur.MaxAmount) )
 		{
-			if ( pickup && ((Owner.player == players[consoleplayer]) || bBigPowerup) ) Owner.A_StartSound(UseSound,CHAN_ITEMEXTRA,CHANF_OVERLAP);
 			Owner.GiveInventory(giveme,giveamt);
 			SWWMHandler.ArmorFlash(Owner.PlayerNumber());
 			return true;

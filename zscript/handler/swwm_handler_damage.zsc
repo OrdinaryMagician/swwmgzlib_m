@@ -55,6 +55,15 @@ extend Class SWWMHandler
 		if ( (e.Thing.Health > 0) || e.Thing.bKilled || e.Thing.bCorpse )
 			return;
 		DoGibThing(e);
+		if ( e.DamageSource && e.DamageSource.player )
+		{
+			// gross hack using services for "hit fx"
+			let si = ServiceIterator.Find("HitFXService");
+			Service sv;
+			while ( sv = si.Next() )
+				sv.GetInt("HitFX",stringArg:e.DamageType,intArg:e.Damage,objectArg:e.DamageSource.player.mo);
+			si.Destroy();
+		}
 		// romero hax
 		if ( (e.Thing is 'BossBrain') && (e.DamageType == 'Telefrag') )
 			e.DamageSource.DamageMobj(null,null,Actor.TELEFRAG_DAMAGE,'EndLevel');

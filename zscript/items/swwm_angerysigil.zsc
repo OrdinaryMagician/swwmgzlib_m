@@ -1,5 +1,18 @@
 // separate Devastation Sigil file, include if used
 
+// hacky way to call our DoHitFX function (hey, as long as it works)
+Class AngeryHitFXService : Service
+{
+	override int GetInt( String request, String stringArg, int intArg, double doubleArg, object objectArg )
+	{
+		if ( request != "HitFX" ) return 0;
+		let mo = PlayerPawn(objectArg);
+		let a = AngeryPower(mo.FindInventory("AngeryPower"));
+		if ( a ) a.DoHitFX();
+		return 0;
+	}
+}
+
 Class AngeryLight : PointLightAttenuated
 {
 	Default
@@ -135,16 +148,14 @@ Class AngeryPower : Powerup
 }
 Class AngerySigil : Inventory
 {
-	Mixin SWWMAutoUseFix;
 	Mixin SWWMOverlapPickupSound;
 	Mixin SWWMUseToPickup;
 	Mixin SWWMRespawn;
 	Mixin SWWMPickupGlow;
+	Mixin SWWMCountNoPickup;
 
 	override bool Use( bool pickup )
 	{
-		if ( pickup && !deathmatch ) return false;
-		if ( pickup && ((Owner.player == players[consoleplayer]) || bBigPowerup) ) Owner.A_StartSound(UseSound,CHAN_ITEMEXTRA,CHANF_OVERLAP);
 		let r = AngeryPower(Owner.FindInventory("AngeryPower"));
 		if ( r )
 		{
@@ -189,8 +200,6 @@ Class AngerySigil : Inventory
 		Inventory.MaxAmount 3;
 		Inventory.InterHubAmount 3;
 		Inventory.PickupFlash "SWWMPurplePickupFlash";
-		+INVENTORY.ALWAYSPICKUP;
-		+INVENTORY.AUTOACTIVATE;
 		+INVENTORY.INVBAR;
 		+COUNTITEM;
 		+INVENTORY.BIGPOWERUP;

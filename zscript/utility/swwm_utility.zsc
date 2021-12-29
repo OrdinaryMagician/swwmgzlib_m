@@ -14,6 +14,14 @@ enum EDoExplosionFlags
 	DE_COUNTFHKILLS = 512	// only count kills for enemies that were at full health
 };
 
+enum EExitType
+{
+	ET_Normal,
+	ET_Secret,
+	ET_EndGame,
+	ET_NewMap,
+};
+
 Struct SWWMProjectionData
 {
 	swwm_GM_Matrix wtc;
@@ -339,14 +347,30 @@ Class SWWMUtility
 		return locknum;
 	}
 
-	static clearscope bool IsExitLine( Line l )
+	// return if a line is an exit, and additionally the type of exit
+	static clearscope bool, int IsExitLine( Line l )
 	{
-		if ( (l.special == Exit_Normal) || (l.special == Exit_Secret) || (l.special == Teleport_EndGame) || (l.special == Teleport_NewMap) )
-			return true;
+		if ( l.special == Exit_Secret )
+			return true, ET_Secret;
+		if ( l.special == Exit_Normal )
+			return true, ET_Normal;
+		if ( l.special == Teleport_EndGame )
+			return true, ET_EndGame;
+		if ( l.special == Teleport_NewMap )
+			return true, ET_NewMap;
 		// spooktober™
 		if ( ((l.special == ACS_Execute) || (l.special == ACS_ExecuteAlways)) && (l.Args[0] == -Int('MapFadeOut')) )
-			return true;
-		return false;
+		{
+			if ( level.levelnum == 1 )
+			{
+				let lv = levelinfo.FindLevelByNum(l.Args[2]);
+				if ( lv && lv.mapname.Left(6) ~== "SECRET" )
+					return true, ET_Secret;
+				else return true, ET_NewMap;
+			}
+			return true, ET_Normal;
+		}
+		return false, ET_Normal;
 	}
 
 	static clearscope bool IsTeleportLine( Line l, bool all = false )
@@ -1043,6 +1067,93 @@ Class SWWMUtility
 		{
 			let bb = a.Spawn("BossBrain",a.pos,NO_REPLACE);
 			bb.angle = a.angle;
+		}
+	}
+
+	// for Omnisight
+	static play void SpawnExitMarkers()
+	{
+		// make sure we're not called multiple times, in case some
+		// mapper is foolish enough to spawn more than one map revealer
+		let ti = ThinkerIterator.Create("SWWMExitMarker",Thinker.STAT_MAPMARKER);
+		if ( ti.Next() ) return;
+		// for skipping over merged exit lines (sharing vertices)
+		Array<Line> skipme;
+		skipme.Clear();
+		// find exit lines
+		for ( int i=0; i<level.lines.Size(); i++ )
+		{
+			Line l = level.lines[i];
+			bool isexit;
+			int exittype;
+			[isexit, exittype] = IsExitLine(l);
+			if ( !isexit )
+				continue;
+			if ( skipme.Find(l) < skipme.Size() ) continue;
+			skipme.Push(l);
+			// look for connected lines
+			Array<Line> con;
+			con.Clear();
+			con.Push(l);
+			int found;
+			if ( l.frontsector )
+			{
+				do
+				{
+					found = 0;
+					for ( int j=0; j<l.frontsector.Lines.Size(); j++ )
+					{
+						let l2 = l.frontsector.Lines[j];
+						if ( (l2.special != l.special) || (con.Find(l2) < con.Size()) ) continue;
+						// needs to have a point in common with this one or any of the added lines
+						bool nomatches = true;
+						for ( int k=0; k<con.Size(); k++ )
+						{
+							if ( (l2.v1 != con[k].v1) && (l2.v2 != con[k].v2) && (l2.v1 != con[k].v2) && (l2.v2 != con[k].v1) )
+								continue;
+							nomatches = false;
+							break;
+						}
+						if ( nomatches ) continue;
+						skipme.Push(l2);
+						con.Push(l2);
+						found++;
+					}
+				}
+				while ( found > 0 );
+			}
+			if ( l.backsector )
+			{
+				do
+				{
+					found = 0;
+					for ( int j=0; j<l.backsector.Lines.Size(); j++ )
+					{
+						let l2 = l.backsector.Lines[j];
+						if ( (l2.special != l.special) || (con.Find(l2) < con.Size()) ) continue;
+						// needs to have a point in common with this one or any of the added lines
+						bool nomatches = true;
+						for ( int k=0; k<skipme.Size(); k++ )
+						{
+							if ( (l2.v1 != skipme[k].v1) && (l2.v2 != skipme[k].v2) && (l2.v1 != skipme[k].v2) && (l2.v2 != skipme[k].v1) )
+								continue;
+							nomatches = false;
+							break;
+						}
+						if ( nomatches ) continue;
+						skipme.Push(l2);
+						con.Push(l2);
+						found++;
+					}
+				}
+				while ( found > 0 );
+			}
+			Vector3 lpos = (0,0,0);
+			for ( int i=0; i<con.Size(); i++ )
+				lpos += UseLinePos(con[i]);
+			lpos /= con.Size();
+			let m = Actor.Spawn("SWWMExitMarker",lpos);
+			m.SetState(m.SpawnState+exittype);
 		}
 	}
 

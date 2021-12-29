@@ -1,11 +1,11 @@
 // Base class for all SWWM Health
 Class SWWMHealth : Inventory abstract
 {
-	Mixin SWWMAutoUseFix;
 	Mixin SWWMUseToPickup;
 	Mixin SWWMOverlapPickupSound;
 	Mixin SWWMRespawn;
 	Mixin SWWMPickupGlow;
+	Mixin SWWMCountNoPickup;
 
 	// can't use the Health class for whatever reason
 	// nice parser you got there I guess?
@@ -19,7 +19,6 @@ Class SWWMHealth : Inventory abstract
 		if ( !pickup && !bBIGPOWERUP && (Owner.Health >= GetDefaultByType(giveme).MaxAmount) ) return false;
 		// healing items won't get auto-used on pickup if their healing could "be wasted", unless they're powerup health
 		if ( pickup && !bBIGPOWERUP && (Owner.Health+GetDefaultByType(giveme).Amount > GetDefaultByType(giveme).MaxAmount) ) return false;
-		if ( pickup && ((Owner.player == players[consoleplayer]) || bBigPowerup) ) Owner.A_StartSound(UseSound,CHAN_ITEMEXTRA);
 		SWWMHandler.HealthFlash(Owner.PlayerNumber());
 		Owner.GiveInventory(giveme,GetDefaultByType(giveme).Amount);
 		return true;

@@ -31,3 +31,19 @@ Class SWWMNothing : Actor
 		Stop;
 	}
 }
+
+// used for minimap stuff
+Class SWWMExitMarker : MapMarker
+{
+	Default
+	{
+		Scale 2.;
+		Args 0, 0, 1;
+	}
+	States
+	{
+	Spawn:
+		EIXT ABCD -1;
+		Stop;
+	}
+}
