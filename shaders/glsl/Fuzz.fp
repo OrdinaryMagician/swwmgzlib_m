@@ -13,7 +13,11 @@ float rnd( in vec2 sd )
 // what the fuck even is this insane syntax?
 const vec3 layers[3] =
 vec3[](
-#if defined(ONICOLORS)
+#if defined(GRAY_COLORS)
+	vec3(1.01,1.07,1.05),
+	vec3(1.06,1.04,1.03),
+	vec3(1.05,1.03,1.01)
+#elif defined(ONICOLORS)
 	vec3(0.61,0.77,0.85),
 	vec3(0.86,0.64,0.63),
 	vec3(1.25,0.33,0.41)
@@ -44,15 +48,22 @@ float[](
 	3.
 );
 
+#ifndef BASE_RES
+#define BASE_RES vec2(640.,400.)
+#endif
+
 void SetupMaterial( inout Material mat )
 {
 	vec2 coord;
 	vec3 col = vec3(1.);
 	for ( int i=0; i<3; i++ )
 	{
-		coord = floor(vTexCoord.st*vec2(640.,400.)/zoom[i]);
+		coord = floor(vTexCoord.st*BASE_RES/zoom[i]);
 		col *= layers[i]*2.0*abs(fract(rnd(coord)+timer*speed[i])-0.5);
 	}
+#ifdef GRAY_COLORS
+	col += getTexel(vTexCoord.st).rgb;
+#endif
 	mat.Base = vec4(col,1.);
 	mat.Normal = ApplyNormalMap(vTexCoord.st);
 }

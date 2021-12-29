@@ -3,6 +3,12 @@ Brightmap Texture "models/Barrier.png"
 	Map "models/Barrier_bright.png"
 	DisableFullbright
 }
+HardwareShader Texture "models/matcap/barriermap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+	Define "BARRIER_MAP"
+	Texture "bartex" "models/barrierbar.png"
+}
 HardwareShader PostProcess beforebloom
 {
 	Name "BarrierShader"

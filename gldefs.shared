@@ -11,12 +11,84 @@ HardwareShader Sprite "MBRNB0"
 {
 	Shader "shaders/glsl/Whew.fp"
 }
-
+HardwareShader Texture "models/matcap/blumap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+}
+HardwareShader Texture "models/matcap/darkmap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+}
+HardwareShader Texture "models/matcap/dekamap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+}
+HardwareShader Texture "models/matcap/goldmap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+}
+HardwareShader Texture "models/matcap/greenmap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+}
+HardwareShader Texture "models/matcap/invincimap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+}
+HardwareShader Texture "models/matcap/pinkmap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+}
+HardwareShader Texture "models/matcap/puromap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+}
+HardwareShader Texture "models/matcap/purpmap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+}
+HardwareShader Texture "models/matcap/ragemap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+}
+HardwareShader Texture "models/matcap/redmap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+}
+HardwareShader Texture "models/matcap/silvermap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+}
+HardwareShader Texture "models/matcap/leadmap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+}
 HardwareShader Texture "models/matcap/errormap.png"
 {
 	Shader "shaders/glsl/Shinemap.fp"
 	Define "AMBIENT_GLOW"
 }
+HardwareShader Texture "models/matcap/glassmap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+}
+HardwareShader Texture "models/matcap/kinymap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+}
+HardwareShader Texture "models/matcap/nkrknmap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+}
+HardwareShader Texture "models/matcap/nokromap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+}
+HardwareShader Texture "models/matcap/pearlmap.png"
+{
+	Shader "shaders/glsl/Shinemap.fp"
+}
+
 HardwareShader PostProcess beforebloom
 {
 	Name "WaterWarp"
