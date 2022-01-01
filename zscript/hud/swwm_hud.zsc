@@ -576,7 +576,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 					int cliptop = int((basepos.y-HALFMAPSIZE)*hs);
 					int clipright = int(clipleft+HALFMAPSIZE*2*hs);
 					int clipbottom = int(cliptop+HALFMAPSIZE*2*hs);
-					Screen.DrawTexture(tx,false,rv.x,rv.y,DTA_ColorOverlay,isportal?Color(128,0,0,0):Color(0,0,0,0),DTA_ScaleX,hs*scl.x,DTA_ScaleY,hs*scl.y,DTA_LegacyRenderStyle,m.GetRenderStyle(),DTA_Alpha,m.Alpha,DTA_FillColor,m.FillColor,DTA_TranslationIndex,m.Translation,DTA_ClipLeft,clipleft,DTA_ClipTop,cliptop,DTA_ClipRight,clipright,DTA_ClipBottom,clipbottom);
+					Screen.DrawTexture(tx,false,rv.x,rv.y,DTA_ColorOverlay,isportal?Color(128,mm_portalcolor.r,mm_portalcolor.g,mm_portalcolor.b):Color(0,0,0,0),DTA_ScaleX,hs*scl.x,DTA_ScaleY,hs*scl.y,DTA_LegacyRenderStyle,m.GetRenderStyle(),DTA_Alpha,m.Alpha,DTA_FillColor,m.FillColor,DTA_TranslationIndex,m.Translation,DTA_ClipLeft,clipleft,DTA_ClipTop,cliptop,DTA_ClipRight,clipright,DTA_ClipBottom,clipbottom);
 				}
 				ai.Destroy();
 				continue;
@@ -605,7 +605,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			int cliptop = int(basepos.y-HALFMAPSIZE*hs);
 			int clipright = int(clipleft+HALFMAPSIZE*2*hs);
 			int clipbottom = int(cliptop+HALFMAPSIZE*2*hs);
-			Screen.DrawTexture(tx,false,rv.x,rv.y,DTA_ColorOverlay,isportal?Color(128,0,0,0):Color(0,0,0,0),DTA_ScaleX,hs*scl.x,DTA_ScaleY,hs*scl.y,DTA_LegacyRenderStyle,m.GetRenderStyle(),DTA_Alpha,m.Alpha,DTA_FillColor,m.FillColor,DTA_TranslationIndex,m.Translation,DTA_ClipLeft,clipleft,DTA_ClipTop,cliptop,DTA_ClipRight,clipright,DTA_ClipBottom,clipbottom);
+			Screen.DrawTexture(tx,false,rv.x,rv.y,DTA_ColorOverlay,isportal?Color(128,mm_portalcolor.r,mm_portalcolor.g,mm_portalcolor.b):Color(0,0,0,0),DTA_ScaleX,hs*scl.x,DTA_ScaleY,hs*scl.y,DTA_LegacyRenderStyle,m.GetRenderStyle(),DTA_Alpha,m.Alpha,DTA_FillColor,m.FillColor,DTA_TranslationIndex,m.Translation,DTA_ClipLeft,clipleft,DTA_ClipTop,cliptop,DTA_ClipRight,clipright,DTA_ClipBottom,clipbottom);
 		}
 	}
 
@@ -726,10 +726,14 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		double dx = (xx+(20-scl.x*mscl)/2)/mscl, dy = (yy+(20-scl.y*mscl)/2)/mscl;
 		if ( i is 'Powerup' )
 		{
-			Screen.DrawTexture(i.Icon,false,dx,dy,DTA_VirtualWidthF,dw,DTA_VirtualHeightF,dh,DTA_KeepRatio,true,DTA_Alpha,Powerup(i).IsBlinking()?alpha*.5:alpha,DTA_TopOffset,0,DTA_LeftOffset,0);
-			String nstr = String.Format("%ds",Powerup(i).EffectTics/GameTicRate);
+			bool isinfinite = ((i is 'PowerStrength') || ((i is 'PowerFlight') && !multiplayer && level.infinite_flight));
+			Screen.DrawTexture(i.Icon,false,dx,dy,DTA_VirtualWidthF,dw,DTA_VirtualHeightF,dh,DTA_KeepRatio,true,DTA_Alpha,(!isinfinite&&Powerup(i).IsBlinking())?alpha*.5:alpha,DTA_TopOffset,0,DTA_LeftOffset,0);
+			String nstr;
+			// handle "infinite" durations
+			if ( isinfinite ) nstr = "∞";
+			else nstr = String.Format("%ds",Powerup(i).EffectTics/GameTicRate);
 			int len = MiniHUDFont.StringWidth(nstr);
-			Screen.DrawText(MiniHUDFont,mhudfontcol[MCR_BRASS],(xx+20)-len,(yy+20)-7,nstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,Powerup(i).IsBlinking()?alpha*.5:alpha);
+			Screen.DrawText(MiniHUDFont,mhudfontcol[MCR_BRASS],(xx+20)-len,(yy+20)-7,nstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,(!isinfinite&&Powerup(i).IsBlinking())?alpha*.5:alpha);
 			return true;
 		}
 		if ( (i is 'SWWMChargeItem') && aspowerup )

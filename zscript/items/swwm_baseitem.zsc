@@ -268,6 +268,17 @@ Class SWWMChargeItem : Inventory
 	FlagDef TravelActive : SItemFlags, 1;	// does not deactivate when changing maps
 	FlagDef DeathActive : SItemFlags, 2;	// does not deactivate on death
 
+	Default
+	{
+		Inventory.PickupSound "misc/p_pkup";
+		Inventory.MaxAmount 5;
+		Inventory.InterHubAmount 5;
+		Inventory.PickupFlash "SWWMCyanPickupFlash";
+		+INVENTORY.INVBAR;
+		+FLOATBOB;
+		FloatBobStrength 0.25;
+	}
+
 	override bool HandlePickup( Inventory item )
 	{
 		if ( item.GetClass() == GetClass() )

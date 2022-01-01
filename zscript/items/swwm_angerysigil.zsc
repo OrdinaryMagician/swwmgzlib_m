@@ -192,7 +192,6 @@ Class AngerySigil : Inventory
 	Default
 	{
 		Tag "$T_DEVASTATION";
-		Stamina -1500000;
 		Inventory.Icon "graphics/HUD/Icons/I_Devastation.png";
 		Inventory.PickupSound "misc/p_pkup_vip";
 		Inventory.UseSound "powerup/devastation";

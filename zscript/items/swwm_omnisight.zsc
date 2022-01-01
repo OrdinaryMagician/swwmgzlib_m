@@ -37,7 +37,7 @@ Class Omnisight : Inventory
 		Inventory.PickupMessage "$I_OMNISIGHT";
 		Inventory.MaxAmount 1;
 		Inventory.InterHubAmount 0;
-		Inventory.PickupFlash "SWWMPurplePickupFlash";
+		Inventory.PickupFlash "SWWMCyanPickupFlash";
 		+INVENTORY.ALWAYSPICKUP;
 		+INVENTORY.AUTOACTIVATE;
 		+COUNTITEM;
