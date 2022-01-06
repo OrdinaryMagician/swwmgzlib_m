@@ -2,22 +2,28 @@
 Class SWWMCreditsEntry ui
 {
 	String title;
-	bool MariHack;
-	TextureID MariSprite[15];
-	int tics, cur;
+	bool hasicon;
+	TextureID itex;
+	int iheight;
 	BrokenLines btext;
 	int width, height;
 	int titlecol, btextcol;
 
-	SWWMCreditsEntry Init( String t, String b = "", int c1 = SWWMCREDITSCOL1, int c2 = SWWMCREDITSCOL2, bool mari = false )
+	SWWMCreditsEntry Init( String t, String b = "", int c1 = SWWMCREDITSCOL1, int c2 = SWWMCREDITSCOL2, String icon = "", int iconheight = 0 )
 	{
-		if ( mari )
+		if ( icon != "" )
 		{
-			MariHack = true;
-			for ( int i=0; i<15; i++ )
-				MariSprite[i] = TexMan.CheckForTexture(String.Format("graphics/Credits/MariSprite%d.png",i),TexMan.Type_Any);
-			tics = 3;
-			cur = 0;
+			itex = TexMan.CheckForTexture(icon,TexMan.Type_Any);
+			if ( itex.IsValid() )
+			{
+				hasicon = true;
+				if ( iconheight ) iheight = iconheight;
+				else
+				{
+					Vector2 sz = TexMan.GetScaledSize(itex);
+					iheight = int(sz.y);
+				}
+			}
 		}
 		titlecol = c1;
 		btextcol = c2;
@@ -56,7 +62,7 @@ Class SWWMCreditsEntry ui
 	private int CalcHeight()
 	{
 		int h = 0;
-		if ( MariHack ) h = 148;
+		if ( hasicon ) h = iheight;
 		h += smallfont.GetHeight();
 		if ( !btext ) return h;
 		h += 6;
@@ -64,26 +70,15 @@ Class SWWMCreditsEntry ui
 		return h;
 	}
 
-	void Ticker()
-	{
-		if ( !MariHack ) return;
-		if ( tics > 0 ) tics--;
-		if ( !tics )
-		{
-			cur = (cur+1)%15;
-			tics = 3;
-		}
-	}
-
 	double Draw( Vector2 ss, double x, double y )
 	{
 		// don't draw if we're offscreen, saves time
 		if ( (y+height < 0) || (y > ss.y) ) return height;
 		double yy = y;
-		if ( MariHack )
+		if ( hasicon )
 		{
-			yy += 148;
-			Screen.DrawTexture(MariSprite[cur],false,x,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+			yy += iheight;
+			Screen.DrawTexture(itex,true,x,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 		}
 		int w = smallfont.StringWidth(title);
 		double xx = x-w/2;
@@ -167,7 +162,7 @@ Class SWWMCreditsMenu : GenericMenu abstract
 		slocal = StringTable.Localize("$SWWM_CLOCAL");
 		spatrons = StringTable.Localize("$SWWM_CPATRON");
 		sthanks = StringTable.Localize("$SWWM_CTHANK");
-		cdev.Push(new("SWWMCreditsEntry").Init("Marisa Kirisame","$SWWM_CDEV2",mari:true));
+		cdev.Push(new("SWWMCreditsEntry").Init("Marisa Kirisame","$SWWM_CDEV2",icon:"graphics/Credits/MariSprite0.png",iconheight:148));
 		cassets.Push(new("SWWMCreditsEntry").Init("Bethesda Game Studios","Fallout: New Vegas\nFallout 4"));
 		cassets.Push(new("SWWMCreditsEntry").Init("Epic Games","Unreal\nUnreal Tournament\nUnreal Tournament 2004\nUnreal Tournament 3"));
 		cassets.Push(new("SWWMCreditsEntry").Init("Ion Storm","Deus Ex"));
@@ -175,8 +170,7 @@ Class SWWMCreditsMenu : GenericMenu abstract
 		clocal.Push(new("SWWMCreditsEntry").Init("Marisa Kirisame","$SWWM_LOCES"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Snacks"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("john"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init("Jonas Höglund"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init("Alexa Jones-Gonzales"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("FireFly"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Corey Hectus"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Dac"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Pietro Gagliardi"));
@@ -185,7 +179,6 @@ Class SWWMCreditsMenu : GenericMenu abstract
 		cpatrons.Push(new("SWWMCreditsEntry").Init("John"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("VoanHead"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("NekoMithos"));
-		cpatrons.Push(new("SWWMCreditsEntry").Init("Ceyne Taikato"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("bouncytem"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Brett Saltzer"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Clint Walker"));
@@ -398,7 +391,6 @@ Class SWWMCreditsMenu : GenericMenu abstract
 		spos -= speed/GameTicRate;
 		if ( spos < -theight ) spos = ss.y+max(logoyofs,0);
 		if ( spos > ss.y+max(logoyofs,0) ) spos = -theight;
-		cdev[0].Ticker();
 	}
 	override bool TranslateKeyboardEvents()
 	{

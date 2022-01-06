@@ -1,0 +1,16 @@
+TEXTURE "graphics/Credits/MariSprite0.png"
+ PIC "graphics/Credits/MariSprite0.png" TICS 3
+ PIC "graphics/Credits/MariSprite1.png" TICS 3
+ PIC "graphics/Credits/MariSprite2.png" TICS 3
+ PIC "graphics/Credits/MariSprite3.png" TICS 3
+ PIC "graphics/Credits/MariSprite4.png" TICS 3
+ PIC "graphics/Credits/MariSprite5.png" TICS 3
+ PIC "graphics/Credits/MariSprite6.png" TICS 3
+ PIC "graphics/Credits/MariSprite7.png" TICS 3
+ PIC "graphics/Credits/MariSprite8.png" TICS 3
+ PIC "graphics/Credits/MariSprite9.png" TICS 3
+ PIC "graphics/Credits/MariSprite10.png" TICS 3
+ PIC "graphics/Credits/MariSprite11.png" TICS 3
+ PIC "graphics/Credits/MariSprite12.png" TICS 3
+ PIC "graphics/Credits/MariSprite13.png" TICS 3
+ PIC "graphics/Credits/MariSprite14.png" TICS 3
