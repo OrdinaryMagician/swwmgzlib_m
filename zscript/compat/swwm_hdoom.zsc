@@ -94,6 +94,7 @@ Class SWWMHDoomHandler : StaticEventHandler
 	{
 		if ( !detected || (timer < 24) ) return;
 		double scl = max(min(floor(Screen.GetWidth()/120.),floor(Screen.GetHeight()/100)),1.);
+		double iscl = scl/4.;
 		double ox = Screen.GetWidth()/2;
 		double oy = Screen.GetHeight()/2-4*scl;
 		String str = "HORNY";
@@ -103,8 +104,8 @@ Class SWWMHDoomHandler : StaticEventHandler
 		Screen.DrawText(BigFont,SWWMCREDITSCOL0,ox-(BigFont.StringWidth(str)*scl)/2+ofs.x,oy+6*scl+ofs.y,str,DTA_ScaleX,scl,DTA_ScaleY,scl);
 		Screen.DrawText(BigFont,Font.FindFontColor('MiniFlash'),ox-(BigFont.StringWidth(str)*scl)/2+ofs.x,oy+6*scl+ofs.y,str,DTA_ScaleX,scl,DTA_ScaleY,scl,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alf);
 		double phase = cos(((timer+e.FracTic)-32)*22.5)*.5+.5;
-		Screen.DrawTexture(bonker,false,ox+18*scl,oy,DTA_ScaleX,scl,DTA_ScaleY,scl,DTA_Rotate,-15+phase*5);
-		Screen.DrawTexture(bonked,false,ox-22*scl,oy,DTA_ScaleX,scl,DTA_ScaleY,scl*(1.-max(phase-.8,0.)),DTA_Rotate,5-phase*5);
-		Screen.DrawTexture(bonk,false,ox+10*scl,oy+2*scl,DTA_ScaleX,scl,DTA_ScaleY,scl,DTA_Rotate,-45+phase*45);
+		Screen.DrawTexture(bonker,false,ox+18*scl,oy,DTA_ScaleX,iscl,DTA_ScaleY,iscl,DTA_Rotate,-15+phase*5);
+		Screen.DrawTexture(bonked,false,ox-22*scl,oy,DTA_ScaleX,iscl,DTA_ScaleY,iscl*(1.-max(phase-.8,0.)),DTA_Rotate,5-phase*5);
+		Screen.DrawTexture(bonk,false,ox+10*scl,oy+2*scl,DTA_ScaleX,iscl,DTA_ScaleY,iscl,DTA_Rotate,-45+phase*45);
 	}
 }

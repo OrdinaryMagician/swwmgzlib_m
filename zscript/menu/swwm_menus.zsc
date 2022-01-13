@@ -539,9 +539,40 @@ Class SWWMMessageBox : MessageBoxMenu
 	}
 }
 
+Mixin Class SWWMSelector
+{
+	override void DrawSelector( double xofs, double yofs, TextureID tex, ListMenuDescriptor desc )
+	{
+		if ( tex.isNull() ) return;
+		int w = desc?desc.DisplayWidth():ListMenuDescriptor.CleanScale;
+		int h = desc?desc.DisplayHeight():-1;
+		double y = mYpos+mHeight/2;
+		if ( w == ListMenuDescriptor.CleanScale )
+		{
+			xofs *= CleanXFac_1;
+			yofs *= CleanYFac_1;
+			double x = (320-GetWidth())/2;
+			SWWMUtility.AdjustClean_1(x,y);
+			Screen.DrawTexture(tex,true,x+xofs,y+yofs,DTA_ScaleX,CleanXFac_1/4.,DTA_ScaleY,CleanYFac_1/4.,DTA_Rotate,15.*sin(8*Menu.MenuTime()));
+			x = (320+GetWidth())/2;
+			SWWMUtility.AdjustClean_1x(x);
+			Screen.DrawTexture(tex,true,x-xofs,y+yofs,DTA_ScaleX,CleanXFac_1/4.,DTA_ScaleY,CleanYFac_1/4.,DTA_Rotate,-15.*sin(8*Menu.MenuTime()));
+		}
+		else
+		{
+			double x = (w-GetWidth())/2;
+			Screen.DrawTexture(tex,true,x+xofs,y+yofs,DTA_ScaleX,.25,DTA_ScaleY,.25,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43,DTA_Rotate,15.*sin(8*Menu.MenuTime()));
+			x = (w+GetWidth())/2;
+			Screen.DrawTexture(tex,true,x-xofs,y+yofs,DTA_ScaleX,.25,DTA_ScaleY,.25,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43,DTA_Rotate,-15.*sin(8*Menu.MenuTime()));
+		}
+	}
+}
+
 // main menu item with wiggly text when selected and Demo face selectors on both sides
 class ListMenuItemSWWMTextItemM : ListMenuItemSelectable
 {
+	Mixin SWWMSelector;
+
 	String mText;
 	Font mFont;
 	int mColor;
@@ -624,36 +655,13 @@ class ListMenuItemSWWMTextItemM : ListMenuItemSelectable
 		else Screen.DrawText(font,mColor,x,y,text,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43);
 	}
 
-	override void DrawSelector( double xofs, double yofs, TextureID tex, ListMenuDescriptor desc )
-	{
-		if ( tex.isNull() ) return;
-		int w = desc?desc.DisplayWidth():ListMenuDescriptor.CleanScale;
-		int h = desc?desc.DisplayHeight():-1;
-		double y = mYpos+mHeight/2;
-		if ( w == ListMenuDescriptor.CleanScale )
-		{
-			xofs *= CleanXFac_1;
-			yofs *= CleanYFac_1;
-			double x = (320-GetWidth())/2;
-			SWWMUtility.AdjustClean_1(x,y);
-			Screen.DrawTexture(tex,true,x+xofs,y+yofs,DTA_CleanNoMove_1,true,DTA_CenterOffset,true,DTA_Rotate,15.*sin(8*Menu.MenuTime()));
-			x = (320+GetWidth())/2;
-			SWWMUtility.AdjustClean_1x(x);
-			Screen.DrawTexture(tex,true,x-xofs,y+yofs,DTA_CleanNoMove_1,true,DTA_CenterOffset,true,DTA_Rotate,-15.*sin(8*Menu.MenuTime()));
-		}
-		else
-		{
-			double x = (w-GetWidth())/2;
-			Screen.DrawTexture(tex,true,x+xofs,y+yofs,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43,DTA_CenterOffset,true,DTA_Rotate,15.*sin(8*Menu.MenuTime()));
-			x = (w+GetWidth())/2;
-			Screen.DrawTexture(tex,true,x-xofs,y+yofs,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43,DTA_CenterOffset,true,DTA_Rotate,-15.*sin(8*Menu.MenuTime()));
-		}
-	}
 }
 
 // for compat with non-text episodes (no longer used?)
 Class ListMenuItemSWWMPatchItemM : ListMenuItemSelectable
 {
+	Mixin SWWMSelector;
+
 	TextureID mTexture;
 
 	void Init( ListMenuDescriptor desc, TextureID patch, String hotkey, Name child, int param = 0 )
@@ -689,29 +697,6 @@ Class ListMenuItemSWWMPatchItemM : ListMenuItemSelectable
 		{
 			double x = (w-GetWidth())/2;
 			screen.DrawTexture(mTexture,true,x,mYpos,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43);
-		}
-	}
-
-	override void DrawSelector( double xofs, double yofs, TextureID tex, ListMenuDescriptor desc )
-	{
-		if ( tex.isNull() ) return;
-		int w = desc?desc.DisplayWidth():ListMenuDescriptor.CleanScale;
-		int h = desc?desc.DisplayHeight():-1;
-		Vector2 vs = TexMan.GetScaledSize(mTexture);
-		double y = mYpos+vs.y/2;
-		if ( w == ListMenuDescriptor.CleanScale )
-		{
-			double x = (320-vs.x)/2;
-			Screen.DrawTexture(tex,true,x+xofs,y+yofs,DTA_Clean,true,DTA_CenterOffset,true,DTA_Rotate,15.*sin(8*Menu.MenuTime()));
-			x = (320+vs.x)/2;
-			Screen.DrawTexture(tex,true,x-xofs,y+yofs,DTA_Clean,true,DTA_CenterOffset,true,DTA_Rotate,-15.*sin(8*Menu.MenuTime()));
-		}
-		else
-		{
-			double x = (w-vs.x)/2;
-			Screen.DrawTexture(tex,true,x+xofs,y+yofs,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43,DTA_CenterOffset,true,DTA_Rotate,15.*sin(8*Menu.MenuTime()));
-			x = (w+vs.x)/2;
-			Screen.DrawTexture(tex,true,x-xofs,y+yofs,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43,DTA_CenterOffset,true,DTA_Rotate,-15.*sin(8*Menu.MenuTime()));
 		}
 	}
 }
