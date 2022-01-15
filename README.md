@@ -1,8 +1,8 @@
-This repository contains shared code and assets used by all **SWWM GZ** side mods *(**Red Oni**, **Red-Eyed Rampage**, **Red Star of Innocence**)*.
+This repository contains shared code and assets used by all **Codename: Demolitionist** side mods *(**Red Oni**, **Red-Eyed Rampage**, **Red Star of Innocence**)*.
 
 It is meant to be merged into them when building a mod archive. Note that due to how **ZScript** class extending works, this can't be loaded as a folder, you have to build a pk3/pk7 archive, otherwise **GZDoom** will complain and quit out.
 
-Shared code and assets are added and tweaked as needed by the side mods. In most cases code will be 1:1 to **SWWM GZ** itself, unless some specific changes are needed. Additionally, several features have been stripped, as they are unused in these mods.
+Shared code and assets are added and tweaked as needed by the side mods. In most cases code will be 1:1 to the main mod itself, unless some specific changes are needed. Additionally, several features have been stripped, as they are unused in these mods.
 
 Functions that must be extended:
 

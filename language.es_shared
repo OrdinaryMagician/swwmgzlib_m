@@ -112,7 +112,7 @@ SWWM_URDED3 = "Pulsa \cfUsar\c- para abandonar tu cuerpo y volver a intentarlo";
 SWWM_URDED4 = "Pulsa \cfUsar\c- para reiniciar desde la última partida guardada";
 SWWM_URDEDMP = "Pulsa \cfUsar\c- para reaparecer";
 SWWM_SWAPWEAPON = "\cjPulsa \cfUsar\cj para cambiar \cf%s\cj por \cf%s\cj.\c-";
-SWWM_SETSLOTSTRICT = "\cg!!!ADVERTENCIA!!!\c-\n\cj\"setslotstrict\" está activado. Esto causará que las armas de SWWM GZ no tengan ranuras asignadas. Por favor, ve a Opciones Misceláneas y cambia la opción de \"KEYCONF de Armas/Jugadores estricto\".\c-";
+SWWM_SETSLOTSTRICT = "\cg!!!ADVERTENCIA!!!\c-\n\cj\"setslotstrict\" está activado. Esto causará que las armas del mod no tengan ranuras asignadas. Por favor, ve a Opciones Misceláneas y cambia la opción de \"KEYCONF de Armas/Jugadores estricto\".\c-";
 SWWM_PAUSE = "PAUSA";
 // weapon tooltips
 SWWM_TTNOTE = "Nota: La ayuda de armas se puede desactivar en las opciones de mod.";
