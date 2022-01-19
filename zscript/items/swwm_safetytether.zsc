@@ -255,8 +255,8 @@ Class SafetyTether : Inventory
 		Inventory.PickupSound "misc/p_pkup";
 		Inventory.UseSound "";
 		Inventory.PickupMessage "$T_SAFETY";
-		Inventory.MaxAmount 5;
-		Inventory.InterHubAmount 5;
+		Inventory.MaxAmount SWWMMAXAMOUNT;
+		Inventory.InterHubAmount SWWMMAXAMOUNT;
 		Inventory.PickupFlash "SWWMCyanPickupFlash";
 		+INVENTORY.INVBAR;
 		+COUNTITEM;

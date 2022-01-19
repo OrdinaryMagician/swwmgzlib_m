@@ -242,8 +242,8 @@ Class EBarrier : Inventory
 		Inventory.PickupSound "misc/p_pkup";
 		Inventory.UseSound "powerup/barrier";
 		Inventory.PickupMessage "$T_BARRIER";
-		Inventory.MaxAmount 5;
-		Inventory.InterHubAmount 5;
+		Inventory.MaxAmount SWWMMAXAMOUNT;
+		Inventory.InterHubAmount SWWMMAXAMOUNT;
 		Inventory.PickupFlash "SWWMCyanPickupFlash";
 		+INVENTORY.INVBAR;
 		+FLOATBOB;

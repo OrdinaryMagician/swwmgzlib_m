@@ -19,6 +19,11 @@ Class SWWMWeapon : Weapon abstract
 	FlagDef HideInMenu : SWeaponFlags, 1;	// don't show in inventory menu (usually for sister weapons)
 	FlagDef NoSwapWeapon : SWeaponFlags, 2;	// weapon is not affected by slot swapping
 
+	// used by "pending load" system, which allows for interruptible reloading
+	// this is implemented per-subclass but the variables are here
+	Class<Ammo> pendingload;
+	int pendingamount;
+
 	bool IsSwapWeapon( Inventory i ) const
 	{
 		if ( bNoSwapWeapon || (i.GetClass() == GetClass()) ) return false;

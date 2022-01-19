@@ -196,8 +196,8 @@ Class AngerySigil : Inventory
 		Inventory.PickupSound "misc/p_pkup_vip";
 		Inventory.UseSound "powerup/devastation";
 		Inventory.PickupMessage "$T_DEVASTATION";
-		Inventory.MaxAmount 3;
-		Inventory.InterHubAmount 3;
+		Inventory.MaxAmount SWWMMAXVIPAMOUNT;
+		Inventory.InterHubAmount SWWMMAXVIPAMOUNT;
 		Inventory.PickupFlash "SWWMPurplePickupFlash";
 		+INVENTORY.INVBAR;
 		+COUNTITEM;

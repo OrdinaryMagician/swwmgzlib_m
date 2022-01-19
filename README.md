@@ -39,6 +39,12 @@ Constants that must be defined:
   Color of credits entry header.
 - **`const int SWWMCREDITSCOL2`**<br/>
   Color of credits entry text.
+- **`const int SWWMMAXAMOUNT`**<br/>
+  Max amount of shared normal items *(Elemental Coating, Safety Tether)*.<br/>
+  *(Only needs to be defined if either item is used)*
+- **`const int SWWMMAXVIPAMOUNT`**<br/>
+  Max amount of shared vip items *(Devastation Sigil)*.<br/>
+  *(Only needs to be defined if the item is used)*
 
 The ***TODO*** list:
 
