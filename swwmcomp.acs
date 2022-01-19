@@ -22,3 +22,217 @@ SCRIPT "EQUINOX_BRAINCRUSH" ( int tag )
 	ScriptCall("SWWMUtility","SpawnVanillaBossBrain",666);
 	Ceiling_CrushAndRaiseDist(tag,8,8,10);
 }
+
+// DUMP 2 and 3 rewritten hub progress scripts
+// Because the way these use BigFont makes them unreadable otherwise
+
+SCRIPT "DUMP2_HUB" ( void )
+{
+	Delay(35);
+	ACS_Terminate(2,0);
+	int mapstodo;
+	switch( GameSkill() )
+	{
+	case 0:
+		mapstodo = 8;
+		break;
+	case 1:
+		mapstodo = 16;
+		break;
+	case 2:
+		mapstodo = 32;
+		break;
+	case 3:
+		mapstodo = 48;
+		break;
+	default:
+		mapstodo = 64;
+		break;
+	}
+	bool unlockedfinal = false;
+	while ( true )
+	{
+		int lvent = ScriptCall("BaseStatusBar","GetGlobalACSValue",59);
+		bool unlockfinal = false;
+		switch( GameSkill() )
+		{
+		case 0:
+			if ( lvent >= 8 ) unlockfinal = true;
+			break;
+		case 1:
+			if ( lvent >= 16 ) unlockfinal = true;
+			break;
+		case 2:
+			if ( lvent >= 32 ) unlockfinal = true;
+			break;
+		case 3:
+			if ( lvent >= 48 ) unlockfinal = true;
+			break;
+		default:
+			if ( lvent >= 64 ) unlockfinal = true;
+			break;
+		}
+		if ( unlockfinal && !unlockedfinal )
+		{
+			unlockedfinal = true;
+			Ceiling_LowerByValue(10,96,96);
+		}
+		SetFont("BigFont");
+		int progress = mapstodo-lvent;
+		SetHudSize(640,480,0);
+		if ( progress > 0 ) HudMessageBold(d:progress,s:" more maps to go...";HUDMSG_PLAIN,1,CR_GOLD,320.0,40.0,0);
+		else HudMessageBold(s:"The final room is open...";HUDMSG_PLAIN,1,CR_GOLD,320.0,40.0,0);
+		Delay(1);
+	}
+}
+
+SCRIPT "DUMP3_HUB" ( void )
+{
+	Delay(1);
+	ACS_Terminate(1,0);
+	int mapstodo;
+	switch( GameSkill() )
+	{
+	case 0:
+		mapstodo = 8;
+		break;
+	case 1:
+		mapstodo = 16;
+		break;
+	case 2:
+		mapstodo = 32;
+		break;
+	case 3:
+		mapstodo = 48;
+		break;
+	default:
+		mapstodo = 64;
+		break;
+	}
+	bool unlockedfinal = false;
+	while ( true )
+	{
+		int lvent = ScriptCall("BaseStatusBar","GetGlobalACSValue",59);
+		bool unlockfinal = false;
+		switch( GameSkill() )
+		{
+		case 0:
+			if ( lvent >= 8 ) unlockfinal = true;
+			break;
+		case 1:
+			if ( lvent >= 16 ) unlockfinal = true;
+			break;
+		case 2:
+			if ( lvent >= 32 ) unlockfinal = true;
+			break;
+		case 3:
+			if ( lvent >= 48 ) unlockfinal = true;
+			break;
+		default:
+			if ( lvent >= 64 ) unlockfinal = true;
+			break;
+		}
+		if ( unlockfinal && !unlockedfinal )
+		{
+			unlockedfinal = true;
+			Floor_LowerByValue(11,96,256);
+		}
+		SetFont("BigFont");
+		int progress = mapstodo-lvent;
+		SetHudSize(640,480,0);
+		if ( progress > 1 ) HudMessageBold(d:progress,s:" more maps to go...";HUDMSG_PLAIN,1,CR_GOLD,320.0,40.0,0);
+		else if ( progress > 0 ) HudMessageBold(d:progress,s:" more map to go...";HUDMSG_PLAIN,1,CR_GOLD,320.0,40.0,0);
+		else HudMessageBold(s:"The final room is open...";HUDMSG_PLAIN,1,CR_GOLD,320.0,40.0,0);
+		Delay(1);
+	}
+}
+
+// same here, just TOO BIG
+str DUMP3MapNames[74][2] =
+{
+    { "", "" }, // 0
+    { "Check-In", "undeadRyker" },
+    { "Pissboy", "Anonymous" },
+    { "Simplicity is Golden", "demo_the_man" },
+    { "Invitation to Destruction", "Gardevoir" },
+    { "SOLITARY", "CJacobs" },
+    { "Ruins & Lava", "VBob" },
+    { "Bloodsport Canyon", "Hoodoo456" },
+    { "Nuclear Control Facilities", "Titan314" },
+    { "Mountain Temple", "Project_ILE" },
+    { "Overflow", "SpudTheRubbish" }, // 10
+    { "'Venture into the Bouncy Castle", "Beed28" },
+    { "The Crater", "combatxtreme & Plutonic Overkill" },
+    { "The Fun Lab", "TerminusEst13" },
+    { "Durex Waste Disposal", "Minimum Payne" },
+    { "The Corporate Ladder", "Kinsie" },
+    { "Regressive Experience", "Dukka" },
+    { "Baby's First Map", "Bobman23" },
+    { "Research Facility", "deathgod5309" },
+    { "AMONG US", "HumansAmongUs" },
+    { "The Darkness Beyond", "KarolineDianne" }, // 20
+    { "Base Stimpack", "charcola" },
+    { "Crunk Refinery", "BobBarker" },
+    { "0-Pipe Gear", "Toooooasty" },
+    { "Escape from Argent Prison", "Lance Charleson" },
+    { "Live Fire Exorcise", "Sgt. Shivers" },
+    { "Attack First", "simpletonn" },
+    { "Hitler's Prison", "Luigi2600" },
+    { "Tomb of Hetickhamen", "Action Max" },
+    { "The Weed Number", "Abysswalker" },
+    { "This Is Serious Mum", "deathz0r" }, // 30
+    { "Not Another Tech Base", "ArchXeno" },
+    { "Hydraulic Plant", "SpiritOfDecay" },
+    { "Janus", "SoundOfDoomDoors" },
+    { "Gamma Station Entrance", "SMG_Marine" },
+    { "Realm of the Sempiternal Archvile", "Darsycho" },
+    { "Judgement Day", "Stale_meat" },
+    { "Complex Alive", "Roxas" },
+    { "DUMP TD", "Arctangent" },
+    { "Dumping Ground", "TotalInjury" },
+    { "Mercury Rain", "Jimmy" }, // 40
+    { "mapsterpiece", "idiotbitz" },
+    { "Tunnel Crates Rule!", "Stale_Meat" },
+    { "CLOVERHOUSE", "Icept" },
+    { "Generic UAC Outpost", "Anonymous" },
+    { "Felt", "FloatRand" },
+    { "Panic Room", "comet1338" },
+    { "Simple Chaos", "willykuo123" },
+    { "EVISCERATED", "NAG" },
+    { "The Mine to Hell", "InsanityBringer" },
+    { "Sandcastley Sandcastling Sandcastles", "PinchySkree" }, // 50
+    { "Dead", "Already Dead" },
+    { "Broken Shit", "ZachBrowder" },
+    { "Weapons Research Lab", "Vennobennu" },
+    { "Winter in Summer", "TehRealSalt" },
+    { "The UAC Ocean Base", "leodoom85" },
+    { "Hot Water Music", "Protester" },
+    { "Lambda Base", "floatRand" },
+    { "inferno odyssey", "Anonymous" },
+    { "Infested Installation", "Flipy" },
+    { "The Duality", "NeuralStunner" }, // 60
+    { "Municipal Well", "Flotilla" },
+    { "Dropoff", "CharlieTheGnarly" },
+    { "Dimensional Accelerator", "Untitled" },
+    { "Urban Hell", "ChrisR91" },
+    { "Electron", "floatRand" },
+    { "Caco-lover", "everennui" },
+    { "Brown Mesa", "Cheeki" },
+    { "Bloody Hell", "Wivicer" },
+    { "A Night at the Opera", "Temin_Dump" },
+    { "An Online Virtual Reality Used By Hackers", "Shadow Hog" }, // 70
+    { "BtFS", "Gageat" },
+    { "The Runaround", "LogicalFallacy" },
+    { "Attack From Within", "mumblemumble" }
+};
+
+SCRIPT "DUMP3_DISPLAY" ( int f1, int f2 )
+{
+	int fuck = (f1*10)+f2;
+	SetHudSize(480,360,0);
+	SetFont("BigFont");
+	HudMessage(s:DUMP3MapNames[fuck][0];HUDMSG_FADEINOUT,2,CR_WHITE,240.0,270.0,2.5,0.15,0.65);
+	SetHudSize(320,240,0);
+	SetFont("SmallFont");
+	HudMessage(s:DUMP3MapNames[fuck][1];HUDMSG_FADEINOUT,3,CR_GOLD,160.0,198.0,2.5,0.15,0.65);
+}

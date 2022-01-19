@@ -78,6 +78,11 @@ extend Class SWWMHandler
 		if ( e.IsReopen ) return;
 		if ( level.levelname ~== "Modder Test Map" )
 			level.ReplaceTextures("-noflat-","kinstile",0);
+		// DUMP 2 and 3 hackaround for the "X maps to go" text being actually readable
+		if ( level.GetChecksum() ~== "BC2878CDB82712598A2196807D099C40" )
+			level.ExecuteSpecial(ACS_Execute,null,null,false,-Int('DUMP2_HUB'));
+		else if ( level.GetChecksum() ~== "7E77AA43AF7ACDBC52171E9EE2BF98D0" )
+			level.ExecuteSpecial(ACS_Execute,null,null,false,-Int('DUMP3_HUB'));
 		// setup cached lockdefs data
 		let cli = SWWMCachedLockInfo.GetInstance();
 		if ( cli.ent.Size() == 0 ) SetupLockdefsCache(cli);
