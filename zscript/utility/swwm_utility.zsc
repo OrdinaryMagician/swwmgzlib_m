@@ -11,7 +11,8 @@ enum EDoExplosionFlags
 	DE_HOWL = 64,		// 25% chance for hit enemies to howl
 	DE_COUNTENEMIES = 128,	// only count hits for hostiles
 	DE_COUNTSTEALTH = 256,	// only count hits for inactive monsters
-	DE_COUNTFHKILLS = 512	// only count kills for enemies that were at full health
+	DE_COUNTFHKILLS = 512,	// only count kills for enemies that were at full health
+	DE_NOHURTFRIEND = 1024	// splash damage will not affect allies
 };
 
 enum EExitType
@@ -666,7 +667,7 @@ Class SWWMUtility
 	// complete spherical and more accurate replacement of A_Explode
 	// 100% free of the buggery GZDoom's own splash damage has
 	// returns the number of shootables hit/killed
-	static play int, int DoExplosion( Actor Source, double Damage, double MomentumTransfer, double ExplosionRadius, double FullDamageRadius = 0., int flags = 0, Name DamageType = '', Actor ignoreme = null )
+	static play int, int DoExplosion( Actor Source, double Damage, double MomentumTransfer, double ExplosionRadius, double FullDamageRadius = 0., int flags = 0, Name DamageType = '', Actor ignoreme = null, int dmgflags = 0 )
 	{
 		if ( !(flags&DE_NOSPLASH) ) Source.CheckSplash(ExplosionRadius);
 		double brange = 1./(ExplosionRadius-FullDamageRadius);
@@ -690,6 +691,9 @@ Class SWWMUtility
 				continue;
 			// check the DONTHARMCLASS/DONTHARMSPECIES flags
 			if ( !a.player && ((Source.bDONTHARMCLASS && (a.GetClass() == Source.GetClass())) || (Source.bDONTHARMSPECIES && (a.GetSpecies() == Source.GetSpecies()))) )
+				continue;
+			// check friendliness
+			if ( (flags&DE_NOHURTFRIEND) && Instigator && Instigator.IsFriend(a) )
 				continue;
 			// can we see it
 			if ( !(flags&DE_THRUWALLS) && !Source.CheckSight(a,SF_IGNOREVISIBILITY|SF_IGNOREWATERBOUNDARY) )
@@ -729,7 +733,7 @@ Class SWWMUtility
 			if ( dmg <= 0 ) continue;	// no harm
 			int oldhp = a.Health;
 			int basehp = a.GetSpawnHealth();
-			int ndmg = a.DamageMobj(Source,Instigator,dmg,(DamageType=='')?Source.DamageType:DamageType,DMG_EXPLOSION,atan2(-dir.y,-dir.x));
+			int ndmg = a.DamageMobj(Source,Instigator,dmg,(DamageType=='')?Source.DamageType:DamageType,DMG_EXPLOSION|dmgflags,atan2(-dir.y,-dir.x));
 			if ( a && !(flags&DE_NOBLEED) ) a.TraceBleed((ndmg>0)?ndmg:dmg,Source);
 			if ( (flags&DE_HOWL) && a && (a.Health > 0) && a.bISMONSTER && !Random[DoBlast](0,3) ) a.Howl();
 			if ( (flags&DE_COUNTFHKILLS) && (oldhp < basehp) ) continue;	// was not at full health
@@ -762,6 +766,9 @@ Class SWWMUtility
 					continue;
 				// check the DONTHARMCLASS/DONTHARMSPECIES flags
 				if ( !a.player && ((Source.bDONTHARMCLASS && (a.GetClass() == Source.GetClass())) || (Source.bDONTHARMSPECIES && (a.GetSpecies() == Source.GetSpecies()))) )
+					continue;
+				// check friendliness
+				if ( (flags&DE_NOHURTFRIEND) && Instigator && Instigator.IsFriend(a) )
 					continue;
 				// can we see it
 				if ( !(flags&DE_THRUWALLS) && !Source.CheckSight(a,SF_IGNOREVISIBILITY|SF_IGNOREWATERBOUNDARY) )
@@ -801,7 +808,7 @@ Class SWWMUtility
 				if ( dmg <= 0 ) continue;	// no harm
 				int oldhp = a.Health;
 				int basehp = a.GetSpawnHealth();
-				int ndmg = a.DamageMobj(Source,Instigator,dmg,(DamageType=='')?Source.DamageType:DamageType,DMG_EXPLOSION,atan2(-dir.y,-dir.x));
+				int ndmg = a.DamageMobj(Source,Instigator,dmg,(DamageType=='')?Source.DamageType:DamageType,DMG_EXPLOSION|dmgflags,atan2(-dir.y,-dir.x));
 				if ( a && !(flags&DE_NOBLEED) ) a.TraceBleed((ndmg>0)?ndmg:dmg,Source);
 				if ( (flags&DE_HOWL) && a && (a.Health > 0) && a.bISMONSTER && !Random[DoBlast](0,3) ) a.Howl();
 				if ( (flags&DE_COUNTFHKILLS) && (oldhp < basehp) ) continue;	// was not at full health
