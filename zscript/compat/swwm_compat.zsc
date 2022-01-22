@@ -90,7 +90,7 @@ Class SWWMLevelCompatibility : LevelPostProcessor
 			// to fix the bigfont being too large
 			for ( int i=0; i<GetThingCount(); i++ )
 			{
-				if ( (GetThingSpecial(i) != 226) || (GetThingArgument(i,0) != 12) )
+				if ( ((GetThingSpecial(i) != 226) && (GetThingSpecial(i) != 80)) || (GetThingArgument(i,0) != 12) )
 					continue;
 				SetThingArgument(i,0,-Int('DUMP3_DISPLAY'));
 			}
