@@ -194,6 +194,23 @@ Class SWWMAmmo : Ammo
 				Inventory last;
 				while ( excess > 0 )
 				{
+					// first of all, see if we can ADD mag ammo
+					if ( MagAmmoType )
+					{
+						let ma = MagAmmo(Owner.FindInventory(MagAmmoType));
+						if ( !ma )
+						{
+							ma = MagAmmo(Spawn(MagAmmoType));
+							ma.Amount = 0;
+							ma.AttachToOwner(Owner);
+						}
+						if ( ma.Amount < (ma.MaxAmount-ma.ClipSize) )
+						{
+							ma.Amount += ma.ClipSize;
+							excess--;
+							continue;
+						}
+					}
 					for ( int i=0; i<ammotypes.Size(); i++ )
 					{
 						let def = GetDefaultByType(ammotypes[i]);
@@ -224,12 +241,16 @@ Class SWWMAmmo : Ammo
 					// split into bullets
 					for ( int i=0; i<item.Amount; i++ )
 					{
+						if ( Amount < MaxAmount )
+						{
+							Amount++;
+							continue;
+						}
 						int bul = ma.ClipSize;
 						int maxgiveamt = min(ma.MaxAmount-ma.Amount,bul);
 						int dropamt = bul-maxgiveamt;
 						if ( dropamt > 0 ) ma.CreateTossable(dropamt);
-						if ( (bul == ma.ClipSize) && (Amount < MaxAmount) ) Amount++;
-						else ma.Amount = min(ma.MaxAmount,ma.Amount+bul);
+						ma.Amount = min(ma.MaxAmount,ma.Amount+bul);
 					}
 					item.bPickupGood = true;
 					return true;
@@ -399,6 +420,13 @@ Class MagAmmo : Inventory abstract
 						// drop full mag if possible
 						if ( excess >= ClipSize )
 						{
+							// first of all, check if we can ADD a mag
+							if ( pamo.Amount < pamo.MaxAmount )
+							{
+								pamo.Amount++;
+								excess -= ClipSize;
+								continue;
+							}
 							double ang = FRandom[Junk](0,360);
 							last = DoDrop(ParentAmmo);
 							last.SetOrigin(item.pos,false);
@@ -651,7 +679,7 @@ Mixin Class SWWMOndemandAmmoSpawner
 	int dropamount;
 
 	// MUST define (used by replacers too)
-	//static Class<Ammo> PickAmmo();
+	//static Class<Actor> PickAmmo();
 
 	override void ModifyDropAmount( int amt )
 	{

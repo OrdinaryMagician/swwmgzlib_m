@@ -1,0 +1,210 @@
+Model "SWWMRedCard"
+{
+	Path "models"
+	Model 0 "DoomKeycard_d.3d"
+	SurfaceSkin 0 0 "DoomRedKey.png"
+	Scale 0.035 0.035 0.035
+	AngleOffset 90
+	PitchOffset 15
+	ZOffset 16
+	ROTATING
+
+	SurfaceSkin 0 1 "DoomKeyLight2.png"
+	FrameIndex XZW1 A 0 0
+	SurfaceSkin 0 1 "DoomKeyLight.png"
+	FrameIndex XZW1 B 0 0
+}
+Model "SWWMYellowCard"
+{
+	Path "models"
+	Model 0 "DoomKeycard_d.3d"
+	SurfaceSkin 0 0 "DoomYellowKey.png"
+	Scale 0.035 0.035 0.035
+	AngleOffset 90
+	PitchOffset 15
+	ZOffset 16
+	ROTATING
+
+	SurfaceSkin 0 1 "DoomKeyLight2.png"
+	FrameIndex XZW1 A 0 0
+	SurfaceSkin 0 1 "DoomKeyLight.png"
+	FrameIndex XZW1 B 0 0
+}
+Model "SWWMBlueCard"
+{
+	Path "models"
+	Model 0 "DoomKeycard_d.3d"
+	SurfaceSkin 0 0 "DoomBlueKey.png"
+	Scale 0.035 0.035 0.035
+	AngleOffset 90
+	PitchOffset 15
+	ZOffset 16
+	ROTATING
+
+	SurfaceSkin 0 1 "DoomKeyLight2.png"
+	FrameIndex XZW1 A 0 0
+	SurfaceSkin 0 1 "DoomKeyLight.png"
+	FrameIndex XZW1 B 0 0
+}
+Model "SWWMGreenCard"
+{
+	Path "models"
+	Model 0 "DoomKeycard_d.3d"
+	SurfaceSkin 0 0 "DoomGreenKey.png"
+	Scale 0.035 0.035 0.035
+	AngleOffset 90
+	PitchOffset 15
+	ZOffset 16
+	ROTATING
+
+	SurfaceSkin 0 1 "DoomKeyLight2.png"
+	FrameIndex XZW1 A 0 0
+	SurfaceSkin 0 1 "DoomKeyLight.png"
+	FrameIndex XZW1 B 0 0
+}
+Model "SWWMSilverCardKDiZD"
+{
+	Path "models"
+	Model 0 "DoomKeycard_d.3d"
+	SurfaceSkin 0 0 "DoomSilverKey.png"
+	Scale 0.035 0.035 0.035
+	AngleOffset 90
+	PitchOffset 15
+	ZOffset 16
+	ROTATING
+
+	SurfaceSkin 0 1 "DoomKeyLight2.png"
+	FrameIndex XZW1 A 0 0
+	SurfaceSkin 0 1 "DoomKeyLight.png"
+	FrameIndex XZW1 B 0 0
+}
+Model "SWWMGreenCardKDiZD"
+{
+	Path "models"
+	Model 0 "DoomKeycard_d.3d"
+	SurfaceSkin 0 0 "DoomGreenKey.png"
+	Scale 0.035 0.035 0.035
+	AngleOffset 90
+	PitchOffset 15
+	ZOffset 16
+	ROTATING
+
+	SurfaceSkin 0 1 "DoomKeyLight2.png"
+	FrameIndex XZW1 A 0 0
+	SurfaceSkin 0 1 "DoomKeyLight.png"
+	FrameIndex XZW1 B 0 0
+}
+Model "SWWMOrangeCardKDiZD"
+{
+	Path "models"
+	Model 0 "DoomKeycard_d.3d"
+	SurfaceSkin 0 0 "DoomOrangeKey.png"
+	Scale 0.035 0.035 0.035
+	AngleOffset 90
+	PitchOffset 15
+	ZOffset 16
+	ROTATING
+
+	SurfaceSkin 0 1 "DoomKeyLight2.png"
+	FrameIndex XZW1 A 0 0
+	SurfaceSkin 0 1 "DoomKeyLight.png"
+	FrameIndex XZW1 B 0 0
+}
+
+Model "SWWMRedSkull"
+{
+	Path "models"
+	Model 0 "DoomSkullKey_d.3d"
+	Skin 0 "DoomRedSkull.png"
+	Scale 0.035 0.035 0.035
+	RollOffset 15
+	ZOffset 16
+	ROTATING
+
+	FrameIndex XZW1 A 0 0
+}
+Model "SWWMBlueSkull"
+{
+	Path "models"
+	Model 0 "DoomSkullKey_d.3d"
+	Skin 0 "DoomBlueSkull.png"
+	Scale 0.035 0.035 0.035
+	RollOffset 15
+	ZOffset 16
+	ROTATING
+
+	FrameIndex XZW1 A 0 0
+}
+Model "SWWMYellowSkull"
+{
+	Path "models"
+	Model 0 "DoomSkullKey_d.3d"
+	Skin 0 "DoomYellowSkull.png"
+	Scale 0.035 0.035 0.035
+	RollOffset 15
+	ZOffset 16
+	ROTATING
+
+	FrameIndex XZW1 A 0 0
+}
+Model "SWWMPurpleSkull"
+{
+	Path "models"
+	Model 0 "DoomSkullKey_d.3d"
+	Skin 0 "DoomPurpleSkull.png"
+	Scale 0.035 0.035 0.035
+	RollOffset 15
+	ZOffset 16
+	ROTATING
+
+	FrameIndex XZW1 A 0 0
+}
+
+Model "SWWMFakeRedSkull"
+{
+	Path "models"
+	Model 0 "DoomSkullKey_d.3d"
+	Skin 0 "DoomRedSkull.png"
+	Scale 0.035 0.035 0.035
+	RollOffset 35
+	AngleOffset 244
+	ZOffset 5
+
+	FrameIndex XZW1 A 0 0
+}
+Model "SWWMFakeBlueSkull"
+{
+	Path "models"
+	Model 0 "DoomSkullKey_d.3d"
+	Skin 0 "DoomBlueSkull.png"
+	Scale 0.035 0.035 0.035
+	RollOffset 35
+	AngleOffset 225
+	ZOffset 5
+
+	FrameIndex XZW1 A 0 0
+}
+Model "SWWMFakeYellowSkull"
+{
+	Path "models"
+	Model 0 "DoomSkullKey_d.3d"
+	Skin 0 "DoomYellowSkull.png"
+	Scale 0.035 0.035 0.035
+	RollOffset 35
+	AngleOffset 135
+	ZOffset 5
+
+	FrameIndex XZW1 A 0 0
+}
+Model "SWWMFakePurpleSkull"
+{
+	Path "models"
+	Model 0 "DoomSkullKey_d.3d"
+	Skin 0 "DoomPurpleSkull.png"
+	Scale 0.035 0.035 0.035
+	RollOffset 35
+	AngleOffset 116
+	ZOffset 5
+
+	FrameIndex XZW1 A 0 0
+}

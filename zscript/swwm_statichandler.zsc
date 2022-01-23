@@ -13,6 +13,7 @@ Class SWWMStaticHandler : StaticEventHandler
 	ui int timer, msgpick;
 	// broccoli doccoli
 	bool isbd;
+	String bdname;
 	// versioning
 	bool tainted;
 	String taintver, taintmodver;
@@ -242,7 +243,7 @@ Class SWWMStaticHandler : StaticEventHandler
 			}
 			else if ( timer == 140 )
 			{
-				if ( isbd ) Console.Printf("\cfYou shouldn't have tried running this with Brutal Doom.\c-");
+				if ( isbd ) Console.Printf("\cfYou shouldn't have tried running this with "..bdname..".\c-");
 				else Console.Printf("\cfYou should probably screenshot this error and show it to Marisa.\c-");
 				Console.Printf("\cfLoaded Version:\n \cjLibrary: %s\c-\n \cjMod: %s\c-",StringTable.Localize("$SWWM_SHORTVER"),StringTable.Localize("$"..SWWMMODPREFIX.."_SHORTVER"));
 				if ( tainted ) Console.Printf("\cfSavegame Version:\n \cjLibrary: %s\c-\n \cjMod: %s\c-",taintver,taintmodver);

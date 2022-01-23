@@ -106,6 +106,11 @@ extend Class SWWMHandler
 				p.target = e.Thing;
 				p.SetStateLabel("Pickup");
 			}
+			if ( e.Thing is 'Key' )
+			{
+				let m = Actor.Spawn("SWWMKeyMarker",e.Thing.pos);
+				m.target = e.Thing;
+			}
 		}
 		if ( !useshadows ) useshadows = CVar.FindCVar(SWWMMODPREFIX.."_shadows");
 		if ( useshadows.GetBool() && (e.Thing.bSHOOTABLE || e.Thing.bISMONSTER || (e.Thing is 'Inventory')) && ((e.Thing is 'SWWMPlayer') || (e.Thing.SpawnState.sprite == e.Thing.GetSpriteIndex('XZW1'))) )

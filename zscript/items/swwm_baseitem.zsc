@@ -262,7 +262,6 @@ Class SWWMChargeItem : Inventory
 	private int SItemFlags;
 
 	Property Charge : Charge;	// total charge (in seconds)
-	Property OnIcon : OnIcon;	// icon when active
 
 	FlagDef KeepActivated : SItemFlags, 0;	// will not deactivate if charge is fully drained and a spare is available
 	FlagDef TravelActive : SItemFlags, 1;	// does not deactivate when changing maps
@@ -277,6 +276,13 @@ Class SWWMChargeItem : Inventory
 		+INVENTORY.INVBAR;
 		+FLOATBOB;
 		FloatBobStrength 0.25;
+	}
+
+	// this is the most bullshit thing ever
+	// why can't we declare our own texture properties?
+	virtual protected string GetOnIcon()
+	{
+		return "";
 	}
 
 	override bool HandlePickup( Inventory item )
@@ -314,6 +320,7 @@ Class SWWMChargeItem : Inventory
 	override void Activate( Actor activator )
 	{
 		bActive = true;
+		if ( !OnIcon ) OnIcon = TexMan.CheckForTexture(GetOnIcon(),TexMan.Type_Any);
 		Icon = OnIcon;
 	}
 

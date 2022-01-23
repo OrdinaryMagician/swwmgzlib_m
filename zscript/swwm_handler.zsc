@@ -12,6 +12,7 @@ Class SWWMHandler : EventHandler
 
 	// for checkreplacement
 	bool hasdrlamonsters;
+	int iskdizd;
 	Array<String> bludtypes;
 
 	override void OnRegister()
@@ -25,6 +26,8 @@ Class SWWMHandler : EventHandler
 			hasdrlamonsters = true;
 			break;
 		}
+		if ( LevelInfo.MapExists("Z1M1") && (LevelInfo.MapChecksum("Z1M1") ~== "2B7744234ED2C162AD08A3255E979F65") )
+			iskdizd = true;
 		// read bludtype files if they can be found
 		for ( int lmp = Wads.FindLump("BLUDTYPE"); lmp != -1; lmp = Wads.FindLump("BLUDTYPE",lmp+1) )
 		{

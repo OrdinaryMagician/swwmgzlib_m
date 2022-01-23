@@ -1,0 +1,45 @@
+pointlight SWWMGREENHKEY
+{
+	color 0.0 1.0 0.0
+	size 40
+	attenuate 1
+	offset 0 16 0
+}
+pointlight SWWMBLUEHKEY
+{
+	color 0.0 0.0 1.0
+	size 40
+	attenuate 1
+	offset 0 16 0
+}
+pointlight SWWMYELLOWHKEY
+{
+	color 1.0 1.0 0.0
+	size 40
+	attenuate 1
+	offset 0 16 0
+}
+pointlight SWWMREDHKEY
+{
+	color 1.0 0.0 0.0
+	size 40
+	attenuate 1
+	offset 0 16 0
+}
+
+object SWWMKeyGreen
+{
+    frame XZW1 { light SWWMGREENHKEY }
+}
+object SWWMKeyBlue
+{
+    frame XZW1 { light SWWMBLUEHKEY }
+}
+object SWWMKeyYellow
+{
+    frame XZW1 { light SWWMYELLOWHKEY }
+}
+object SWWMKeyRed
+{
+    frame XZW1 { light SWWMREDHKEY }
+}

@@ -15,7 +15,9 @@ enum ESWWMGZChannels
 	CHAN_WEAPONEXTRA3 = 63209,	// additional weapon sound slot (again)
 	CHAN_DAMAGE = 63210,		// used for impact/hit sounds
 	CHAN_AMBEXTRA = 63211,		// player ambience when submerged
-	CHAN_VOICEOVERAUX = 63212	// extra channel to make voice acting louder if needed
+	CHAN_VOICEOVERAUX = 63212,	// extra channel to make oneliner voices louder
+	CHAN_VOICEOVERAUX2 = 63213,	// how many more channels do I need???
+	CHAN_VOICEOVERAUX3 = 63214	// oh god, the loudening
 };
 
 const FallbackTag = "AWESOME IT'S PENIS"; // used on tag processing, please don't mind the actual string used)
@@ -45,5 +47,38 @@ Class SWWMExitMarker : MapMarker
 	Spawn:
 		EIXT ABCD -1;
 		Stop;
+	}
+}
+Class SWWMKeyMarker : MapMarker
+{
+	Default
+	{
+		Args 0, 0, 1;
+		+DORMANT;
+	}
+	override void PostBeginPlay()
+	{
+		if ( target is 'SWWMKey' )
+		{
+			Class<Key> k = SWWMKey(target).species;
+			if ( k )
+			{
+				let def = GetDefaultByType(k);
+				picnum = def.SpawnState.GetSpriteTexture(0);
+			}
+		}
+		else picnum = target.SpawnState.GetSpriteTexture(0);
+		Scale = target.Scale;
+	}
+	override void Tick()
+	{
+		Super.Tick();
+		if ( !target )
+		{
+			Destroy();
+			return;
+		}
+		bDORMANT = ((!level.allmap)||Inventory(target).Owner);
+		if ( pos != target.pos ) SetOrigin(target.pos,true);
 	}
 }

@@ -1,0 +1,239 @@
+Brightmap Texture "models/DoomRedKey.png"
+{
+	map "models/DoomKey_bright.png"
+}
+Brightmap Texture "models/DoomYellowKey.png"
+{
+	map "models/DoomKey_bright.png"
+}
+Brightmap Texture "models/DoomBlueKey.png"
+{
+	map "models/DoomKey_bright.png"
+}
+Brightmap Texture "models/DoomGreenKey.png"
+{
+	map "models/DoomKey_bright.png"
+}
+Brightmap Texture "models/DoomOrangeKey.png"
+{
+	map "models/DoomKey_bright.png"
+}
+Brightmap Texture "models/DoomBlackKey.png"
+{
+	map "models/DoomKey_bright.png"
+}
+Brightmap Texture "models/DoomWhiteKey.png"
+{
+	map "models/DoomKey_bright.png"
+}
+Brightmap Texture "models/DoomSilverKey.png"
+{
+	map "models/DoomKey_bright.png"
+}
+HardwareShader Texture "models/DoomRedKey.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/DoomKey_mask.png"
+	Texture "envtex" "models/matcap/redmap.png"
+}
+HardwareShader Texture "models/DoomYellowKey.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/DoomKey_mask.png"
+	Texture "envtex" "models/matcap/goldmap.png"
+}
+HardwareShader Texture "models/DoomBlueKey.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/DoomKey_mask.png"
+	Texture "envtex" "models/matcap/blumap.png"
+}
+HardwareShader Texture "models/DoomGreenKey.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/DoomKey_mask.png"
+	Texture "envtex" "models/matcap/greenmap.png"
+}
+HardwareShader Texture "models/DoomOrangeKey.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/DoomKey_mask.png"
+	Texture "envtex" "models/matcap/goldmap.png"
+}
+HardwareShader Texture "models/DoomBlackKey.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/DoomKey_mask.png"
+	Texture "envtex" "models/matcap/leadmap.png"
+}
+HardwareShader Texture "models/DoomWhiteKey.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/DoomKey_mask.png"
+	Texture "envtex" "models/matcap/silvermap.png"
+}
+HardwareShader Texture "models/DoomSilverKey.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/DoomKey_mask.png"
+	Texture "envtex" "models/matcap/silvermap.png"
+}
+Brightmap Texture "models/DoomKeyLight.png"
+{
+	Map "brightmaps/Fullbright.png"
+}
+HardwareShader Texture "models/DoomKeyLight3.png"
+{
+	Shader "shaders/glsl/KeyBlink.fp"
+}
+
+Brightmap Texture "models/DoomRedSkull.png"
+{
+	map "models/DoomSkull_bright.png"
+}
+Brightmap Texture "models/DoomBlueSkull.png"
+{
+	map "models/DoomSkull_bright.png"
+}
+Brightmap Texture "models/DoomYellowSkull.png"
+{
+	map "models/DoomSkull_bright.png"
+}
+Brightmap Texture "models/DoomPurpleSkull.png"
+{
+	map "models/DoomSkull_bright.png"
+}
+HardwareShader Texture "models/DoomRedSkull.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/DoomSkull_mask.png"
+	Texture "envtex" "models/matcap/redmap.png"
+}
+HardwareShader Texture "models/DoomBlueSkull.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/DoomSkull_mask.png"
+	Texture "envtex" "models/matcap/blumap.png"
+}
+HardwareShader Texture "models/DoomYellowSkull.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/DoomSkull_mask.png"
+	Texture "envtex" "models/matcap/goldmap.png"
+}
+HardwareShader Texture "models/DoomPurpleSkull.png"
+{
+	Shader "shaders/glsl/Shinemask.fp"
+	Texture "masktex" "models/DoomSkull_mask.png"
+	Texture "envtex" "models/matcap/purpmap.png"
+}
+
+pointlight SWWMREDKEY
+{
+	color 1.0 0.0 0.0
+	size 40
+	attenuate 1
+	offset 0 16 0
+}
+pointlight SWWMYELLOWKEY
+{
+	color 1.0 1.0 0.0
+	size 40
+	attenuate 1
+	offset 0 16 0
+}
+pointlight SWWMBLUEKEY
+{
+	color 0.0 0.0 1.0
+	size 40
+	attenuate 1
+	offset 0 16 0
+}
+pointlight SWWMGREENKEY
+{
+	color 0.0 1.0 0.0
+	size 40
+	attenuate 1
+	offset 0 16 0
+}
+pointlight SWWMSILVERKEY
+{
+	color 0.8 0.9 1.0
+	size 40
+	attenuate 1
+	offset 0 16 0
+}
+pointlight SWWMORANGEKEY
+{
+	color 1.0 0.6 0.0
+	size 40
+	attenuate 1
+	offset 0 16 0
+}
+pointlight SWWMPURPLEKEY
+{
+	color 1.0 0.0 1.0
+	size 40
+	attenuate 1
+	offset 0 16 0
+}
+pointlight SWWMCARDLITE
+{
+	color 0.5 0.5 0.0
+	size 20
+	attenuate 1
+	offset 0 16 0
+}
+
+object SWWMRedCard
+{
+    frame XZW1 { light SWWMREDKEY }
+    frame XZW1B { light SWWMCARDLITE }
+}
+object SWWMYellowCard
+{
+    frame XZW1 { light SWWMYELLOWKEY }
+    frame XZW1B { light SWWMCARDLITE }
+}
+object SWWMBlueCard
+{
+    frame XZW1 { light SWWMBLUEKEY }
+    frame XZW1B { light SWWMCARDLITE }
+}
+object SWWMGreenCard
+{
+    frame XZW1 { light SWWMGREENKEY }
+    frame XZW1B { light SWWMCARDLITE }
+}
+object SWWMSilverCardKDiZD
+{
+    frame XZW1 { light SWWMSILVERKEY }
+    frame XZW1B { light SWWMCARDLITE }
+}
+object SWWMGreenCardKDiZD
+{
+    frame XZW1 { light SWWMGREENKEY }
+    frame XZW1B { light SWWMCARDLITE }
+}
+object SWWMOrangeCardKDiZD
+{
+    frame XZW1 { light SWWMORANGEKEY }
+    frame XZW1B { light SWWMCARDLITE }
+}
+
+object SWWMRedSkull
+{
+    frame XZW1 { light SWWMREDKEY }
+}
+object SWWMBlueSkull
+{
+    frame XZW1 { light SWWMBLUEKEY }
+}
+object SWWMYellowSkull
+{
+    frame XZW1 { light SWWMYELLOWKEY }
+}
+object SWWMPurpleSkull
+{
+    frame XZW1 { light SWWMPURPLEKEY }
+}

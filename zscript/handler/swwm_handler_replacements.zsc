@@ -573,6 +573,28 @@ extend Class SWWMHandler
 			if ( SWWMUtility.CheckDehackery(e.Replacee) ) return;
 			e.Replacement = 'SWWMBossBrain';
 		}
+		else if ( (e.Replacee is 'RedCard') && !(e.Replacee is 'ChexRedCard') )
+		{
+			// don't replace red key in Equinox MAP13
+			if ( level.GetChecksum() ~== "3805A661D5C4523AFF7BF86991071043" )
+				return;
+			e.Replacement = 'SWWMRedCard';
+		}
+		else if ( (e.Replacee is 'BlueCard') && !(e.Replacee is 'ChexBlueCard') ) e.Replacement = 'SWWMBlueCard';
+		else if ( (e.Replacee is 'YellowCard') && !(e.Replacee is 'ChexYellowCard') ) e.Replacement = 'SWWMYellowCard';
+		else if ( e.Replacee.GetClassName() == 'GreenCard' ) e.Replacement = 'SWWMGreenCard';
+		else if ( e.Replacee.GetClassName() == 'RedSkullFake' ) e.Replacement = 'SWWMFakeRedSkull';
+		else if ( e.Replacee.GetClassName() == 'BlueSkullFake' ) e.Replacement = 'SWWMFakeBlueSkull';
+		else if ( e.Replacee.GetClassName() == 'YellowSkullFake' ) e.Replacement = 'SWWMFakeYellowSkull';
+		else if ( e.Replacee.GetClassName() == 'PurpleSkullFake' ) e.Replacement = 'SWWMFakePurpleSkull';
+		else if ( e.Replacee is 'RedSkull' ) e.Replacement = iskdizd?'SWWMSilverCardKDiZD':'SWWMRedSkull';
+		else if ( e.Replacee is 'BlueSkull' ) e.Replacement = iskdizd?'SWWMGreenCardKDiZD':'SWWMBlueSkull';
+		else if ( e.Replacee is 'YellowSkull' ) e.Replacement = iskdizd?'SWWMOrangeCardKDiZD':'SWWMYellowSkull';
+		else if ( e.Replacee.GetClassName() == 'PurpleSkull' ) e.Replacement = 'SWWMPurpleSkull';
+		else if ( e.Replacee is 'KeyGreen' ) e.Replacement = 'SWWMKeyGreen';
+		else if ( e.Replacee is 'KeyBlue' ) e.Replacement = 'SWWMKeyBlue';
+		else if ( e.Replacee is 'KeyYellow' ) e.Replacement = 'SWWMKeyYellow';
+		else if ( e.Replacee.GetClassName() == 'KeyRed' ) e.Replacement = 'SWWMKeyRed';
 		else if ( !ModReplacement(e) ) return;
 		// this last part is kind of ugly, but it works
 		// guarantees that OUR replacements are all final

@@ -1,0 +1,368 @@
+// Key item replacements, including some for popular map packs
+
+Class SWWMKey : Key abstract
+{
+	Mixin SWWMOverlapPickupSound;
+	Mixin SWWMUseToPickup;
+
+	override bool TryPickup( in out Actor toucher )
+	{
+		// attach the vanilla key that we replace
+		Actor rt = toucher;
+		if ( toucher.player ) rt = toucher.player.mo;
+		Class<Key> pc = Species;
+		if ( pc && !rt.FindInventory(pc) )
+		{
+			let p = Inventory(Spawn(pc));
+			p.AttachToOwner(rt);
+		}
+		GoAwayAndDie();
+		return true;
+	}
+
+	Default
+	{
+		+FLOATBOB;
+		FloatBobStrength 0.25;
+	}
+}
+
+Class SWWMRedCard : SWWMKey
+{
+	Default
+	{
+		Tag "$T_REDCARD";
+		Species "RedCard";
+		Inventory.PickupMessage "$T_REDCARD";
+		Inventory.PickupFlash "SWWMRedPickupFlash";
+		Radius 10;
+		Height 25;
+	}
+	States
+	{
+	Spawn:
+		XZW1 AB 10;
+		Loop;
+	}
+}
+Class SWWMYellowCard : SWWMKey
+{
+	Default
+	{
+		Tag "$T_YELLOWCARD";
+		Species "YellowCard";
+		Inventory.PickupMessage "$T_YELLOWCARD";
+		Inventory.PickupFlash "SWWMPickupFlash";
+		Radius 10;
+		Height 25;
+	}
+	States
+	{
+	Spawn:
+		XZW1 AB 10;
+		Loop;
+	}
+}
+Class SWWMBlueCard : SWWMKey
+{
+	Default
+	{
+		Tag "$T_BLUECARD";
+		Species "BlueCard";
+		Inventory.PickupMessage "$T_BLUECARD";
+		Inventory.PickupFlash "SWWMBluePickupFlash";
+		Radius 10;
+		Height 25;
+	}
+	States
+	{
+	Spawn:
+		XZW1 AB 10;
+		Loop;
+	}
+}
+Class SWWMSilverCardKDiZD : SWWMKey
+{
+	Default
+	{
+		Tag "$T_SILVERCARD";
+		Species "BlueSkull";
+		Inventory.PickupMessage "$T_SILVERCARD";
+		Inventory.PickupFlash "SWWMWhitePickupFlash";
+		Radius 10;
+		Height 25;
+	}
+	States
+	{
+	Spawn:
+		XZW1 AB 10;
+		Loop;
+	}
+}
+Class SWWMGreenCardKDiZD : SWWMKey
+{
+	Default
+	{
+		Tag "$T_GREENCARD";
+		Species "YellowSkull";
+		Inventory.PickupMessage "$T_GREENCARD";
+		Inventory.PickupFlash "SWWMGreenPickupFlash";
+		Radius 10;
+		Height 25;
+	}
+	States
+	{
+	Spawn:
+		XZW1 AB 10;
+		Loop;
+	}
+}
+Class SWWMOrangeCardKDiZD : SWWMKey
+{
+	Default
+	{
+		Tag "$T_ORANGECARD";
+		Species "RedSkull";
+		Inventory.PickupMessage "$T_ORANGECARD";
+		Inventory.PickupFlash "SWWMPickupFlash";
+		Radius 10;
+		Height 25;
+	}
+	States
+	{
+	Spawn:
+		XZW1 AB 10;
+		Loop;
+	}
+}
+Class SWWMGreenCard : SWWMKey
+{
+	Default
+	{
+		Tag "$T_GREENCARD";
+		Species "GreenCard";
+		Inventory.PickupMessage "$T_GREENCARD";
+		Inventory.PickupFlash "SWWMGreenPickupFlash";
+		Radius 10;
+		Height 25;
+	}
+	States
+	{
+	Spawn:
+		XZW1 AB 10;
+		Loop;
+	}
+}
+// more Doom key color variants will be implemented as needed
+
+Class SWWMRedSkull : SWWMKey
+{
+	Default
+	{
+		Tag "$T_REDSKULL";
+		Species "RedSkull";
+		Inventory.PickupMessage "$T_REDSKULL";
+		Inventory.PickupFlash "SWWMRedPickupFlash";
+		Radius 10;
+		Height 25;
+	}
+	States
+	{
+	Spawn:
+		XZW1 A -1;
+		Stop;
+	}
+}
+Class SWWMBlueSkull : SWWMKey
+{
+	Default
+	{
+		Tag "$T_BLUESKULL";
+		Species "BlueSkull";
+		Inventory.PickupMessage "$T_BLUESKULL";
+		Inventory.PickupFlash "SWWMBluePickupFlash";
+		Radius 10;
+		Height 25;
+	}
+	States
+	{
+	Spawn:
+		XZW1 A -1;
+		Stop;
+	}
+}
+Class SWWMYellowSkull : SWWMKey
+{
+	Default
+	{
+		Tag "$T_YELLOWSKULL";
+		Species "YellowSkull";
+		Inventory.PickupMessage "$T_YELLOWSKULL";
+		Inventory.PickupFlash "SWWMPickupFlash";
+		Radius 10;
+		Height 25;
+	}
+	States
+	{
+	Spawn:
+		XZW1 A -1;
+		Stop;
+	}
+}
+Class SWWMPurpleSkull : SWWMKey
+{
+	Default
+	{
+		Tag "$T_PURPLESKULL";
+		Species "PurpleSkull";
+		Inventory.PickupMessage "$T_PURPLESKULL";
+		Inventory.PickupFlash "SWWMPurplePickupFlash";
+		Radius 10;
+		Height 25;
+	}
+	States
+	{
+	Spawn:
+		XZW1 A -1;
+		Stop;
+	}
+}
+
+// Verdant Citadel fake keys
+Class SWWMFakeRedSkull : Actor
+{
+	Default
+	{
+		Radius .1;
+		Height 0.;
+		+NOBLOCKMAP;
+		+MOVEWITHSECTOR;
+	}
+	States
+	{
+	Spawn:
+		XZW1 A -1;
+		Stop;
+	}
+}
+Class SWWMFakeBlueSkull : Actor
+{
+	Default
+	{
+		Radius .1;
+		Height 0.;
+		+NOBLOCKMAP;
+		+MOVEWITHSECTOR;
+	}
+	States
+	{
+	Spawn:
+		XZW1 A -1;
+		Stop;
+	}
+}
+Class SWWMFakeYellowSkull : Actor
+{
+	Default
+	{
+		Radius .1;
+		Height 0.;
+		+NOBLOCKMAP;
+		+MOVEWITHSECTOR;
+	}
+	States
+	{
+	Spawn:
+		XZW1 A -1;
+		Stop;
+	}
+}
+Class SWWMFakePurpleSkull : Actor
+{
+	Default
+	{
+		Radius .1;
+		Height 0.;
+		+NOBLOCKMAP;
+		+MOVEWITHSECTOR;
+	}
+	States
+	{
+	Spawn:
+		XZW1 A -1;
+		Stop;
+	}
+}
+
+Class SWWMKeyGreen : SWWMKey
+{
+	Default
+	{
+		Tag "$T_KEYGREEN";
+		Species "KeyGreen";
+		Inventory.PickupMessage "$T_KEYGREEN";
+		Inventory.PickupFlash "SWWMGreenPickupFlash";
+		Radius 10;
+		Height 25;
+	}
+	States
+	{
+	Spawn:
+		XZW1 A -1;
+		Stop;
+	}
+}
+Class SWWMKeyBlue : SWWMKey
+{
+	Default
+	{
+		Tag "$T_KEYBLUE";
+		Species "KeyBlue";
+		Inventory.PickupMessage "$T_KEYBLUE";
+		Inventory.PickupFlash "SWWMBluePickupFlash";
+		Radius 10;
+		Height 25;
+	}
+	States
+	{
+	Spawn:
+		XZW1 A -1;
+		Stop;
+	}
+}
+Class SWWMKeyYellow : SWWMKey
+{
+	Default
+	{
+		Tag "$T_KEYYELLOW";
+		Species "KeyYellow";
+		Inventory.PickupMessage "$T_KEYYELLOW";
+		Inventory.PickupFlash "SWWMPickupFlash";
+		Radius 10;
+		Height 25;
+	}
+	States
+	{
+	Spawn:
+		XZW1 A -1;
+		Stop;
+	}
+}
+Class SWWMKeyRed : SWWMKey
+{
+	Default
+	{
+		Tag "$T_KEYRED";
+		Species "KeyRed";
+		Inventory.PickupMessage "$T_KEYRED";
+		Inventory.PickupFlash "SWWMRedPickupFlash";
+		Radius 10;
+		Height 25;
+	}
+	States
+	{
+	Spawn:
+		XZW1 A -1;
+		Stop;
+	}
+}

@@ -15,20 +15,32 @@ Class SWWMBrutalHandler : StaticEventHandler
 	ui int timer;
 	ui TextureID scr[85];
 	bool detected;
+	String which, whichshort;
 
 	override void OnRegister()
 	{
 		// check for brutal doom
 		for ( int i=0; i<AllActorClasses.size(); i++ )
 		{
-			if ( (AllActorClasses[i].GetClassName() != "BrutalWeapon")
-				&& (AllActorClasses[i].GetClassName() != "BrutalDoomer") ) continue;
-			detected = true;
+			if ( AllActorClasses[i].GetClassName() == "BDoomer" )
+			{
+				detected = true;
+				which = "Brutal Doom";
+				whichshort = "BD";
+			}
+			else if ( AllActorClasses[i].GetClassName() == "BrutalDoomer" )
+			{
+				detected = true;
+				which = "Project Brutality";
+				whichshort = "PB";
+			}
+			if ( !detected ) continue;
 			let shnd = SWWMStaticHandler(StaticEventHandler.Find("SWWMStaticHandler"));
 			shnd.isbd = true;
+			shnd.bdname = which;
 			Console.Printf(
 				"\cx┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\c-\n"
-				"\cx┃   \cfIf you have BD on your autoload you really shouldn't.   \cx┃\c-\n"
+				"\cx┃   \cfIf you have "..whichshort.." on your autoload you really shouldn't.   \cx┃\c-\n"
 				"\cx┃  \cfIf you manually loaded it with this mod, why would you?  \cx┃\c-\n"
 				"\cx┃         \cfThey're not compatible and never will be.         \cx┃\c-\n"
 				"\cx┃    \cfThis mod will now shit the bed once you go in-game,    \cx┃\c-\n"
@@ -84,7 +96,7 @@ Class SWWMBrutalHandler : StaticEventHandler
 		Screen.Dim("Black",clamp(((timer+e.fractic)-35.)/70.,0.,1.),0,0,Screen.GetWidth(),Screen.GetHeight());
 		if ( timer < 140 )
 		{
-			String str = "Can I run this with \cgBrutal Doom\c-?";
+			String str = "Can I run this with \cg"..which.."\c-?";
 			Screen.DrawText(bigfont,Font.CR_WHITE,(Screen.GetWidth()-bigfont.StringWidth(str)*CleanXFac_1)/2,(Screen.GetHeight()-bigfont.GetHeight()*CleanYFac_1)/2,str,DTA_CleanNoMove_1,true);
 			return;
 		}
