@@ -155,7 +155,6 @@ Class SWWMPlayer : PlayerPawn
 
 	override bool UseInventory( Inventory item )
 	{
-		let itemtype = item.GetClass();
 		if ( (player.cheats&CF_TOTALLYFROZEN) || isFrozen() ) return false;
 		if ( !Actor.UseInventory(item) ) return false;
 		// use sounds of big powerups are heard by other players

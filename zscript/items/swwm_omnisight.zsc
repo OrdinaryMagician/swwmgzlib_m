@@ -6,28 +6,21 @@ Class Omnisight : Inventory
 	Mixin SWWMUseToPickup;
 	Mixin SWWMRespawn;
 
-	override bool Use( bool pickup )
+	override bool TryPickup( in out Actor toucher )
 	{
 		if ( !level.allmap )
 		{
-			if ( Owner.player == players[consoleplayer] )
-				Owner.A_StartSound("powerup/omnisight",CHAN_ITEMEXTRA,CHANF_OVERLAP);
-			if ( Owner is 'SWWMPlayer' )
-				SWWMPlayer(Owner).lastbump *= 1.1;
+			Actor rt = toucher;
+			if ( toucher.player ) rt = toucher.player.mo;
+			if ( rt.player == players[consoleplayer] )
+				rt.A_StartSound("powerup/omnisight",CHAN_ITEMEXTRA,CHANF_OVERLAP);
+			if ( rt is 'SWWMPlayer' )
+				SWWMPlayer(rt).lastbump *= 1.1;
 			level.allmap = true;
 			SWWMUtility.SpawnExitMarkers();
 		}
-		// not used up, must be kept so the hud can detect it in order to amplify minimap range
-		return false;
-	}
-	override bool HandlePickup( Inventory item )
-	{
-		if ( item.GetClass() == GetClass() )
-		{
-			item.bPickupGood = true;
-			return true;
-		}
-		return false;
+		GoAwayAndDie();
+		return true;
 	}
 	Default
 	{
@@ -35,16 +28,12 @@ Class Omnisight : Inventory
 		Inventory.Icon "graphics/HUD/Icons/I_Omnisight.png";
 		Inventory.PickupSound "misc/p_pkup";
 		Inventory.PickupMessage "$I_OMNISIGHT";
-		Inventory.MaxAmount 1;
-		Inventory.InterHubAmount 0;
 		Inventory.PickupFlash "SWWMCyanPickupFlash";
 		+INVENTORY.ALWAYSPICKUP;
-		+INVENTORY.AUTOACTIVATE;
 		+COUNTITEM;
 		+INVENTORY.BIGPOWERUP;
-		+INVENTORY.UNDROPPABLE;
-		+INVENTORY.UNTOSSABLE;
 		+FLOATBOB;
+		+NOTDMATCH;
 		FloatBobStrength 0.25;
 		Radius 6;
 		Height 26;

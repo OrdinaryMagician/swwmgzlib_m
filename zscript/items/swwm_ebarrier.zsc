@@ -61,11 +61,35 @@ Class BarrierSnd : Actor
 	}
 }
 
+Class BarrierArmor : SWWMArmor
+{
+	Default
+	{
+		+SWWMARMOR.NOHITSOUND;
+		+SWWMARMOR.NOHITFLASH;
+		+SWWMARMOR.NODRAIN;
+		SWWMArmor.ArmorPriority 10;
+	}
+	override int HandleDamage( int damage, Name damageType, int flags )
+	{
+		if ( (damageType == 'Fire') || (damageType == 'Ice') || (damageType == 'Slime') || (damageType == 'Electric') || (damageType == 'Plasma') || (damageType == 'Radiation') || (damageType == 'Wind') || (damageType == 'Water') || (damageType == 'Corroded') || (damageType == 'Lava') )
+			return damage;
+		return 0;
+	}
+	override void DoEffect()
+	{
+		Super.DoEffect();
+		if ( !Owner.FindInventory('BarrierPower') )
+			Destroy();
+	}
+}
+
 Class BarrierPower : PowerIronFeet
 {
 	Mixin SWWMShadedPowerup;
 
 	Actor snd, l;
+	Inventory am;
 
 	Default
 	{
@@ -74,14 +98,6 @@ Class BarrierPower : PowerIronFeet
 		Powerup.Color "20 FF 00", 0.1;
 		Powerup.Mode "Full";	// no leaky damage
 		+INVENTORY.ADDITIVETIME;
-	}
-
-	override void ModifyDamage( int damage, Name damageType, out int newdamage, bool passive, Actor inflictor, Actor source, int flags )
-	{
-		if ( !passive ) return;
-		// negate elemental damage
-		if ( (damageType == 'Fire') || (damageType == 'Ice') || (damageType == 'Slime') || (damageType == 'Electric') || (damageType == 'Plasma') || (damageType == 'Radiation') || (damageType == 'Wind') || (damageType == 'Water') || (damageType == 'Corroded') || (damageType == 'Lava') )
-			newdamage = 0;
 	}
 
 	override void InitEffect()
@@ -112,6 +128,15 @@ Class BarrierPower : PowerIronFeet
 		if ( !snd ) snd = Spawn("BarrierSnd",Owner.pos);
 		snd.target = Owner;
 		snd.master = self;
+		if ( !am )
+		{
+			am = Owner.FindInventory("BarrierArmor");
+			if ( !am )
+			{
+				am = Inventory(Spawn("BarrierArmor"));
+				am.AttachToOwner(Owner);
+			}
+		}
 		// break ourselves if we're in an endlevel sector
 		bool endlv = false;
 		for ( int i=0; i<Owner.CurSector.Get3DFloorCount(); i++ )
