@@ -173,12 +173,15 @@ Class SWWMCreditsMenu : GenericMenu abstract
 		cpatrons.Push(new("SWWMCreditsEntry").Init("FireFly"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Corey Hectus"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Dac"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("kevansevans"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Pietro Gagliardi"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Ryan Weatherman"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Xada Xephron"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("Zard1084"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("John"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("VoanHead"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("NekoMithos"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("Ceyne Taikato"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("bouncytem"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Brett Saltzer"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Clint Walker"));
