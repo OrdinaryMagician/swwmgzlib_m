@@ -48,6 +48,4 @@ Constants that must be defined:
 
 The ***TODO*** list:
 
-- Streamlined **`SWWMHelpMenu`**.
-- Generic **`SWWMStatusBar`** base class with reusable functions.
 - Generic **`SWWMPlayer`** class with reusable functions.

@@ -50,9 +50,9 @@ MiniCyan
 {
 	#000000  #00FFFF
 }
-MiniMagenta
+MiniPurple
 {
-	#000000  #FF00FF
+	#000000  #8000FF
 }
 MiniYellow
 {
@@ -91,13 +91,21 @@ MiniMana
 	#000099  #4400CC  152 203
 	#4400CC  #AA00FF  204 255
 }
-MiniWildMana	// UNUSED
+MiniEldritch	// funky green, usually for wild mana
 {
 	#000000  #003333    0  50
 	#003333  #006644   51 101
 	#006644  #009944  102 151
 	#009944  #00CC33  152 203
 	#00CC33  #00FF00  204 255
+}
+MiniCrimson	// Anarukon blood
+{
+	#000000  #330022    0  50
+	#330022  #660033   51 101
+	#660033  #990033  102 151
+	#880033  #CC0022  152 203
+	#CC0022  #FF0000  204 255
 }
 // "obtained" flash
 MiniFlash

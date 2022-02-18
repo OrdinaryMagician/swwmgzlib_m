@@ -64,11 +64,10 @@ extend Class SWWMHandler
 				sv.GetInt("HitFX",stringArg:e.DamageType,intArg:e.Damage,objectArg:e.DamageSource.player.mo);
 			si.Destroy();
 		}
-		// romero hax
-		if ( (e.Thing is 'BossBrain') && (e.DamageType == 'Telefrag') )
-			e.DamageSource.DamageMobj(null,null,Actor.TELEFRAG_DAMAGE,'EndLevel');
-		// voodoo doll telefragging barrel hax (eviternity death exits)
-		if ( (e.Thing is 'ExplosiveBarrel') && (e.DamageType == 'Telefrag') && e.DamageSource.player && (e.DamageSource.player.mo != e.DamageSource) )
+		// death exit hax
+		// could be telefragging Romero, or a voodoo doll telefragging a barrel (death exits in Eviternity)
+		if ( (e.DamageType == 'Telefrag') && e.DamageSource && e.DamageSource.player
+			&& ((e.Thing is 'BossBrain') || ((e.Thing is 'ExplosiveBarrel') && (e.DamageSource.player.mo != e.DamageSource))) )
 			e.DamageSource.DamageMobj(null,null,Actor.TELEFRAG_DAMAGE,'EndLevel');
 		if ( !e.Thing.player && !e.Thing.bIsMonster && !e.Thing.bCountKill && !(e.Thing is 'ScriptedMarine') )
 			return;
