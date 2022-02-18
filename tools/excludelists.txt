@@ -75,5 +75,4 @@ zscript/compat/swwm_shame.zsc
 
 graphics/HDoom_*
 sounds/BONK.ogg
-gldefs.hdscreen
 zscript/compat/swwm_hdoom.zsc
