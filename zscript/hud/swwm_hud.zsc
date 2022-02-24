@@ -799,7 +799,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			{
 				sec = Thinker.Tics2Seconds(level.maptime);
 				str = String.Format("\c"..tclabel_s.."T \c-%02d\c"..tcextra_s..":\c-%02d\c"..tcextra_s..":\c-%02d",sec/3600,(sec%3600)/60,sec%60);
-				Screen.DrawText(smallfont2,((level.sucktime>0)&&(sec>=(level.sucktime*3600)))?tcsucks:(sec<=level.partime)?tccompl:tcvalue,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				Screen.DrawText(smallfont2,((level.sucktime>0)&&(sec>=(level.sucktime*3600)))?tcsucks:((level.partime>0)&&(sec<=level.partime))?tccompl:tcvalue,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 				yy += smallfont2.GetHeight();
 			}
 			// don't show total time if it's equal to map time
