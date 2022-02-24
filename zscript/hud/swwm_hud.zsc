@@ -6,6 +6,12 @@ Class MsgLine
 	int tic, type, rep;
 }
 
+Class KeyGet
+{
+	Class<Key> got;
+	int flashtime;
+}
+
 Enum EMiniHUDFontColor
 {
 	MCR_WHITE,
@@ -61,6 +67,13 @@ Class SWWMStatusBar : BaseStatusBar abstract
 	int midtic, midtype;
 
 	SWWMWeaponTooltip ctip;
+
+	// for flashing some elements in the hud
+	Array<KeyGet> keyflash;
+	int oldkills, olditems, oldsecrets;
+	int oldtkills, oldtitems, oldtsecrets;
+	int killflash, itemflash, secretflash;
+	int tkillflash, titemflash, tsecretflash;
 
 	double mm_zoom;
 	transient ThinkerIterator mi;	// for map markers
@@ -132,6 +145,19 @@ Class SWWMStatusBar : BaseStatusBar abstract
 					ctip = tt;
 					AttachMessage(tt,-2910);
 				}
+			}
+			return true;
+		}
+		else if ( msg.Left(11) ~== "swwmkeyget." )
+		{
+			String kname = msg.Mid(11);
+			Class<Key> k = kname;
+			if ( k )
+			{
+				let kg = new("KeyGet");
+				kg.got = k;
+				kg.flashtime = gametic+25;
+				keyflash.Push(kg);
 			}
 			return true;
 		}
@@ -254,6 +280,43 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		// also try with different endianness, just in case
 		DetachMessageID(0x4e504557);	// WEPN
 		DetachMessageID(0x564e4953);	// SINV
+		// stats flashing
+		if ( level.killed_monsters > oldkills )
+		{
+			oldkills = level.killed_monsters;
+			killflash = gametic+25;
+		}
+		if ( level.found_items > olditems )
+		{
+			olditems = level.found_items;
+			itemflash = gametic+25;
+		}
+		if ( level.found_secrets > oldsecrets )
+		{
+			oldsecrets = level.found_secrets;
+			secretflash = gametic+25;
+		}
+		if ( level.total_monsters > oldtkills )
+		{
+			oldtkills = level.total_monsters;
+			tkillflash = gametic+25;
+		}
+		if ( level.total_items > oldtitems )
+		{
+			oldtitems = level.total_items;
+			titemflash = gametic+25;
+		}
+		if ( level.total_secrets > oldtsecrets )
+		{
+			oldtsecrets = level.total_secrets;
+			tsecretflash = gametic+25;
+		}
+		// purge expired key flashes
+		for ( int i=0; i<keyflash.Size(); i++ )
+		{
+			if ( keyflash[i].flashtime >= gametic ) continue;
+			keyflash.Delete(i--);
+		}
 		// low health pulsing
 		if ( (CPlayer.health <= 0) || (CPlayer.health > 25) )
 		{
@@ -678,18 +741,57 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			{
 				str = String.Format("\c"..tclabel_s.."K \c-%d\c"..tcextra_s.."/\c-%d",level.killed_monsters,level.total_monsters);
 				Screen.DrawText(smallfont2,(level.killed_monsters>=level.total_monsters)?tccompl:tcvalue,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				if ( killflash && (gametic < killflash) )
+				{
+					double alph = ((killflash-(gametic+FracTic))/25.)**1.5;
+					str = String.Format("%d/%d",level.killed_monsters,level.total_monsters);
+					int slashpos = str.IndexOf("/");
+					Screen.DrawText(smallfont2,mhudfontcol[MCR_FLASH],xx-smallfont2.StringWidth(str),yy,str.Left(slashpos),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
+				}
+				if ( tkillflash && (gametic < tkillflash) )
+				{
+					double alph = ((tkillflash-(gametic+FracTic))/25.)**1.5;
+					str = String.Format("%d",level.total_monsters);
+					Screen.DrawText(smallfont2,mhudfontcol[MCR_FLASH],xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
+				}
 				yy += smallfont2.GetHeight();
 			}
 			if ( (level.total_items > 0) && am_showitems && !deathmatch )
 			{
 				str = String.Format("\c"..tclabel_s.."I \c-%d\c"..tcextra_s.."/\c-%d",level.found_items,level.total_items);
 				Screen.DrawText(smallfont2,(level.found_items>=level.total_items)?tccompl:tcvalue,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				if ( itemflash && (gametic < itemflash) )
+				{
+					double alph = ((itemflash-(gametic+FracTic))/25.)**1.5;
+					str = String.Format("%d/%d",level.found_items,level.total_items);
+					int slashpos = str.IndexOf("/");
+					Screen.DrawText(smallfont2,mhudfontcol[MCR_FLASH],xx-smallfont2.StringWidth(str),yy,str.Left(slashpos),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
+				}
+				if ( titemflash && (gametic < titemflash) )
+				{
+					double alph = ((titemflash-(gametic+FracTic))/25.)**1.5;
+					str = String.Format("%d",level.total_items);
+					Screen.DrawText(smallfont2,mhudfontcol[MCR_FLASH],xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
+				}
 				yy += smallfont2.GetHeight();
 			}
 			if ( (level.total_secrets > 0) && am_showsecrets && !deathmatch )
 			{
 				str = String.Format("\c"..tclabel_s.."S \c-%d\c"..tcextra_s.."/\c-%d",level.found_secrets,level.total_secrets);
 				Screen.DrawText(smallfont2,(level.found_secrets>=level.total_secrets)?tccompl:tcvalue,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				if ( secretflash && (gametic < secretflash) )
+				{
+					double alph = ((secretflash-(gametic+FracTic))/25.)**1.5;
+					str = String.Format("%d/%d",level.found_secrets,level.total_secrets);
+					int slashpos = str.IndexOf("/");
+					Screen.DrawText(smallfont2,mhudfontcol[MCR_FLASH],xx-smallfont2.StringWidth(str),yy,str.Left(slashpos),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
+				}
+				if ( tsecretflash && (gametic < tsecretflash) )
+				{
+					double alph = ((tsecretflash-(gametic+FracTic))/25.)**1.5;
+					str = String.Format("%d",level.total_secrets);
+					Screen.DrawText(smallfont2,mhudfontcol[MCR_FLASH],xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
+				}
 				yy += smallfont2.GetHeight();
 			}
 			int sec;
@@ -730,6 +832,14 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			TextureID icon = (k is 'HexenKey')?k.SpawnState.GetSpriteTexture(0):k.Icon;
 			Vector2 siz = TexMan.GetScaledSize(icon);
 			Screen.DrawTexture(icon,false,keypos.x-siz.x,keypos.y,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_TopLeft,true);
+			for ( int j=0; j<keyflash.Size(); j++ )
+			{
+				if ( !(k is keyflash[j].got) ) continue;
+				if ( !keyflash[j].flashtime || (gametic >= keyflash[j].flashtime) ) continue;
+				double alph = ((keyflash[j].flashtime-(gametic+FracTic))/25.)**1.5;
+				Screen.DrawTexture(icon,false,keypos.x-siz.x,keypos.y,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_TopLeft,true,DTA_ColorOverlay,0xFFFFC040,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
+				break;
+			}
 			keypos.x -= siz.x+2;
 			colh = max(colh,siz.y);
 			if ( ++colc == maxcolc )

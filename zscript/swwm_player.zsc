@@ -153,6 +153,14 @@ Class SWWMPlayer : PlayerPawn
 		CheckUnderwaterAmb();
 	}
 
+	override void AddInventory( Inventory item )
+	{
+		Super.AddInventory(item);
+		// notify key obtained to flash icon
+		if ( item is 'Key' )
+			Console.MidPrint(null,"swwmkeyget."..item.GetClassName());
+	}
+
 	override bool UseInventory( Inventory item )
 	{
 		if ( (player.cheats&CF_TOTALLYFROZEN) || isFrozen() ) return false;
