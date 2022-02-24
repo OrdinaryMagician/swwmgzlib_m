@@ -47,6 +47,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 	bool camhidden;
 	int pausetime;
 	Vector2 pausepos, pausedir;
+	int PulsePhase;	// for health pulsing
 
 	// shared from renderunderlay, needed for proper interpolation of some things
 	Vector3 viewpos, viewrot;
@@ -253,6 +254,17 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		// also try with different endianness, just in case
 		DetachMessageID(0x4e504557);	// WEPN
 		DetachMessageID(0x564e4953);	// SINV
+		// low health pulsing
+		if ( (CPlayer.health <= 0) || (CPlayer.health > 25) )
+		{
+			PulsePhase = 0;
+			return;
+		}
+		if ( PulsePhase == 15 )
+			S_StartSound("misc/heartbeat",CHAN_BODY,CHANF_UI|CHANF_OVERLAP,(30-CPlayer.health)/50.);
+		PulsePhase--;
+		if ( (PulsePhase < 0) || (PulsePhase > CPlayer.health*2+25) )
+			PulsePhase = CPlayer.health*2+25;
 	}
 
 	override void Init()
