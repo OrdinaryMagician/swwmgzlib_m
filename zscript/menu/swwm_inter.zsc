@@ -21,6 +21,8 @@ Class SWWMStatScreen : StatusScreen abstract
 	int statbasecolor, statcolor0,	// stat label / color for numbers
 		statcolor1, statcolor2;	// color for 100% / color for SUCKS
 	int tipcolor0, tipcolor1;	// tip header / tip text
+	Color glarecolor;	// for the eye glare when advancing
+	int tipflash;	// for switching
 
 	override void Start( wbstartstruct wbstartstruct )
 	{
@@ -49,6 +51,7 @@ Class SWWMStatScreen : StatusScreen abstract
 		statcolor2 = Font.CR_RED;
 		tipcolor0 = Font.CR_GOLD;
 		tipcolor1 = Font.CR_WHITE;
+		glarecolor = "Red";
 	}
 
 	// implement in subclass
@@ -171,17 +174,17 @@ Class SWWMStatScreen : StatusScreen abstract
 
 	private void drawSWWMFg()
 	{
-		let pdata = SWWMStatScreenData(ThinkerIterator.Create("SWWMStatScreenData",Thinker.STAT_STATIC).Next());
-		if ( !pdata )
-		{
-			pdata = new("SWWMStatScreenData");
-			pdata.ChangeStatNum(Thinker.STAT_STATIC);
-		}
 		// intermission tips at the bottom
 		if ( !whichtip )
 		{
 			int maxtip = StringTable.Localize("$"..SWWMMODPREFIX.."_NINTERTIP").ToInt();
 			if ( maxtip <= 0 ) return;
+			let pdata = SWWMStatScreenData(ThinkerIterator.Create("SWWMStatScreenData",Thinker.STAT_STATIC).Next());
+			if ( !pdata )
+			{
+				pdata = new("SWWMStatScreenData");
+				pdata.ChangeStatNum(Thinker.STAT_STATIC);
+			}
 			Array<Int> ents;
 			ents.Clear();
 			for ( int i=1; i<=maxtip; i++ ) ents.Push(i);
@@ -217,11 +220,18 @@ Class SWWMStatScreen : StatusScreen abstract
 			Screen.DrawTexture(gradtex,false,Screen.GetWidth()/2,yy+smallfont.GetHeight()*CleanYFac_1,DTA_DestWidth,400*CleanXFac_1,DTA_DestHeight,(smallfont.GetHeight()*2+8)*CleanYFac_1,DTA_Rotate,90,DTA_LegacyRenderStyle,STYLE_Shaded,DTA_FillColor,Color(0,0,0),DTA_Alpha,.8*alf,DTA_TopOffset,256,DTA_LeftOffset,128);
 			Screen.DrawTexture(gradtex,false,Screen.GetWidth()/2,yy+smallfont.GetHeight()*CleanYFac_1,DTA_DestWidth,400*CleanXFac_1,DTA_DestHeight,(smallfont.GetHeight()*2+8)*CleanYFac_1,DTA_Rotate,270,DTA_LegacyRenderStyle,STYLE_Shaded,DTA_FillColor,Color(0,0,0),DTA_Alpha,.8*alf,DTA_TopOffset,256,DTA_LeftOffset,128);
 			Screen.DrawText(smallfont,tipcolor0,xx,yy,stra,DTA_ScaleX,CleanXFac_1,DTA_ScaleY,CleanYFac_1,DTA_Alpha,alf);
+			double alph;
+			if ( tipflash && (gametic < tipflash) )
+			{
+				alph = max((tipflash-(gametic+FracTic))/25.,0.)**1.5;
+					Screen.DrawText(smallfont,Font.FindFontColor('MiniHUDFlash'),xx,yy,stra,DTA_ScaleX,CleanXFac_1,DTA_ScaleY,CleanYFac_1,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alf*alph);
+			}
 			yy += smallfont.GetHeight()*CleanYFac_1;
 			xx += (tw-wb)*CleanXFac_1;
 			Screen.DrawText(smallfont,tipcolor1,xx,yy,strb,DTA_ScaleX,CleanXFac_1,DTA_ScaleY,CleanYFac_1,DTA_Alpha,alf);
+			if ( tipflash && (gametic < tipflash) )
+				Screen.DrawText(smallfont,Font.FindFontColor('MiniHUDFlash'),xx,yy,strb,DTA_ScaleX,CleanXFac_1,DTA_ScaleY,CleanYFac_1,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alf*alph);
 		}
-		if ( glarestr > 0 ) Screen.Dim("Red",(clamp(glarestr/20.,0.,1.)**2)*.3,0,0,Screen.GetWidth(),Screen.GetHeight());
 	}
 
 	override void Drawer( void )
@@ -245,6 +255,32 @@ Class SWWMStatScreen : StatusScreen abstract
 			drawSWWMFg();
 			break;
 		}
+		if ( glarestr > 0 ) Screen.Dim(glarecolor,(clamp(glarestr/20.,0.,1.)**2)*.3,0,0,Screen.GetWidth(),Screen.GetHeight());
+	}
+
+	protected void checkForAccelerateNew( void )
+	{
+		// check for button presses to skip delays (but only recognize fire/use buttons)
+		for ( int i=0; i < MAXPLAYERS; i++ )
+		{
+			if ( !playeringame[i] ) continue;
+			PlayerInfo p = players[i];
+			if ( (p.cmd.buttons^p.oldbuttons) && ((p.cmd.buttons&p.oldbuttons) == p.oldbuttons) && !p.Bot )
+			{
+				if ( p.cmd.buttons&(BT_ATTACK|BT_ALTATTACK|BT_USE) )
+				{
+					acceleratestage = 1;
+					playerready[i] = true;
+				}
+				if ( p.cmd.buttons&(BT_RELOAD|BT_ZOOM) )
+				{
+					PlaySound("misc/chat");
+					whichtip = 0;
+					tipflash = gametic+25;
+				}
+			}
+			p.oldbuttons = p.buttons;
+		}
 	}
 
 	override void Ticker( void )
@@ -252,7 +288,7 @@ Class SWWMStatScreen : StatusScreen abstract
 		bcnt++;
 		if ( bcnt == 1 ) StartMusic();
 		glarestr = max(glarestr-1,0);
-		checkForAccelerate();
+		checkForAccelerateNew();
 		tipalpha = min(tipalpha+tipalphastate/double(GameTicRate),2.);
 		switch (CurState)
 		{

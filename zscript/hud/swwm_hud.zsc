@@ -743,14 +743,14 @@ Class SWWMStatusBar : BaseStatusBar abstract
 				Screen.DrawText(smallfont2,(level.killed_monsters>=level.total_monsters)?tccompl:tcvalue,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 				if ( killflash && (gametic < killflash) )
 				{
-					double alph = ((killflash-(gametic+FracTic))/25.)**1.5;
+					double alph = max((killflash-(gametic+FracTic))/25.,0.)**1.5;
 					str = String.Format("%d/%d",level.killed_monsters,level.total_monsters);
 					int slashpos = str.IndexOf("/");
 					Screen.DrawText(smallfont2,mhudfontcol[MCR_FLASH],xx-smallfont2.StringWidth(str),yy,str.Left(slashpos),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
 				}
 				if ( tkillflash && (gametic < tkillflash) )
 				{
-					double alph = ((tkillflash-(gametic+FracTic))/25.)**1.5;
+					double alph = max((tkillflash-(gametic+FracTic))/25.,0.)**1.5;
 					str = String.Format("%d",level.total_monsters);
 					Screen.DrawText(smallfont2,mhudfontcol[MCR_FLASH],xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
 				}
@@ -762,14 +762,14 @@ Class SWWMStatusBar : BaseStatusBar abstract
 				Screen.DrawText(smallfont2,(level.found_items>=level.total_items)?tccompl:tcvalue,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 				if ( itemflash && (gametic < itemflash) )
 				{
-					double alph = ((itemflash-(gametic+FracTic))/25.)**1.5;
+					double alph = max((itemflash-(gametic+FracTic))/25.,0.)**1.5;
 					str = String.Format("%d/%d",level.found_items,level.total_items);
 					int slashpos = str.IndexOf("/");
 					Screen.DrawText(smallfont2,mhudfontcol[MCR_FLASH],xx-smallfont2.StringWidth(str),yy,str.Left(slashpos),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
 				}
 				if ( titemflash && (gametic < titemflash) )
 				{
-					double alph = ((titemflash-(gametic+FracTic))/25.)**1.5;
+					double alph = max((titemflash-(gametic+FracTic))/25.,0.)**1.5;
 					str = String.Format("%d",level.total_items);
 					Screen.DrawText(smallfont2,mhudfontcol[MCR_FLASH],xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
 				}
@@ -781,14 +781,14 @@ Class SWWMStatusBar : BaseStatusBar abstract
 				Screen.DrawText(smallfont2,(level.found_secrets>=level.total_secrets)?tccompl:tcvalue,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 				if ( secretflash && (gametic < secretflash) )
 				{
-					double alph = ((secretflash-(gametic+FracTic))/25.)**1.5;
+					double alph = max((secretflash-(gametic+FracTic))/25.,0.)**1.5;
 					str = String.Format("%d/%d",level.found_secrets,level.total_secrets);
 					int slashpos = str.IndexOf("/");
 					Screen.DrawText(smallfont2,mhudfontcol[MCR_FLASH],xx-smallfont2.StringWidth(str),yy,str.Left(slashpos),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
 				}
 				if ( tsecretflash && (gametic < tsecretflash) )
 				{
-					double alph = ((tsecretflash-(gametic+FracTic))/25.)**1.5;
+					double alph = max((tsecretflash-(gametic+FracTic))/25.,0.)**1.5;
 					str = String.Format("%d",level.total_secrets);
 					Screen.DrawText(smallfont2,mhudfontcol[MCR_FLASH],xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
 				}
@@ -836,7 +836,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			{
 				if ( !(k is keyflash[j].got) ) continue;
 				if ( !keyflash[j].flashtime || (gametic >= keyflash[j].flashtime) ) continue;
-				double alph = ((keyflash[j].flashtime-(gametic+FracTic))/25.)**1.5;
+				double alph = max((keyflash[j].flashtime-(gametic+FracTic))/25.,0.)**1.5;
 				Screen.DrawTexture(icon,false,keypos.x-siz.x,keypos.y,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_TopLeft,true,DTA_ColorOverlay,0xFFFFC040,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
 				break;
 			}
