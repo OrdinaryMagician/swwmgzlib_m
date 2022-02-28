@@ -1177,6 +1177,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		xx = int((ss.x-len)/2.);
 		yy = (ss.y-bigfont.GetHeight()*4)/2.;
 		Screen.DrawText(bigfont,Font.CR_RED,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+		if ( demo.restimer > 0 ) return (1.-dimalph);	// don't draw prompts while reviving
 		if ( multiplayer || level.AllowRespawn || sv_singleplayerrespawn || G_SkillPropertyInt(SKILLP_PlayerRespawn) )
 		{
 			if ( sv_norespawn ) return (1.-dimalph);

@@ -85,3 +85,38 @@ Model "SWWMShadow"
 
 	FrameIndex XZW1 A 0 0
 }
+
+// Voodoo Doll
+Model "SWWMVoodooDoll"
+{
+	Path "models"
+	Model 1 "VoodooDoll_d.3d"
+	SurfaceSkin 1 0 "VoodooDoll.png"
+	SurfaceSkin 1 1 "VoodooDollFace.png"
+	Scale 0.0025 0.0025 0.0025
+	AngleOffset -90
+	IGNORETRANSLATION
+
+	// Still
+	FrameIndex XZWZ A 1 1
+	// Pain
+	FrameIndex XZWZ B 1 2
+	FrameIndex XZWZ C 1 3
+	FrameIndex XZWZ D 1 4
+	FrameIndex XZWZ E 1 5
+	FrameIndex XZWZ F 1 6
+	// Death
+	FrameIndex XZWZ G 1 8
+	FrameIndex XZWZ H 1 9
+	FrameIndex XZWZ I 1 10
+	FrameIndex XZWZ J 1 11
+	FrameIndex XZWZ K 1 12
+	FrameIndex XZWZ L 1 13
+	FrameIndex XZWZ M 1 14
+	FrameIndex XZWZ N 1 15
+	FrameIndex XZWZ O 1 16
+	FrameIndex XZWZ P 1 17
+	FrameIndex XZWZ Q 1 18
+	FrameIndex XZWZ R 1 19
+	FrameIndex XZWZ S 1 20
+}

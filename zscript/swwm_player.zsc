@@ -1,13 +1,22 @@
-// TODO Shared player class code
-Class SWWMPlayer : PlayerPawn
+// Shared player class code
+Class SWWMPlayer : PlayerPawn abstract
 {
 	// for weapon bobbing stuff
-	Array<double> bumpvelz, bumppitch;
+	double bumpvelz, bumppitch;
 	double oldangle, oldpitch;
 	double oldlagangle, oldlagpitch, oldlagready;
 	Vector3 oldlagvel;
 	double lagangle, lagpitch, lagready;
 	Vector3 lagvel;
+
+	int lastdamage;
+	transient int lastdamagetic;
+	bool lastground;
+	int lastgroundtic, lastairtic;
+	double lastvelz, prevvelz, landvelz;
+	double ssup;
+	bool sendtoground;
+	int dodgetics;
 
 	enum EUnderType
 	{
@@ -25,6 +34,7 @@ Class SWWMPlayer : PlayerPawn
 		RT_RESPAWN	// destroy the body and respawn
 	};
 	int restype;
+	int restimer;
 	Property ResurrectType : restype;
 
 	int lastunder;
@@ -39,6 +49,301 @@ Class SWWMPlayer : PlayerPawn
 	Vector3 oldencroachedpos;
 
 	transient SWWMItemTracer itrace;
+
+	private int SPlayerFlags;
+
+	FlagDef CanDodge : SPlayerFlags, 0;
+	FlagDef CanAirDodge : SPlayerFlags, 1;
+	FlagDef CanBunnyhop : SPlayerFlags, 2;
+	FlagDef CanLongJump : SPlayerFlags, 3;
+
+	double walkspeed, runspeed;
+	double dodgespeed;
+	double crouchingspeed;
+	double mincrouch;
+	Property MoveSpeed : walkspeed, runspeed;
+	Property DodgeSpeed : dodgespeed;
+	Property CrouchingSpeed : crouchingspeed;
+	Property MinCrouch : mincrouch;
+	bool bDucking;
+
+	enum EInvWipe
+	{
+		WIPE_EPISODE = 1,
+		WIPE_CLUSTER = 2,
+		WIPE_MAP = 4
+	}
+	int invwipe;	// inventory wipe flags for next level
+
+	Default
+	{
+		Radius 16;
+		Height 56;
+		Speed 1;
+		PainChance 255;
+		Health 100;
+		Player.AirCapacity 0;
+		Player.ForwardMove 1., 1.;
+		Player.SideMove 1., 1.;
+		Player.GruntSpeed 30;
+		DamageFactor "Drowning", 0.;
+		SWWMPlayer.MoveSpeed .5, 1.;
+		SWWMPlayer.DodgeSpeed 20;
+		SWWMPlayer.CrouchingSpeed CROUCHSPEED;
+		SWWMPlayer.MinCrouch .5;
+		SWWMPlayer.ResurrectType RT_NONE;
+		+DONTGIB;
+		+NOICEDEATH;
+		+DONTMORPH;
+		+DONTCORPSE;
+	}
+
+	// directional movement without straferunning
+	Vector2 NormalizedMove()
+	{
+		if ( !(player.cmd.forwardmove|player.cmd.sidemove) )
+			return (0,0);
+		Vector2 mvec = (player.cmd.forwardmove,-player.cmd.sidemove/.96);
+		double maxval = max(abs(mvec.x),abs(mvec.y));
+		// sorry, we don't use that here specifically, that's for tweakspeed to handle
+		if ( !(player.cmd.buttons&BT_RUN) ) maxval *= 2.;
+		return mvec.unit()*maxval;
+	}
+	double TweakSpeed()
+	{
+		double fact = (player.cmd.buttons&BT_RUN)?runspeed:walkspeed;
+		for ( Inventory i=Inv; i; i=i.Inv ) fact *= i.GetSpeedFactor();
+		return fact;
+	}
+
+	// attempt to generic-ize this
+
+	virtual void CheatGive_Health( int amount = 0 )
+	{
+		player.health = health = (amount>0)?(health+amount):default.health;
+	}
+
+	virtual void CheatGive_Backpack()
+	{
+		if ( SWWMMAXBACKPACK <= 0 ) return;
+		// resolve class at runtime
+		String bstr = "TradedHammerspaceEmbiggener";
+		Class<Inventory> bclass = bstr;
+		if ( !bclass ) return;
+		GiveInventory(bclass,SWWMMAXBACKPACK,true);
+	}
+
+	virtual void CheatGive_Ammo()
+	{
+		// Max out all ammo
+		for ( int i=0; i<AllActorClasses.Size(); i++ )
+		{
+			let type = (class<Ammo>)(AllActorClasses[i]);
+			if ( !type || type.IsAbstract() || (type.GetParentClass() != 'SWWMAmmo') ) continue;
+			let ammoitem = Ammo(FindInventory(type));
+			if ( !ammoitem )
+			{
+				// Add it first if not found
+				ammoitem = Ammo(Spawn(type));
+				ammoitem.AttachToOwner(self);
+			}
+			// Top up
+			ammoitem.Amount = ammoitem.MaxAmount;
+			// Does it have mag ammo?
+			let sammoitem = SWWMAmmo(ammoitem);
+			if ( !sammoitem || !sammoitem.MagAmmoType ) continue;
+			let magitem = MagAmmo(FindInventory(sammoitem.MagAmmoType));
+			if ( !magitem )
+			{
+				// Add it first if not found (shouldn't happen)
+				magitem = MagAmmo(Spawn(sammoitem.MagAmmoType));
+				magitem.AttachToOwner(self);
+			}
+			// Top up
+			magitem.Amount = magitem.MaxAmount;
+		}
+	}
+
+	virtual void CheatGive_Armor()
+	{
+		// only give armors that have spares associated
+		for ( int i=0; i<AllActorClasses.Size(); i++ )
+		{
+			let type = (Class<SWWMSpareArmor>)(AllActorClasses[i]);
+			if ( !type || type.IsAbstract() || (type == 'SWWMSpareArmor') ) continue;
+			if ( GetReplacement(type) != type ) continue;
+			let def = GetDefaultByType(type);
+			let armo = SWWMArmor(FindInventory(def.giveme));
+			if ( !armo )
+			{
+				armo = SWWMArmor(Spawn(def.giveme));
+				armo.AttachToOwner(self);
+			}
+			armo.Amount = armo.MaxAmount;
+		}
+	}
+
+	virtual void CheatGive_Keys()
+	{
+		// give all valid keys
+		for ( int i=0; i<Key.GetKeyTypeCount(); i++ )
+		{
+			let type = Key.GetKeyType(i);
+			let keyitem = GetDefaultByType(type);
+			if ( !keyitem.special1 ) continue;	// ignored key
+			let item = Inventory(Spawn(type));
+			if ( !item.CallTryPickup(self) ) item.Destroy();
+		}
+	}
+
+	virtual void CheatGive_Weapons()
+	{
+		let savedpending = player.PendingWeapon;
+		for ( int i=0; i<AllActorClasses.Size(); i++ )
+		{
+			let type = (class<Weapon>)(AllActorClasses[i]);
+			if ( !type || (type == "Weapon") ) continue;
+			// Don't give already owned weapons
+			let owned = FindInventory(type);
+			if ( owned && (owned.Amount >= owned.MaxAmount) ) continue;
+			// Don't give replaced weapons unless the replacement was done by Dehacked.
+			let rep = GetReplacement(type);
+			if ( (rep == type) || (rep is "DehackedPickup") )
+			{
+				// Give the weapon only if it is set in a weapon slot.
+				if ( !player.weapons.LocateWeapon(type) ) continue;
+				readonly<Weapon> def = GetDefaultByType(type);
+				if ( !def.bCheatNotWeapon && def.ShouldSpawn() && def.CanPickup(self) )
+					GiveInventory(type,1,true);
+			}
+		}
+		player.PendingWeapon = savedpending;
+	}
+
+	virtual void CheatGive_Artifacts( int amount = 0 )
+	{
+		for ( int i=0; i<AllActorClasses.Size(); i++ )
+		{
+			let type = (class<Inventory>)(AllActorClasses[i]);
+			if ( !type ) continue;
+			let rep = GetReplacement(type);
+			// don't give replaced items
+			if ( rep != type ) continue;
+			// Don't give maxed items
+			let owned = FindInventory(type);
+			if ( owned && (owned.Amount >= owned.MaxAmount) ) continue;
+			let def = GetDefaultByType(type);
+			// must have INVBAR and a valid icon (also can't be a puzzle item)
+			if ( !def.bINVBAR || !def.ShouldSpawn() || !def.Icon.isValid() || (type is 'PuzzleItem') ) continue;
+			GiveInventory(type,(amount<=0)?def.MaxAmount:amount,true);
+		}
+	}
+
+	virtual void CheatGive_PuzzlePieces( int amount = 0 )
+	{
+		for ( int i=0; i<AllActorClasses.Size(); i++ )
+		{
+			let type = (class<PuzzleItem>)(AllActorClasses[i]);
+			if ( !type ) continue;
+			let def = GetDefaultByType(type);
+			if ( !def.Icon.isValid() ) continue;
+			GiveInventory(type,(amount<=0)?def.MaxAmount:amount,true);
+		}
+	}
+
+	override void CheatGive( String name, int amount )
+	{
+		if ( !player.mo || (player.health <= 0) ) return;
+		// interchangeable
+		if ( (name ~== "all") || (name ~== "everything") )
+		{
+			CheatGive_Health();
+			CheatGive_Backpack();
+			CheatGive_Ammo();
+			CheatGive_Armor();
+			CheatGive_Keys();
+			CheatGive_Weapons();
+			CheatGive_Artifacts();
+			CheatGive_PuzzlePieces();
+		}
+		else if ( name ~== "health" ) CheatGive_Health(amount);
+		else if ( name ~== "backpack" ) CheatGive_Backpack();
+		else if ( name ~== "ammo" ) CheatGive_Backpack();
+		else if ( name ~== "armor" ) CheatGive_Armor();
+		else if ( name ~== "keys" ) CheatGive_Keys();
+		else if ( name ~== "weapons" ) CheatGive_Weapons();
+		else if ( name ~== "artifacts" ) CheatGive_Artifacts(amount);
+		else if ( name ~== "puzzlepieces" ) CheatGive_PuzzlePieces(amount);
+		else
+		{
+			Class<Inventory> type = name;
+			if ( !type || type.IsAbstract() )
+			{
+				if ( CheckLocalView() )
+					Console.Printf("'%s' is not a valid inventory item",name);
+				return;
+			}
+			GiveInventory(type,amount,true);
+		}
+	}
+
+	override void ClearInventory()
+	{
+		Super.ClearInventory();
+		// remove some specific "undroppable" items
+		Actor last = self;
+		while ( last.inv )
+		{
+			let i = last.inv;
+			if ( ((i is 'SWWMArmor') && !i.bUNCLEARABLE) || (i.GetClassName() == "HammerspaceEmbiggener") )
+			{
+				i.DepleteOrDestroy();
+				if ( !i.bDestroyed ) last = i;
+			}
+			else last = i;
+		}
+	}
+
+	override void PostBeginPlay()
+	{
+		Super.PostBeginPlay();
+		lastground = true;	// prevent sudden landing sound on map start
+		// swap ourselves for a voodoo doll
+		if ( !player || (player.mo != self) )
+		{
+			let v = Spawn("SWWMVoodooDoll",pos);
+			v.angle = angle;
+			v.player = player;
+			Destroy();
+		}
+	}
+
+	void CheckItemUsePickup()
+	{
+		if ( player.usedown ) return;
+		if ( !itrace ) itrace = new("SWWMItemTracer");
+		Vector3 x, y, z, dir;
+		[x, y, z] = swwm_CoordUtil.GetAxes(pitch,angle,roll);
+		Vector3 origin = Vec2OffsetZ(0,0,player.viewz);
+		Sector os = level.PointInSector(origin.xy);
+		int rings = 1;
+		Array<Actor> ignoreme;
+		ignoreme.Clear();
+		for ( double i=0; i<.2; i+=.02 )
+		{
+			for ( int j=0; j<360; j+=(360/rings) )
+			{
+				dir = (x+y*cos(j)*i+z*sin(j)*i).unit();
+				itrace.Trace(origin,os,dir,UseRange,0);
+				if ( itrace.Results.HitType != TRACE_HitActor ) continue;
+				if ( ignoreme.Find(itrace.Results.HitActor) < ignoreme.Size() ) continue;
+				player.usedown = true;	// we found an item, ignore further uses
+				if ( itrace.Results.HitActor.Used(self) ) return;
+				ignoreme.Push(itrace.Results.HitActor);
+			}
+			rings += 2;
+		}
+	}
 
 	void CheckUnderwaterAmb( bool restore = false )
 	{
@@ -145,12 +450,517 @@ Class SWWMPlayer : PlayerPawn
 		}
 	}
 
+	override Vector2 BobWeapon( double ticfrac )
+	{
+		// non-mod weapons bob normally
+		if ( !(player.ReadyWeapon is 'SWWMWeapon') )
+			return Super.BobWeapon(ticfrac);
+		bool oldbob = !!(player.WeaponState&WF_WEAPONBOBBING);
+		player.WeaponState |= WF_WEAPONBOBBING;	// always bob
+		Vector2 cur = Super.BobWeapon(ticfrac);
+		if ( !oldbob ) player.WeaponState &= ~WF_WEAPONBOBBING;
+		double fangle = oldangle*(1.-ticfrac)+angle*ticfrac;
+		double fpitch = (oldpitch*(1.-ticfrac)+pitch*ticfrac);
+		double flagangle = (oldlagangle*(1.-ticfrac)+lagangle*ticfrac);
+		double flagpitch = (oldlagpitch*(1.-ticfrac)+lagpitch*ticfrac);
+		double diffang = fangle-flagangle;
+		double diffpitch = fpitch-flagpitch;
+		if ( abs(diffang) > 1. )
+		{
+			int sgn = (diffang>0)?1:-1;
+			diffang = abs(diffang)**.7*sgn;
+		}
+		if ( abs(diffpitch) > 1. )
+		{
+			int sgn = (diffpitch>0)?1:-1;
+			diffpitch = abs(diffpitch)**.7*sgn;
+		}
+		Vector3 flagvel = oldlagvel*(1.-ticfrac)+lagvel*ticfrac;
+		double diffx = flagvel dot (cos(flagangle+90),sin(flagangle+90),0);
+		double diffy = flagvel dot (0,0,1);
+		if ( abs(diffx) > 1. )
+		{
+			int sgn = (diffx>0)?1:-1;
+			diffx = abs(diffx)**.5*sgn;
+		}
+		if ( abs(diffy) > 1. )
+		{
+			int sgn = (diffy>0)?1:-1;
+			diffy = abs(diffy)**.5*sgn;
+		}
+		return cur*(oldlagready*(1.-ticfrac)+lagready*ticfrac);
+	}
+
+	override void PlayerThink()
+	{
+		oldangle = angle+viewangle;
+		oldpitch = pitch+viewpitch;
+		// try to "use" the item closest to the crosshair
+		if ( player && (player.mo == self) && (player.playerstate != PST_DEAD) && (player.cmd.buttons&BT_USE) )
+			CheckItemUsePickup();
+		Super.PlayerThink();
+		oldlagangle = lagangle;
+		oldlagpitch = lagpitch;
+		lagangle = lagangle*.8+(angle+viewangle)*.2;
+		lagpitch = lagpitch*.8+(pitch+viewpitch)*.2;
+		if ( !player || (player.mo != self) ) return;
+		// faster falloff for bhop
+		if ( bCANBUNNYHOP && (player.playerstate != PST_DEAD) && (player.jumptics != 0) )
+		{
+			player.jumptics -= 5;
+			if ( player.onground && (player.jumptics < -18) )
+				player.jumptics = 0;
+		}
+	}
+
 	override void Tick()
 	{
 		Super.Tick();
 		if ( gamestate != GS_LEVEL ) return;
-		if ( !player || (player.mo != self) ) return;
+		if ( (gamestate != GS_LEVEL) || !player || (player.mo != self) ) return;
+		oldlagvel = lagvel;
+		oldlagready = lagready;
+		if ( player.weaponstate&WF_WEAPONBOBBING ) lagready = lagready*.9+.1;
+		else lagready = lagready*.4;
+		lagvel = lagvel*.8+vel*.2;
 		CheckUnderwaterAmb();
+		if ( player.onground && !bNoGravity && !lastground && (waterlevel < 2) )
+		{
+			// bump down weapon
+			bumpvelz -= lastvelz;
+			bumppitch += min(-lastvelz/10.,20);
+			if ( lastvelz < -10 ) PlayLanded();
+			if ( lastvelz < -1 ) PlayFootstep(0,1,clamp(-lastvelz*.05,0.,1.),true);
+			// bounce off slopes
+			if ( pos.z <= floorz )
+			{
+				F3DFloor ff;
+				for ( int i=0; i<FloorSector.Get3DFloorCount(); i++ )
+				{
+					if ( !(FloorSector.Get3DFloor(i).flags&F3DFloor.FF_SOLID) ) continue;
+					if ( !(FloorSector.Get3DFloor(i).top.ZAtPoint(pos.xy) ~== floorz) ) continue;
+					ff = FloorSector.Get3DFloor(i);
+					break;
+				}
+				Vector3 fnorm;
+				if ( ff ) fnorm = -ff.top.Normal;
+				else fnorm = FloorSector.floorplane.Normal;
+				double maxsteep = clamp(abs(lastvelz)*.1,0.,.9);
+				if ( fnorm.z < maxsteep ) vel = .8*fnorm*(-lastvelz)*(1.-.8*fnorm.z);
+			}
+		}
+		// are we standing on something?
+		CheckEncroachment();
+		// for weapon lowering
+		if ( abs(bumpvelz) > double.epsilon )
+		{
+			lagvel.z += bumpvelz*.2;
+			bumpvelz *= .8;
+		}
+		if ( abs(bumppitch) > double.epsilon )
+		{
+			ViewPitch += bumppitch*.5;
+			bumppitch *= .8;
+		}
+		// move tilting
+		double bobangle = level.maptime/(20*TICRATE/35.)*360.;
+		ViewAngle += cos(bobangle/2.)*(player.bob*ViewBob)/90.;
+		ViewPitch += cos(bobangle)*(player.bob*ViewBob)/90.;
+		ViewRoll += sin(bobangle/2.)*(player.bob*ViewBob)/90.;
+		// stabilize view angles
+		A_SetViewAngle(ViewAngle*.8,SPF_INTERPOLATE);
+		A_SetViewPitch(ViewPitch*.8,SPF_INTERPOLATE);
+		A_SetViewRoll(ViewRoll*.8,SPF_INTERPOLATE);
+		if ( player.onground && !lastground ) landvelz = lastvelz;
+		else if ( !player.onground && lastground ) landvelz = 0;
+		else if ( player.onground && lastground ) landvelz *= .9;
+		lastground = player.onground;
+		lastvelz = prevvelz;
+		prevvelz = vel.z;
+	}
+
+	override int DamageMobj( Actor inflictor, Actor source, int damage, Name mod, int flags, double angle )
+	{
+		// end level hax
+		if ( (damage > 0) && !inflictor && !source && (FloorSector.flags&Sector.SECF_ENDLEVEL) )
+		{
+			damage = max(50,health-100);
+			flags |= DMG_FORCED|DMG_NO_ARMOR;
+			mod = 'EndLevel';
+		}
+		int realdmg = Super.DamageMobj(inflictor,source,damage,mod,flags,angle);
+		lastdamage = max(lastdamage,realdmg);
+		lastdamagetic = max(lastdamagetic,gametic+clamp(lastdamage/2,10,40));
+		return realdmg;
+	}
+
+	override void CalcHeight()
+	{
+		Super.CalcHeight();
+		// handle smooth step down (hacky but looks ok)
+		player.viewz += ssup;
+		ssup = max(0,(ssup*.7)-.25);
+	}
+
+	override void CheckMoveUpDown()
+	{
+		if ( (waterlevel < 2) && bFly && !bFlyCheat && !(player.cheats&CF_NOCLIP2) )
+		{
+			double fs = TweakSpeed();
+			Vector3 x, y, z;
+			[x, y, z] = swwm_CoordUtil.GetAxes(pitch,angle,roll);
+			Vector3 accel;
+			if ( (player.cmd.upmove == -32768) || sendtoground )
+			{
+				sendtoground = true;
+				player.centering = true;
+				accel = (0,0,-4096);
+			}
+			else accel = z*player.cmd.upmove*8.;
+			accel *= fs/128.;
+			vel = vel+accel/GameTicRate;
+			if ( sendtoground ) vel.xy *= .6;
+			if ( (pos.z <= floorz) || bOnMobj ) sendtoground = false;
+			if ( vel.length() > 50. )
+				vel = vel.unit()*50.;
+			return;
+		}
+		else sendtoground = false;
+		Super.CheckMoveUpDown();
+	}
+
+	override void MovePlayer()
+	{
+		if ( !player || (player.mo != self) || (player.cheats&(CF_FROZEN|CF_TOTALLYFROZEN)) )
+		{
+			Super.MovePlayer();
+			return;
+		}
+		if ( player.turnticks )
+		{
+			player.turnticks--;
+			angle = (180./TURN180_TICKS);
+		}
+		else angle += player.cmd.yaw*(360./65536.);
+		if ( (waterlevel < 2) && bFly && !bFlyCheat && !(player.cheats&CF_NOCLIP2) )
+		{
+			player.onground = false;
+			if ( player.centering ) pitch = 0.;
+			double fs = TweakSpeed();
+			double jcmove = 0.;
+			if ( player.cmd.buttons&BT_JUMP ) jcmove += 4096.;
+			if ( player.cmd.buttons&BT_CROUCH ) jcmove -= 4096.;
+			if ( CanCrouch() && (player.crouchfactor != -1) ) fs *= player.crouchfactor;
+			Vector3 x, y, z;
+			[x, y, z] = swwm_CoordUtil.GetAxes(pitch,angle,roll);
+			Vector2 nmove = NormalizedMove();
+			Vector3 accel = x*nmove.x-y*nmove.y+z*jcmove;
+			accel *= fs/320.;
+			double spd = vel.length();
+			if ( spd > 40. ) vel = (vel+accel/GameTicRate).unit()*spd;
+			else vel = vel+accel/GameTicRate;
+			vel *= .97;
+			player.vel = (1,1)*vel.length();
+			player.jumptics = -2;
+			if ( !(player.cheats & CF_PREDICTING) && (player.cmd.forwardmove|player.cmd.sidemove) )
+				PlayRunning();
+			if ( player.cheats&CF_REVERTPLEASE )
+			{
+				player.cheats &= ~CF_REVERTPLEASE;
+				player.camera = player.mo;
+			}
+		}
+		else
+		{
+			player.onground = (pos.z<=floorz)||bOnMobj||bMBFBouncer||(player.cheats&CF_NOCLIP2);
+			if ( player.cmd.forwardmove|player.cmd.sidemove )
+			{
+				double bobfactor;
+				double friction, movefactor;
+				[friction, movefactor] = GetFriction();
+				bobfactor = (friction<ORIG_FRICTION)?movefactor:ORIG_FRICTION_FACTOR;
+				if ( !player.onground && !bNoGravity && !waterlevel )
+				{
+					// no air control here, done afterwards
+					movefactor *= 0.;
+					bobfactor *= 0.;
+				}
+				// use normalized movement vector, no SR40 (not that we need it with how fast we can run)
+				Vector2 nmove = NormalizedMove();
+				nmove *= TweakSpeed();
+				nmove *= Speed/256.;
+				// When crouching, speed and bobbing have to be reduced
+				if ( CanCrouch() && (player.crouchfactor != 1) )
+				{
+					nmove *= player.crouchfactor;
+					bobfactor *= player.crouchfactor;
+				}
+				nmove *= movefactor;
+				if ( (waterlevel || bNOGRAVITY) && !player.GetClassicFlight() )
+				{
+					double zpush = nmove.x*sin(pitch);
+					if ( waterlevel && (waterlevel < 2) && (zpush < 0) ) zpush = 0;
+					vel.z -= zpush;
+					vel.xy += RotateVector(nmove,angle)*cos(pitch);
+					player.vel += RotateVector(nmove,angle)*bobfactor*cos(pitch)*16.;
+				}
+				else
+				{	vel.xy += RotateVector(nmove,angle);
+					player.vel += RotateVector(nmove,angle)*bobfactor*16.;
+				}
+				// override air control because we REALLY need the extra mobility
+				if ( !player.onground && !bNOGRAVITY && !waterlevel )
+				{
+					nmove = NormalizedMove();
+					double fs = TweakSpeed();
+					if ( CanCrouch() && (player.crouchfactor != -1) ) fs *= player.crouchfactor;
+					Vector3 accel = (RotateVector(nmove,angle),0);
+					accel *= fs/480.;
+					double spd = vel.length();
+					double maxspd = fs*15.;
+					if ( spd > maxspd ) vel = (vel+accel/GameTicRate).unit()*spd;
+					else vel = vel+accel/GameTicRate;
+				}
+				if ( !(player.cheats&CF_PREDICTING) && (nmove.length() > 0.) )
+					PlayRunning();
+				if ( player.cheats&CF_REVERTPLEASE )
+				{
+					player.cheats &= ~CF_REVERTPLEASE;
+					player.camera = player.mo;
+				}
+			}
+			else if ( player.onground ) vel *= .95; // quickly decelerate if we're not holding movement keys
+			// recenter roll
+			if ( abs(roll) > double.epsilon ) A_SetRoll(roll+clamp(deltaangle(roll,0),-3.,3.),SPF_INTERPOLATE);
+		}
+		// anchor to ground when going down steps
+		if ( lastground && !player.onground && !bFly && !bFlyCheat && (waterlevel < 2) && (abs(pos.z-floorz) <= maxdropoffheight) && (player.jumptics == 0) && (vel.z < 0) )
+		{
+			// test for gap crossing (i.e: climbing up platforms with holes between them)
+			Vector3 storepos = pos;
+			double storefloorz = floorz;
+			bool crossgap = false;
+			for ( int i=1; i<=4; i++ )	// test up to 4 steps ahead, should be enough for most cases
+			{
+				SetOrigin(Vec3Offset(vel.x,vel.y,vel.z),true);
+				if ( floorz < storepos.z ) continue;
+				crossgap = true;
+				break;
+			}
+			SetOrigin(storepos,true);
+			floorz = storefloorz;
+			if ( !crossgap )
+			{
+				ssup = max(0,(pos.z-floorz));
+				SetZ(floorz);
+				lastground = player.onground = true;
+			}
+		}
+		if ( player.onground ) lastgroundtic = level.maptime;
+		else lastairtic = level.maptime;
+		if ( !(player.cheats & CF_PREDICTING) && !(player.cmd.forwardmove|player.cmd.sidemove) )
+			PlayIdle();
+		if ( --dodgetics > 0 ) return;
+		if ( bCANDODGE && (player.cmd.buttons&BT_SPEED) && !(player.oldbuttons&BT_SPEED) )
+			CheckDodge();
+	}
+
+	virtual void CheckDodge()
+	{
+		Vector3 dodge = (0,0,0), x, y, z;
+		[x, y, z] = swwm_CoordUtil.GetAxes(pitch,angle,roll);
+		int fm = player.cmd.forwardmove;
+		int sm = player.cmd.sidemove;
+		if ( !(fm|sm) ) fm = 1;
+		if ( fm ) dodge += (fm>0)?X:-X;
+		if ( sm ) dodge += (sm>0)?Y:-Y;
+		if ( dodge == (0,0,0) )
+		{
+			if ( !player.onground || bNOGRAVITY || (waterlevel > 2) || (player.cheats&CF_NOCLIP2) ) dodge = X;
+			else dodge.xy = RotateVector((1,0),angle);
+		}
+		if ( player.onground && !bNOGRAVITY && (waterlevel < 2) && !(player.cheats&CF_NOCLIP2) )
+		{
+			dodge.z = max(.1/GetGravity(),dodge.z);
+			if ( !bCANAIRDODGE || !level.IsJumpingAllowed() ) dodge.z = min(dodgespeed*.01,dodge.z);
+		}
+		else if ( (waterlevel < 2) && !bCANAIRDODGE ) return;
+		if ( (gamestate != GS_LEVEL) || (dodge.length() <= 0.) ) return;
+		bOnMobj = false;
+		if ( player.cheats & CF_REVERTPLEASE )
+		{
+			player.cheats &= ~CF_REVERTPLEASE;
+			player.camera = player.mo;
+		}
+		vel += dodge*dodgespeed;
+		vel.z += clamp(-vel.z*.4,0.,30.);
+		player.jumptics = -1;
+		PlayDodge(dodge);
+		dodgetics = 15;
+	}
+
+	override void CheckJump()
+	{
+		if ( !(player.cmd.buttons&BT_JUMP) || (gamestate != GS_LEVEL) ) return;
+		if ( player.crouchoffset ) player.crouching = 1;
+		else if ( waterlevel >= 2 ) vel.z = 4*Speed;
+		else if ( (waterlevel < 2) && bFly && !bFlyCheat && !(player.cheats&CF_NOCLIP2) ) return;
+		else if ( bNoGravity ) vel.z = 3;
+		else if ( level.IsJumpingAllowed() && player.onground && (player.jumptics == 0) )
+		{
+			double jumpvelz = JumpZ;
+			double jumpfac = 0;
+			for ( let p=Inv; p; p=p.Inv )
+			{
+				let pp = PowerHighJump(p);
+				if ( pp )
+				{
+					double f = pp.Strength;
+					if ( f > jumpfac ) jumpfac = f;
+				}
+			}
+			if ( jumpfac > 0 ) jumpvelz *= jumpfac;
+			bOnMobj = false;
+			player.jumpTics = -1;
+			if ( !(player.cheats&CF_PREDICTING) )
+				PlayJumping();
+			bumppitch += clamp((vel.length()-10)/5.,0.,20.);
+			if ( bCANBUNNYHOP && (player.cmd.buttons&BT_RUN) && (level.maptime < (lastairtic+10)) )
+			{
+				// bhop, z vel relative to vel size
+				if ( vel.z < 25. )	// don't ramp up too hard
+					vel.z += jumpvelz*(1.2+vel.length()*.01);
+				// accelerate
+				vel.xy += (RotateVector(NormalizedMove(),angle)/2400.)*(1.+vel.length()*.025)*TweakSpeed();
+			}
+			else
+			{
+				if ( vel.z < 10. )	// don't ramp up too hard
+					vel.z += jumpvelz*((player.cmd.buttons&BT_RUN)?1.2:1.);
+				// long jump if running
+				if ( bCANLONGJUMP && (player.cmd.buttons&BT_RUN) && !(player.oldbuttons&BT_JUMP) )
+					vel.xy += (RotateVector(NormalizedMove(),angle)/1200.)*TweakSpeed();
+			}
+		}
+	}
+
+	override void DeathThink()
+	{
+		player.Uncrouch();
+		TickPSprites();
+		player.onground = (pos.Z<=floorz);
+		if ( restimer > 0 )
+		{
+			if ( --restimer == 0 )
+			{
+				if ( restype == RT_REVIVE ) DoRevive();
+				else DoRespawn();
+			}
+			return;
+		}
+		// ded
+		player.deltaviewheight = 0;
+		if ( player.viewheight > 6 ) player.viewheight -= 3;
+		if ( player.viewheight < 6 ) player.viewheight = 6;
+		// center pitch
+		double dpitch = clamp(deltaangle(pitch,0),-6,6);
+		if ( abs(dpitch) < 3. ) pitch = 0.;
+		else A_SetPitch(pitch+dpitch,SPF_INTERPOLATE);
+		// add roll
+		double droll = clamp(deltaangle(roll,50)*.5,-5,5);
+		if ( abs(droll) < 2. ) roll = 50.;
+		else A_SetRoll(roll+droll,SPF_INTERPOLATE);
+		player.mo.CalcHeight();
+		if ( player.damagecount ) player.damagecount--;
+		if ( player.poisoncount ) player.poisoncount--;
+		// remain solid if we can revive
+		if ( restype == RT_REVIVE ) bSolid = true;
+		if ( player.viewheight <= 6 )
+		{
+			deadtimer++;
+			if ( (deadtimer == 60) && (player == players[consoleplayer]) )
+				A_StartSound("misc/youdied",CHAN_VOICE,CHANF_OVERLAP|CHANF_UI);
+			if ( multiplayer || level.AllowRespawn || sv_singleplayerrespawn || G_SkillPropertyInt(SKILLP_PlayerRespawn) )
+			{
+				// standard behaviour, respawn normally
+				if ( (((player.cmd.buttons&BT_USE) || ((deathmatch || alwaysapplydmflags) && sv_forcerespawn)) && !sv_norespawn)
+					&& ((Level.maptime >= player.respawn_time) || ((player.cmd.buttons&BT_USE) && !player.Bot)) )
+				{
+					player.cls = null;
+					player.playerstate = PST_REBORN;
+					if ( special1 > 2 ) special1 = 0;
+				}
+				return;
+			}
+			if ( !(player.cmd.buttons&BT_USE) || (deadtimer < 120) )
+				return;
+			switch ( restype )
+			{
+			case RT_NONE:
+				// reload save
+				player.cls = null;
+				player.playerstate = PST_ENTER;
+				if ( special1 > 2 ) special1 = 0;
+				break;
+			case RT_REVIVE:
+				restimer = GetRespawnTimer();
+				if ( restimer == 0 ) DoRevive();
+				break;
+			case RT_RESPAWN:
+				restimer = GetRespawnTimer();
+				if ( restimer == 0 ) DoRespawn();
+				break;
+			}
+			return;
+		}
+		deadtimer = 0;
+	}
+
+	virtual int GetRespawnTimer()
+	{
+		return 0;
+	}
+
+	virtual void PreRespawn()
+	{
+	}
+
+	virtual void PostRespawn()
+	{
+	}
+
+	void DoRevive()
+	{
+		player.Resurrect();
+		player.damagecount = 0;
+		player.bonuscount = 0;
+		player.poisoncount = 0;
+		PlayRevive();
+		if ( special1 > 2 ) special1 = 0;
+	}
+
+	void DoRespawn()
+	{
+		PreRespawn();
+		DoRevive();
+		roll = 0;
+		Vector3 safepos;
+		double safeangle;
+		[safepos, safeangle] = level.PickPlayerStart(PlayerNumber());
+		Teleport(safepos,safeangle,TELF_DESTFOG);
+		PostRespawn();
+	}
+
+	override void RemoveInventory( Inventory item )
+	{
+		// stop any looping sounds our current weapon had
+		if ( (item is 'SWWMWeapon') && player && (SWWMWeapon(item) == player.ReadyWeapon) )
+		{
+			A_StopSound(CHAN_WEAPONEXTRA);
+			A_StopSound(CHAN_WEAPONEXTRA2);
+			A_StopSound(CHAN_WEAPONEXTRA3);
+		}
+		Super.RemoveInventory(item);
 	}
 
 	override void AddInventory( Inventory item )
@@ -171,6 +981,321 @@ Class SWWMPlayer : PlayerPawn
 		return true;
 	}
 
+	virtual Actor CheckEncroachment()
+	{
+		bool dummy;
+		Actor encroached;
+		[dummy, encroached] = TestMobjZ();
+		// add special check so corpses don't get stuck on top of monsters and players
+		if ( encroached && encroached.bSOLID && (bSOLID || encroached.bACTLIKEBRIDGE) )
+		{
+			// try to follow movement (this method is awkward but works with monsters)
+			if ( encroached == oldencroached )
+			{
+				Vector3 oldp = pos;
+				Vector3 newp = level.Vec3Offset(pos,level.Vec3Diff(oldencroachedpos,encroached.pos));
+				if ( level.IsPointInLevel(newp) )
+				{
+					SetOrigin(newp,true);
+					if ( !TestMobjLocation() ) SetOrigin(oldp,true);
+				}
+			}
+			oldencroached = encroached;
+			oldencroachedpos = encroached.pos;
+		}
+		else
+		{
+			// launch in movement direction (useful for moving platforms)
+			// make sure we're not getting launched because an enemy just died under our feet, because that can cause some issues
+			if ( oldencroached && (lastvelz >= -25) && (!oldencroached.bISMONSTER || (oldencroached.Health > 0)) ) vel += oldencroached.vel+level.Vec3Diff(oldencroachedpos,oldencroached.pos);
+			oldencroached = null;
+		}
+		return encroached;
+	}
+
+	virtual void PlayFootstep( double yofs, bool run = false, double vol = .3, bool nosplash = false )
+	{
+		if ( run )
+		{
+			if ( !nosplash )
+			{
+				let b = Spawn("InvisibleSplasher",level.Vec3Offset(pos,(RotateVector((0,yofs*.25*radius),angle),0)));
+				b.A_CheckTerrain();
+			}
+			vel.xy += (RotateVector(NormalizedMove(),angle)/3600.)*TweakSpeed();
+			return;
+		}
+		if ( !nosplash )
+		{
+			let b = Spawn("SmolInvisibleSplasher",level.Vec3Offset(pos,(RotateVector((0,yofs*.25*radius),angle),0)));
+			b.A_CheckTerrain();
+		}
+		vel.xy += (RotateVector(NormalizedMove(),angle)/6400.)*TweakSpeed();
+	}
+
+	bool FastCheck()
+	{
+		if ( !player || (player.mo != self) ) return false;
+		if ( player.cmd.buttons&BT_RUN ) return true;	// sprint
+		return false;	// walk
+	}
+	State A_FastJump( StateLabel walk = null, StateLabel run = null )
+	{
+		int fc = FastCheck();
+		if ( fc && run ) return ResolveState(run);
+		if ( !fc && walk ) return ResolveState(walk);
+		return ResolveState(null);
+	}
+
+	// Imagine having to duplicate two functions only to change a couple values in both
+	// I sure love constants
+	override void CrouchMove( int direction )
+	{
+		double defaultheight = FullHeight;
+		double savedheight = Height;
+		double crouchspeed = clamp(direction,-1,1)*CrouchingSpeed;
+		double oldheight = player.viewheight;
+		player.crouchdir = clamp(direction,-1,1);
+		player.crouchfactor += crouchspeed;
+		// check whether the move is ok
+		Height = 56;
+		if ( !TryMove(pos.xy,false) )
+		{
+			Height = savedheight;
+			if ( direction > 0 )
+			{
+				// doesn't fit
+				player.crouchfactor -= crouchspeed;
+				player.crouchdir = -1;	// force crouch
+				return;
+			}
+		}
+		Height = savedheight;
+		double rmin = mincrouch;
+		if ( direction == -2 ) rmin = 56./FullHeight;
+		player.crouchfactor = clamp(player.crouchfactor,rmin,1.);
+		player.viewheight = ViewHeight*player.crouchfactor;
+		player.crouchviewdelta = player.viewheight-ViewHeight;
+		// Check for eyes going above/below fake floor due to crouching motion.
+		CheckFakeFloorTriggers(pos.z+oldheight,true);
+	}
+	override void CheckCrouch( bool totallyfrozen )
+	{
+		// crouch to swim/float down
+		if ( !totallyfrozen && (player.cmd.buttons&BT_CROUCH) )
+		{
+			if ( waterlevel >= 2 ) vel.z = -4*Speed;
+			else if ( bNOGRAVITY ) vel.z = -3;
+		}
+		bDucking = SpecialCrouch();
+		bool wascrouching = !!(player.cmd.buttons&BT_CROUCH);
+		if ( (CanCrouch() && (player.health > 0) && level.IsCrouchingAllowed()) )
+		{
+			if ( !totallyfrozen )
+			{
+				int crouchdir = player.crouching;
+				if ( !crouchdir ) crouchdir = (player.cmd.buttons&BT_CROUCH)?-1:1;
+				else if ( player.cmd.buttons&BT_CROUCH ) player.crouching = 0;
+				if ( (crouchdir == -1) && (player.crouchfactor > mincrouch) )
+					CrouchMove(-1);
+				else if ( bDucking )
+				{
+					if ( player.crouchfactor > (56./FullHeight) )
+						CrouchMove(-2);
+					else if ( (crouchdir == 1) && (player.crouchfactor < (56./FullHeight)) )
+						CrouchMove(1);
+				}
+				else if ( (crouchdir == 1) && (player.crouchfactor < 1) && (pos.z+height < ceilingz) )
+					CrouchMove(1);
+			}
+		}
+		else if ( !totallyfrozen && bDucking )
+		{
+			if ( player.crouchfactor > (56./FullHeight) )
+				CrouchMove(-2);
+		}
+		else if ( player.crouchfactor < 1 ) CrouchMove(1);
+		else player.Uncrouch();
+		player.crouchoffset = -(ViewHeight)*(1-player.crouchfactor);
+		// we need the crouch button state to be preserved for other functions
+		if ( wascrouching ) player.cmd.buttons |= BT_CROUCH;
+	}
+
+	// "auto duck" for players taller than 56 units
+	bool SpecialCrouch()
+	{
+		if ( (FullHeight <= 56) || (player.Health <= 0) ) return false;
+		let oldh = Height;
+		bool duck = false;
+		FCheckPosition tm;
+		for ( int i=0; i<360; i+=45 )
+		{
+			Height = FullHeight;
+			if ( !CheckMove(pos.xy+RotateVector((4,0),i),false,tm) )
+			{
+				if ( (tm.ceilingz-tm.floorz) >= FullHeight )
+					continue;
+				Height = 56;
+				if ( !CheckMove(pos.xy+RotateVector((4,0),i),false) )
+					continue;
+				duck = true;
+				break;
+			}
+		}
+		Height = oldh;
+		return duck;
+	}
+
+	void A_SWWMPain()
+	{
+		if ( lastdamage > 75 )
+		{
+			A_QuakeEx(4,4,4,9,0,8,"",QF_RELATIVE|QF_SCALEDOWN);
+			A_StartSound("*pain25",CHAN_VOICE);
+			lastbump *= 1.04;
+		}
+		else if ( lastdamage > 50 )
+		{
+			A_QuakeEx(3,3,3,7,0,8,"",QF_RELATIVE|QF_SCALEDOWN);
+			A_StartSound("*pain50",CHAN_VOICE);
+			lastbump *= 1.03;
+		}
+		else if ( lastdamage > 25 )
+		{
+			A_QuakeEx(2,2,2,5,0,8,"",QF_RELATIVE|QF_SCALEDOWN);
+			A_StartSound("*pain75",CHAN_VOICE);
+			lastbump *= 1.02;
+		}
+		else if ( lastdamage > 0 )
+		{
+			A_QuakeEx(1,1,1,3,0,8,"",QF_RELATIVE|QF_SCALEDOWN);
+			A_StartSound("*pain100",CHAN_VOICE);
+			lastbump *= 1.01;
+		}
+		lastdamage = 0;
+	}
+	void A_SWWMScream()
+	{
+		Sound snd = "*death";
+		if ( special1 < 10 )
+			snd = "*wimpydeath";
+		if ( health < -50 )
+			snd = "*xdeath";
+		A_StartSound(snd,CHAN_VOICE);
+	}
+
+	override void PreTravelled()
+	{
+		// disable death exits for players that can revive
+		if ( player && (player.playerstate == PST_DEAD) && (restype != RT_NONE) )
+		{
+			player.Resurrect();
+			player.damagecount = 0;
+			player.bonuscount = 0;
+			player.poisoncount = 0;
+			roll = 0;
+			if ( special1 > 2 ) special1 = 0;
+		}
+		// inventory wipes
+		if ( invwipe && (player.playerstate != PST_DEAD) )
+		{
+			let rf = CVar.FindCVar(SWWMMODPREFIX.."_ps_fullreset").GetInt();
+			let ra = CVar.FindCVar(SWWMMODPREFIX.."_ps_resetammo").GetInt();
+			let ri = CVar.FindCVar(SWWMMODPREFIX.."_ps_resetitems").GetInt();
+			let rh = CVar.FindCVar(SWWMMODPREFIX.."_ps_resethealth").GetInt();
+			bool wiped = false;
+			bool resetammo = false;
+			bool resetitems = false;
+			bool resethealth = false;
+			if ( invwipe&WIPE_EPISODE )
+			{
+				SWWMUtility.WipeInventory(self,swwm_resetscore);
+				wiped = true;
+			}
+			if ( invwipe&WIPE_CLUSTER )
+			{
+				if ( (rf == 2) && !wiped )
+				{
+					SWWMUtility.WipeInventory(self,swwm_resetscore);
+					wiped = true;
+				}
+				if ( (ra == 2) && !wiped )
+				{
+					SWWMUtility.ResetAmmo(self);
+					resetammo = true;
+				}
+				if ( (ri == 2) && !wiped )
+				{
+					SWWMUtility.ResetItems(self);
+					resetitems = true;
+				}
+				if ( (rh == 2) && !wiped )
+				{
+					SWWMUtility.ResetHealth(self);
+					resethealth = true;
+				}
+			}
+			if ( invwipe&WIPE_MAP )
+			{
+				if ( (rf == 1) && !wiped )
+				{
+					SWWMUtility.WipeInventory(self,swwm_resetscore);
+					wiped = true;
+				}
+				if ( (ra == 1) && !wiped && !resetammo )
+					SWWMUtility.ResetAmmo(self);
+				if ( (ri == 1) && !wiped && !resetitems )
+					SWWMUtility.ResetItems(self);
+				if ( (rh == 1) && !wiped && !resethealth )
+					SWWMUtility.ResetHealth(self);
+			}
+		}
+		invwipe = 0;
+	}
+	override void Travelled()
+	{
+		// prevent sudden stomping if we were previously falling
+		lastvelz = vel.z;
+		// re-attach shadow
+		if ( CVar.FindCVar(SWWMMODPREFIX.."_shadows").GetInt() <= 0 ) return;
+		let ti = ThinkerIterator.Create("SWWMShadow");
+		Actor a;
+		while ( a = Actor(ti.Next()) )
+		{
+			if ( a.target == self )
+				return;	// shadow already attached
+		}
+		SWWMShadow.Track(self);
+		ti.Destroy();
+	}
+
+	override void PostTeleport( Vector3 destpos, double destangle, int flags )
+	{
+		// reset all smooth bob variables if angles/velocity aren't carried over
+		if ( !(flags&TELF_KEEPORIENTATION) )
+		{
+			oldlagangle = lagangle = oldangle = angle+viewangle;
+			oldlagpitch = lagpitch = oldpitch = pitch+viewpitch;
+		}
+		if ( !(flags&TELF_KEEPVELOCITY) )
+		{
+			oldlagvel = lagvel = vel;
+			lastvelz = vel.z;
+		}
+	}
+
+	virtual void PlayJumping()
+	{
+	}
+
+	virtual void PlayDodge( Vector3 dir )
+	{
+	}
+
+	virtual void PlayLanded()
+	{
+	}
+
 	virtual void PlayFire()
 	{
 	}
@@ -185,5 +1310,53 @@ Class SWWMPlayer : PlayerPawn
 
 	virtual void PlayCheckGun()
 	{
+	}
+
+	virtual void PlayRevive()
+	{
+	}
+}
+
+Class SWWMVoodooDoll : PlayerPawn
+{
+	override String GetObituary( Actor victim, Actor inflictor, Name mod, bool playerattack )
+	{
+		// as simple as it gets
+		return "$OB_VOODOO";
+	}
+	Default
+	{
+		Tag "$FN_VOODOO";
+		Speed 1;
+		Health 100;
+		Radius 16;
+		Height 56;
+		Mass 100;
+		PainChance 255;
+		+NOBLOOD;
+		+DONTGIB;
+		+NOICEDEATH;
+		+DONTCORPSE;
+	}
+	States
+	{
+	Spawn:
+		XZWZ A -1;
+		Loop;
+	Pain:
+		XZWZ A 1;
+		XZWZ B 2 A_StartSound("voodoodoll/hit",CHAN_BODY,CHANF_OVERLAP);
+		XZWZ CDEF 2;
+		Goto Spawn;
+	Death:
+		XZWZ A 2
+		{
+			A_StartSound("voodoodoll/fall",CHAN_BODY,CHANF_OVERLAP);
+			A_NoBlocking();
+		}
+		XZWZ GHIJKLMNO 2;
+		XZWZ PQR 2;
+		XZWZ S -1;
+		Stop;
 	}
 }

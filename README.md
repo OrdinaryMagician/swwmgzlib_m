@@ -45,7 +45,3 @@ Constants that must be defined:
 - **`const int SWWMMAXVIPAMOUNT`**<br/>
   Max amount of shared vip items *(Devastation Sigil)*.<br/>
   *(Only needs to be defined if the item is used)*
-
-The ***TODO*** list:
-
-- Generic **`SWWMPlayer`** class with reusable functions.

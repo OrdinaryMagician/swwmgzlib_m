@@ -13,6 +13,7 @@ brutal/bdscreen	sounds/BDSCREEN.ogg
 hdoom/bonk	sounds/BONK.ogg
 compat/warn	sounds/UTWARN.ogg
 hahaha/hahaha	sounds/HAHAHA.ogg
+hahaha/hahaha2	sounds/HAHAEVIL.ogg
 
 voodoodoll/hit	sounds/general/BodyHit.ogg
 voodoodoll/fall	sounds/general/BodyThud.ogg
@@ -59,6 +60,7 @@ $random misc/gibhit { misc/gibhit1 misc/gibhit2 misc/gibhit3 misc/gibhit4 misc/g
 misc/blooddrop		sounds/general/bloddrop.ogg
 misc/bodythump		sounds/general/thump.ogg
 misc/heartbeat		sounds/general/hbeat.ogg
+misc/youdied		sounds/general/YouDied.ogg
 
 misc/underwater	sounds/general/uWater1a.ogg
 misc/underslime	sounds/general/uGoop1.ogg

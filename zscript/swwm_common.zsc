@@ -58,6 +58,11 @@ Class SWWMKeyMarker : MapMarker
 	}
 	override void PostBeginPlay()
 	{
+		if ( !target )
+		{
+			Destroy();
+			return;
+		}
 		if ( target is 'SWWMKey' )
 		{
 			Class<Key> k = SWWMKey(target).species;

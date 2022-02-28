@@ -1065,6 +1065,92 @@ Class SWWMUtility
 		return GetDefaultByType(i).GetTag();
 	}
 
+	// full reset of inventory (excluding collectibles, and optionally resetting the score)
+	static play void WipeInventory( Actor mo, bool allplayers = false )
+	{
+		if ( allplayers )
+		{
+			for ( int i=0; i<MAXPLAYERS; i++ )
+			{
+				if ( !playeringame[i] || !players[i].mo ) continue;
+				WipeInventory(players[i].mo,false);
+			}
+			return;
+		}
+		PlayerInfo p = mo.player;
+		if ( !p || !p.mo ) return;
+		Actor last = p.mo;
+		while ( last.inv )
+		{
+			let inv = last.inv;
+			inv.Destroy();
+			if ( !inv.bDestroyed ) last = inv;
+			else last = inv;
+		}
+		p.mo.GiveDefaultInventory();
+		p.mo.BringUpWeapon();
+		p.health = p.mo.Health = p.mo.SpawnHealth();
+	}
+
+	// sets all carried ammo back to zero
+	// resets hammerspace capacity
+	static play void ResetAmmo( Actor mo )
+	{
+		PlayerInfo p = mo.player;
+		if ( !p || !p.mo ) return;
+		for ( Inventory i=p.mo.inv; i; i=i.inv )
+		{
+			if ( (i is 'Ammo') || (i is 'MagAmmo') )
+			{
+				i.Amount = 0;
+				i.MaxAmount = i.default.MaxAmount;
+			}
+			if ( i.GetClassName() == "HammerspaceEmbiggener" )
+				i.Amount = 0;
+		}
+		// also gives back any ammo from carried weapons (provided they don't have NOFIRSTGIVE)
+		for ( Inventory i=p.mo.inv; i; i=i.inv )
+		{
+			if ( !(i is 'Weapon') ) continue;
+			let w = Weapon(i);
+			if ( (w is 'SWWMWeapon') && SWWMWeapon(w).bNOFIRSTGIVE ) continue;
+			if ( w.Ammo1 ) w.Ammo1.Amount = min(w.Ammo1.MaxAmount,w.Ammo1.Amount+w.AmmoGive1);
+			if ( w.Ammo2 && (w.Ammo2 != w.Ammo1) ) w.Ammo2.Amount = min(w.Ammo2.MaxAmount,w.Ammo2.Amount+w.AmmoGive2);
+		}
+	}
+
+	// removes all usable items
+	static play void ResetItems( Actor mo )
+	{
+		PlayerInfo p = mo.player;
+		if ( !p || !p.mo ) return;
+		Actor last = p.mo;
+		while ( last.inv )
+		{
+			let inv = last.inv;
+			if ( !inv.bINVBAR )
+			{
+				last = inv;
+				continue;
+			}
+			inv.Destroy();
+			if ( !inv.bDestroyed ) last = inv;
+		}
+	}
+
+	// resets health and removes worn armor
+	static play void ResetHealth( Actor mo )
+	{
+		PlayerInfo p = mo.player;
+		if ( !p || !p.mo ) return;
+		p.health = p.mo.health = p.mo.SpawnHealth();
+		for ( Inventory i=p.mo.inv; i; i=i.inv )
+		{
+			if ( !(i is 'SWWMArmor') ) continue;
+			i.Amount = 0;
+		}
+	}
+
 	// for Equinox
 	static play void SpawnVanillaBossBrain( int tid )
 	{

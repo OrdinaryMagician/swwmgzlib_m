@@ -73,6 +73,22 @@ extend Class SWWMHandler
 		}
 	}
 
+	override void WorldUnloaded( WorldEvent e )
+	{
+		// end of episode resets and enforced pistol starts
+		LevelInfo nextlv = LevelInfo.FindLevelInfo(e.NextMap);
+		for ( int i=0; i<MAXPLAYERS; i++ )
+		{
+			if ( !playeringame[i] || !players[i].mo ) continue;
+			let demo = SWWMPlayer(players[i].mo);
+			if ( !demo ) continue;
+			if ( level.nextsecretmap.Left(6) == "enDSeQ" ) demo.invwipe |= SWWMPlayer.WIPE_EPISODE;
+			if ( nextlv && (level.cluster!=nextlv.cluster) ) demo.invwipe |= (SWWMPlayer.WIPE_CLUSTER|SWWMPlayer.WIPE_MAP);
+			if ( !(level.clusterflags&LevelLocals.CLUSTER_HUB) ) demo.invwipe |= SWWMPlayer.WIPE_MAP;
+			// the playerpawn will know what to do with this in its PreTravelled()
+		}
+	}
+
 	override void WorldLoaded( WorldEvent e )
 	{
 		if ( e.IsReopen ) return;

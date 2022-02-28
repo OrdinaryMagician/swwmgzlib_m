@@ -259,6 +259,12 @@ Class EBarrier : Inventory
 		terrainwait = 0;
 		Owner.UseInventory(self);
 	}
+	override bool ShouldSpawn()
+	{
+		// only spawn in Doom
+		if ( gameinfo.gametype&GAME_DoomChex ) return true;
+		return false;
+	}
 
 	Default
 	{

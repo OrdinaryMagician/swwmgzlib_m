@@ -248,6 +248,13 @@ Class SafetyTether : Inventory
 		return true;
 	}
 
+	override bool ShouldSpawn()
+	{
+		// only spawn on Heretic and Hexen
+		if ( gameinfo.gametype&GAME_Raven ) return true;
+		return false;
+	}
+
 	Default
 	{
 		Tag "$T_SAFETY";
