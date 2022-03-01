@@ -8,6 +8,7 @@ Class SWWMSaveVerData : Thinker
 
 Class SWWMStaticHandler : StaticEventHandler
 {
+	transient ui CVar uptime;
 	// crash handler
 	ui bool wasinmap;
 	ui int timer, msgpick;
@@ -128,15 +129,15 @@ Class SWWMStaticHandler : StaticEventHandler
 			for ( int i=0; i<cvarlist.Size(); i++ )
 			{
 				// don't reset this one
-				if ( cvarlist[i] == SWWMMODPREFIX.."_playtime" )
+				if ( cvarlist[i] ~== SWWMMODPREFIX.."_playtime" )
 					continue;
 				CVar.FindCVar(cvarlist[i]).ResetToDefault();
 			}
 		}
 		else if ( e.Name ~== "swwmresettooltips" )
 		{
-			CVar.FindCVar(SWWMMODPREFIX.."_tooltipshown").ResetToDefault();
-			CVar.FindCVar(SWWMMODPREFIX.."_tooltipnote").ResetToDefault();
+			CVar.FindCVar('swwm_tooltipshown').ResetToDefault();
+			CVar.FindCVar('swwm_tooltipnote').ResetToDefault();
 		}
 		else if ( e.Name ~== "swwmlistcvars" )
 		{
@@ -151,7 +152,8 @@ Class SWWMStaticHandler : StaticEventHandler
 		}
 		else if ( e.Name ~== "swwmgetplaytime" )
 		{
-			int val = CVar.FindCVar(SWWMMODPREFIX.."_playtime").GetInt();
+			if ( !uptime ) uptime = CVar.FindCVar(SWWMMODPREFIX.."_playtime");
+			int val = uptime.GetInt();
 			int sec = (val%60);
 			int min = ((val/60)%60);
 			int hour = ((val/3600)%24);
@@ -191,9 +193,9 @@ Class SWWMStaticHandler : StaticEventHandler
 	{
 		if ( (gametic > 0) && !(gametic%GameTicRate) )
 		{
-			let pt = CVar.FindCVar(SWWMMODPREFIX.."_playtime");
-			int ct = pt.GetInt();
-			pt.SetInt(ct+1);
+			if ( !uptime ) uptime = CVar.FindCVar(SWWMMODPREFIX.."_playtime");
+			int ct = uptime.GetInt();
+			uptime.SetInt(ct+1);
 		}
 		if ( gamestate != GS_LEVEL ) return;
 		if ( checked || (gametic < checktic) ) return;

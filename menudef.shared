@@ -1,0 +1,89 @@
+OptionValue "SWWMEnemyDropType"
+{
+	-1, "$SWWM_DROPS_NONE"
+	0, "$SWWM_DROPS_AMMO"
+	1, "$SWWM_DROPS_WEAPONS"
+}
+OptionValue "SWWMForceStats"
+{
+	0, "$SWWM_STATS_DISABLED"
+	1, "$SWWM_STATS_ALWAYS"
+	2, "$SWWM_STATS_MAPNAME"
+}
+OptionValue "SWWMDRLASkill"
+{
+	0, "$SWWM_DRLASKILL_BABY"
+	1, "$SWWM_DRLASKILL_EASY"
+	2, "$SWWM_DRLASKILL_NORMAL"
+	3, "$SWWM_DRLASKILL_HARD"
+	4, "$SWWM_DRLASKILL_NIGHTMARE"
+	5, "$SWWM_DRLASKILL_TECHNOPHOBIA"
+	6, "$SWWM_DRLASKILL_ARMAGEDDON"
+	7, "$SWWM_DRLASKILL_ADAPTIVE"
+}
+OptionValue "SWWMPistolStart"
+{
+	0, "$TXT_NO"
+	1, "$SWWM_PISTOLSTART_MAP"
+	2, "$SWWM_PISTOLSTART_CLUSTER"
+}
+OptionValue "SWWMHUDScale"
+{
+	0, "$SWWM_TFITSCALE"
+	1, "$SWWM_LFITSCALE"
+}
+OptionMenu "SWWMOptionMenu"
+{
+	Class "SWWMOptionMenu"
+	Title "<REPLACEME>"
+
+	SafeCommand "$SWWM_CRESET", "event swwmresetcvars"
+	StaticText " "
+
+	StaticText "$SWWM_PTITLE", 1
+	SWWMPlayTime "$SWWM_PLAYTIME", "swwm_playtime"
+	StaticText " "
+	StaticText "$SWWM_OTITLE", 1
+	Option "$SWWM_SHADERS", "swwm_shaders", "YesNo"
+	Slider "$SWWM_FLASH", "swwm_flashstrength", 0.0, 1.0, 0.1, 1
+	Slider "$SWWM_BUMP", "swwm_bumpstrength", 0.0, 1.0, 0.1, 1
+	Slider "$SWWM_VBOB", "swwm_bobstrength", 0.0, 1.0, 0.1, 1
+	Option "$SWWM_MM_ENABLE", "swwm_mm_enable", "YesNo"
+	Option "$SWWM_FORCESTATS", "swwm_forcestats", "SWWMForceStats"
+	Slider "$SWWM_HUDMARGIN", "swwm_hudmargin", 0, 40, 1, 0
+	Option "$SWWM_HUDSCALE", "swwm_hudscale", "SWWMHudScale"
+	Slider "$SWWM_MAXMSG", "swwm_maxshown", 1, 10, 1, 0
+	Slider "$SWWM_MAXMSGBIG", "swwm_maxshownbig", 1, 20, 1, 0
+	Slider "$SWWM_MAXPICK", "swwm_maxpickup", 1, 10, 1, 0
+	Slider "$SWWM_CHATLEN", "swwm_chatduration", 1, 30, 1, 0
+	Slider "$SWWM_MSGLEN", "swwm_msgduration", 1, 30, 1, 0
+	Slider "$SWWM_PICKLEN", "swwm_pickduration", 1, 30, 1, 0
+	Option "$SWWM_FUZZ", "swwm_fuzz", "YesNo"
+	StaticText " "
+	StaticText "$SWWM_ETITLE", 1
+	Option "$SWWM_SHADOWS", "swwm_shadows", "YesNo"
+	ScaleSlider "$SWWM_SHADOWDIST", "swwm_shadowdist", -1, 4000, 1, "$SWWM_NONE", "$SWWM_UNLIMITED"
+	Option "$SWWM_BLOOD", "swwm_blood", "YesNo"
+	ScaleSlider "$SWWM_MAXBLOOD", "swwm_maxblood", -1, 1000, 1, "$SWWM_NONE", "$SWWM_UNLIMITED"
+	ScaleSlider "$SWWM_MAXGIBS", "swwm_maxgibs", -1, 1000, 1, "$SWWM_NONE", "$SWWM_UNLIMITED"
+	ScaleSlider "$SWWM_MAXCASINGS", "swwm_maxcasings", -1, 1000, 1, "$SWWM_NONE", "$SWWM_UNLIMITED"
+	ScaleSlider "$SWWM_MAXDEBRIS", "swwm_maxdebris", -1, 1000, 1, "$SWWM_NONE", "$SWWM_UNLIMITED"
+	SafeCommand "$SWWM_CLEARFX", "netevent swwmcleareffects"
+	StaticText " "
+	StaticText "$SWWM_BTITLE", 1
+	Option "$SWWM_PS_FULLRESET", "swwm_ps_fullreset", "SWWMPistolStart"
+	Option "$SWWM_PS_RESETAMMO", "swwm_ps_resetammo", "SWWMPistolStart"
+	Option "$SWWM_PS_RESETITEMS", "swwm_ps_resetitems", "SWWMPistolStart"
+	Option "$SWWM_PS_RESETHEALTH", "swwm_ps_resethealth", "SWWMPistolStart"
+	Option "$SWWM_ENEMYDROPS", "swwm_enemydrops", "SWWMEnemyDropType"
+	StaticText " "
+	StaticText "$SWWM_ITITLE", 1
+	Option "$SWWM_WEAPONTOOLTIPS", "swwm_weapontooltips", "YesNo"
+	SafeCommand "$SWWM_RESETTOOLTIPS", "event swwmresettooltips"
+	IfGame(Doom)
+	{
+		StaticText " "
+		StaticText "$SWWM_MCTITLE", 1
+		Option "$SWWM_DRLASKILL", "swwm_drlaskill", "SWWMDRLASkill"
+	}
+}

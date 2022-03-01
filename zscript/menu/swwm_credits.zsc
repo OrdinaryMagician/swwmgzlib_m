@@ -112,7 +112,6 @@ Class SWWMCreditsMenu : GenericMenu abstract
 	double hs;
 	int logow, logoh;
 	int logoyofs;
-	bool dofuzz;
 
 	String oldmus;
 	int oldorder;
@@ -148,7 +147,6 @@ Class SWWMCreditsMenu : GenericMenu abstract
 		Super.Init(parent);
 		bgtex = TexMan.CheckForTexture("graphics/tempbg.png",TexMan.Type_Any);
 		UpdateSize();
-		dofuzz = CVar.FindCVar(SWWMMODPREFIX.."_fuzz").GetBool();
 		logo = TexMan.CheckForTexture("graphics/"..SWWMLOGONAME..".png",TexMan.Type_Any);
 		[logow, logoh] = TexMan.GetSize(logo);
 		Vector2 ofs = TexMan.GetScaledOffset(logo);
@@ -297,7 +295,7 @@ Class SWWMCreditsMenu : GenericMenu abstract
 	}
 	override void Drawer()
 	{
-		if ( dofuzz )
+		if ( swwm_fuzz )
 		{
 			Vector2 tsize = TexMan.GetScaledSize(bgtex);
 			double zoom = max(ceil(Screen.GetWidth()/tsize.x),ceil(Screen.GetHeight()/tsize.y));

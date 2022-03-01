@@ -35,11 +35,34 @@ Class SWWMUtility
 	static clearscope void GetCVars( out Array<String> cvarlist )
 	{
 		cvarlist.Clear();
-		let lmp = Wads.CheckNumForFullname("cvarinfo.base");
-		if ( lmp == -1 ) ThrowAbortException("'cvarinfo.base' not found");
+		// common library cvars
+		let lmp = Wads.CheckNumForFullname("cvarinfo.shared");
+		if ( lmp == -1 ) ThrowAbortException("'cvarinfo.shared' not found");
 		String dat = Wads.ReadLump(lmp);
 		Array<String> list, ln;
 		// fucking Windows
+		dat.Replace("\r","");
+		list.Clear();
+		dat.Split(list,"\n");
+		for ( int i=0; i<list.Size(); i++ )
+		{
+			if ( (list[i].Length() == 0) || (list[i].Left(2) == "//") || (list[i].Left(1) == "") )
+				continue;
+			int eq = list[i].IndexOf("=");
+			if ( eq == -1 ) continue;
+			list[i].Truncate(eq);
+			ln.Clear();
+			list[i].Split(ln," ",0);
+			for ( int j=0; j<ln.Size(); j++ )
+			{
+				if ( (ln[j].Left(5) != "swwm_") ) continue;
+				cvarlist.Push(ln[j]);
+			}
+		}
+		// mod-specific cvars
+		lmp = Wads.CheckNumForFullname("cvarinfo.base");
+		if ( lmp == -1 ) ThrowAbortException("'cvarinfo.base' not found");
+		dat = Wads.ReadLump(lmp);
 		dat.Replace("\r","");
 		list.Clear();
 		dat.Split(list,"\n");
@@ -65,8 +88,8 @@ Class SWWMUtility
 	// sends
 	static clearscope void SendTooltip( Class<SWWMWeapon> which )
 	{
-		if ( !CVar.FindCVar(SWWMMODPREFIX.."_weapontooltips").GetBool() ) return;
-		CVar v = CVar.FindCVar(SWWMMODPREFIX.."_tooltipshown");
+		if ( !swwm_weapontooltips ) return;
+		CVar v = CVar.FindCVar('swwm_tooltipshown');
 		String tt = v.GetString();
 		Array<String> wpn;
 		tt.Split(wpn,",");

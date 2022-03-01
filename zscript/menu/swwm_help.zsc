@@ -5,7 +5,6 @@ Class SWWMHelpMenu : GenericMenu
 	int curpage, prevpage, numpages;
 	int fadetic;
 	TextureID bgtex;
-	transient CVar fuzz;
 	bool isrclick;
 	int pagedir;
 
@@ -135,8 +134,7 @@ Class SWWMHelpMenu : GenericMenu
 
 	override void Drawer()
 	{
-		if ( !fuzz ) fuzz = CVar.FindCVar(SWWMMODPREFIX.."_fuzz");
-		if ( fuzz.GetBool() )
+		if ( swwm_fuzz )
 		{
 			Vector2 tsize = TexMan.GetScaledSize(bgtex);
 			double zoom = max(ceil(Screen.GetWidth()/tsize.x),ceil(Screen.GetHeight()/tsize.y));

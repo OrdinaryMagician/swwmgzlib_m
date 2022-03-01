@@ -2,8 +2,6 @@
 
 extend Class SWWMHandler
 {
-	transient CVar modblood, drlaskill;
-
 	private Class<Actor> GetDRLAReplacee( Class<Actor> a )
 	{
 		static const String refpool[] =
@@ -204,8 +202,7 @@ extend Class SWWMHandler
 			"RLUVBossEye",
 			"RLBossBrain"
 		};
-		if ( !drlaskill ) drlaskill = CVar.FindCVar(SWWMMODPREFIX.."_drlaskill");
-		switch ( drlaskill.GetInt() )
+		switch ( swwm_drlaskill )
 		{
 		case 0:
 			for ( int i=0; i<18; i++ )
@@ -476,8 +473,7 @@ extend Class SWWMHandler
 			"RLUVBossEye",
 			"RLBossBrain"
 		};
-		if ( !drlaskill ) drlaskill = CVar.FindCVar(SWWMMODPREFIX.."_drlaskill");
-		switch ( drlaskill.GetInt() )
+		switch ( swwm_drlaskill )
 		{
 		case 0:
 			for ( int i=0; i<18; i++ )
@@ -556,11 +552,7 @@ extend Class SWWMHandler
 			}
 		}
 		// only replace vanilla blood if no other gore mod is doing it
-		if ( (e.Replacee == "Blood") && (!e.Replacement || e.Replacement == "Blood")|| (bludtypes.Find(e.Replacee.GetClassName()) < bludtypes.Size()) )
-		{
-			if ( !modblood ) modblood = CVar.FindCVar(SWWMMODPREFIX.."_blood");
-			if ( modblood.GetBool() ) e.Replacement = "mkBlood";
-		}
+		if ( (((e.Replacee == "Blood") && (!e.Replacement || e.Replacement == "Blood")) || (bludtypes.Find(e.Replacee.GetClassName()) < bludtypes.Size())) && swwm_blood ) e.Replacement = "mkBlood";
 		else if ( e.Replacee is 'ItemFog' ) e.Replacement = 'SWWMItemFog';
 		else if ( e.Replacee is 'TeleportFog' ) e.Replacement = 'SWWMTeleportFog';
 		else if ( (e.Replacee is 'CommanderKeen') && (!e.Replacement || (e.Replacement == 'CommanderKeen')) )

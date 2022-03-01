@@ -1313,7 +1313,7 @@ Class SWWMShadow : Actor
 	{
 		RenderStyle "Shaded";
 		StencilColor "000000";
-		DistanceCheck SWWMMODPREFIX.."_shadowdist";
+		DistanceCheck 'swwm_shadowdist';
 		Radius .1;
 		Height 0.;
 		+NOBLOCKMAP;

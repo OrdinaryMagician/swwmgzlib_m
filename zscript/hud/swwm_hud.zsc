@@ -97,10 +97,6 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		bAlwaysAboveInv;	// powerups are always drawn above the inventory box, even when shifted to the right
 	int AboveInvOffset;		// (Saya mod) additional offset applied to displays over inventory box
 
-	transient CVar pickduration, msgduration, chatduration, forcestats,
-		maxpickup, maxshownbig, maxshown, hudmargin, hudscale, fuzz,
-		mm_enable;
-
 	override void FlushNotify()
 	{
 		if ( level.maptime <= 1 )
@@ -223,20 +219,17 @@ Class SWWMStatusBar : BaseStatusBar abstract
 	{
 		Super.Tick();
 		pausetime = gametic;
-		if ( !pickduration ) pickduration = CVar.FindCVar(SWWMMODPREFIX.."_pickduration");
-		if ( !msgduration ) msgduration = CVar.FindCVar(SWWMMODPREFIX.."_msgduration");
-		if ( !chatduration ) chatduration = CVar.FindCVar(SWWMMODPREFIX.."_chatduration");
 		// prune old messages
 		for ( int i=0; i<PickupQueue.Size(); i++ )
 		{
-			if ( level.totaltime < (PickupQueue[i].tic+GameTicRate*pickduration.GetInt()) ) continue;
+			if ( level.totaltime < (PickupQueue[i].tic+GameTicRate*swwm_pickduration) ) continue;
 			PickupQueue.Delete(i);
 			i--;
 		}
 		for ( int i=0; i<MainQueue.Size(); i++ )
 		{
-			if ( (MainQueue[i].type <= PRINT_HIGH) && (level.totaltime < (MainQueue[i].tic+GameTicRate*msgduration.GetInt())) ) continue;
-			else if ( (MainQueue[i].type > PRINT_HIGH) && (level.totaltime < (MainQueue[i].tic+GameTicRate*chatduration.GetInt())) ) continue;
+			if ( (MainQueue[i].type <= PRINT_HIGH) && (level.totaltime < (MainQueue[i].tic+GameTicRate*swwm_msgduration)) ) continue;
+			else if ( (MainQueue[i].type > PRINT_HIGH) && (level.totaltime < (MainQueue[i].tic+GameTicRate*swwm_chatduration)) ) continue;
 			MainQueue.Delete(i);
 			i--;
 		}
@@ -700,8 +693,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 	{
 		// obviously, don't draw the minimap if the automap is open
 		int xx, yy = margin;
-		if ( !mm_enable ) mm_enable = CVar.FindCVar(SWWMMODPREFIX.."_mm_enable");
-		if ( !automapactive && mm_enable.GetBool() )
+		if ( !automapactive && swwm_mm_enable )
 		{
 			xx = int(ss.x-(margin+(HALFMAPSIZE+2)*2));
 			Screen.DrawTexture(MiniBox,false,xx,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
@@ -720,8 +712,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			yy += ((HALFMAPSIZE+2)*2)+3;
 		}
 		// draw stats and timer when automap is open
-		if ( !forcestats ) forcestats = CVar.FindCVar(SWWMMODPREFIX.."_forcestats");
-		int fstats = forcestats.GetInt();
+		int fstats = swwm_forcestats;
 		if ( automapactive || (fstats > 0) )
 		{
 			xx = int(ss.x-(margin+2));
@@ -983,9 +974,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		}
 		if ( PickupQueue.Size() <= 0 ) return;
 		// reverse order since they're drawn bottom to top
-		if ( !maxpickup ) maxpickup = CVar.FindCVar(SWWMMODPREFIX.."_maxpickup");
-		if ( !pickduration ) pickduration = CVar.FindCVar(SWWMMODPREFIX.."_pickduration");
-		int mend = max(0,PickupQueue.Size()-maxpickup.GetInt());
+		int mend = max(0,PickupQueue.Size()-swwm_maxpickup);
 		yy = ss.y-(margin+50);
 		// shift up if nametag is present
 		if ( nalph > 0. ) yy -= int((smallfont.GetHeight()+6)*clamp(nalph*2.,0.,1.));
@@ -993,7 +982,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		{
 			String cstr = PickupQueue[i].str;
 			if ( PickupQueue[i].rep > 1 ) cstr.AppendFormat(" (x%d)",PickupQueue[i].rep);
-			double curtime = (PickupQueue[i].tic+GameTicRate*pickduration.GetInt())-(level.totaltime+fractic);
+			double curtime = (PickupQueue[i].tic+GameTicRate*swwm_pickduration)-(level.totaltime+fractic);
 			double alph = clamp(curtime/20.,0.,1.);
 			BrokenLines l = smallfont.BreakLines(cstr,int(ss.x*.75));
 			int maxlen = 0;
@@ -1044,11 +1033,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			l.Destroy();
 		}
 		if ( MainQueue.Size() <= 0 ) return;
-		if ( !msgduration ) msgduration = CVar.FindCVar(SWWMMODPREFIX.."_msgduration");
-		if ( !chatduration ) chatduration = CVar.FindCVar(SWWMMODPREFIX.."_chatduration");
-		if ( !maxshownbig ) maxshownbig = CVar.FindCVar(SWWMMODPREFIX.."_maxshownbig");
-		if ( !maxshown ) maxshown = CVar.FindCVar(SWWMMODPREFIX.."_maxshown");
-		int mstart = max(0,MainQueue.Size()-((chatopen>=gametic)?maxshownbig.GetInt():maxshown.GetInt()));
+		int mstart = max(0,MainQueue.Size()-((chatopen>=gametic)?swwm_maxshownbig:swwm_maxshown));
 		xx = margin;
 		yy = margin;
 		bool smol = (ss.x<640);
@@ -1063,8 +1048,8 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			String cstr = MainQueue[i].str;
 			if ( MainQueue[i].rep > 1 ) cstr.AppendFormat(" (x%d)",MainQueue[i].rep);
 			double curtime = MainQueue[i].tic-(level.totaltime+fractic);
-			if ( MainQueue[i].type < PRINT_CHAT ) curtime += GameTicRate*msgduration.GetInt();
-			else curtime += GameTicRate*chatduration.GetInt();
+			if ( MainQueue[i].type < PRINT_CHAT ) curtime += GameTicRate*swwm_msgduration;
+			else curtime += GameTicRate*swwm_chatduration;
 			double alph = clamp(curtime/20.,0.,1.);
 			BrokenLines l = smallfont.BreakLines(cstr,smol?211:361);
 			for ( int j=0; j<l.Count(); j++ )
@@ -1104,8 +1089,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 
 	override bool DrawPaused( int player )
 	{
-		if ( !fuzz ) fuzz = CVar.FindCVar(SWWMMODPREFIX.."_fuzz");
-		if ( fuzz.GetBool() )
+		if ( swwm_fuzz )
 		{
 			Vector2 tsize = TexMan.GetScaledSize(bgtex);
 			double zoom = max(ceil(Screen.GetWidth()/tsize.x),ceil(Screen.GetHeight()/tsize.y));
@@ -1214,12 +1198,10 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		if ( !(players[consoleplayer].Camera is 'PlayerPawn') ) camhidden = true;
 		else camhidden = false;
 		BeginHUD();
-		if ( !hudscale ) hudscale = CVar.FindCVar(SWWMMODPREFIX.."_hudscale");
-		if ( hudscale.GetBool() ) hs = CleanXFac_1;
+		if ( swwm_hudscale ) hs = CleanXFac_1;
 		else hs = max(floor(Screen.GetWidth()/640.),1.);
 		ss = (Screen.GetWidth(),Screen.GetHeight())/hs;
-		if ( !hudmargin ) hudmargin = CVar.FindCVar(SWWMMODPREFIX.."_hudmargin");
-		margin = clamp(hudmargin.GetInt(),0,40);
+		margin = clamp(swwm_hudmargin,0,40);
 		FracTic = TicFrac;
 		if ( camhidden )
 		{

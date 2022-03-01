@@ -236,12 +236,9 @@ Class SWWMItemOverlay : Actor
 
 Mixin Class SWWMShadedPowerup
 {
-	transient CVar useshaders;
-
 	override Color GetBlend()
 	{
-		if ( !useshaders ) useshaders = CVar.FindCVar(SWWMMODPREFIX.."_shaders");
-		if ( useshaders.GetBool() ) return 0;
+		if ( swwm_shaders ) return 0;
 		return Super.GetBlend();
 	}
 }

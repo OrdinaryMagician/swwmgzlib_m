@@ -12,8 +12,6 @@ extend Class SWWMHandler
 	int blods_cnt, oldmaxblood, blods_realcnt;
 	mkFlyingGib meats, meats_end;
 	int meats_cnt, oldmaxgibs, meats_realcnt;
-	// cvars
-	transient CVar maxcasings, maxdebris, maxblood, maxgibs;
 
 	static void QueueCasing( SWWMCasing c )
 	{
@@ -32,8 +30,7 @@ extend Class SWWMHandler
 			c.prevcasing = hnd.casings_end;
 			hnd.casings_end = c;
 		}
-		if ( !hnd.maxcasings ) hnd.maxcasings = CVar.FindCVar(SWWMMODPREFIX.."_maxcasings");
-		while ( hnd.casings && (hnd.maxcasings.GetInt() >= 0) && (hnd.casings_cnt > hnd.maxcasings.GetInt()) )
+		while ( hnd.casings && (swwm_maxcasings >= 0) && (hnd.casings_cnt > swwm_maxcasings) )
 			DeQueueCasing(hnd.casings);
 	}
 	static void DeQueueCasing( SWWMCasing c )
@@ -67,8 +64,7 @@ extend Class SWWMHandler
 			c.prevchip = hnd.chips_end;
 			hnd.chips_end = c;
 		}
-		if ( !hnd.maxdebris ) hnd.maxdebris = CVar.FindCVar(SWWMMODPREFIX.."_maxdebris");
-		while ( hnd.chips && (hnd.maxdebris.GetInt() >= 0) && (hnd.chips_cnt > hnd.maxdebris.GetInt()) )
+		while ( hnd.chips && (swwm_maxdebris >= 0) && (hnd.chips_cnt > swwm_maxdebris) )
 			DeQueueChip(hnd.chips);
 	}
 	static void DeQueueChip( SWWMChip c )
@@ -102,8 +98,7 @@ extend Class SWWMHandler
 			b.prevblod = hnd.blods_end;
 			hnd.blods_end = b;
 		}
-		if ( !hnd.maxblood ) hnd.maxblood = CVar.FindCVar(SWWMMODPREFIX.."_maxblood");
-		while ( hnd.blods && (hnd.maxblood.GetInt() >= 0) && (hnd.blods_cnt > hnd.maxblood.GetInt()) )
+		while ( hnd.blods && (swwm_maxblood >= 0) && (hnd.blods_cnt > swwm_maxblood) )
 			DeQueueBlod(hnd.blods);
 	}
 	static void DeQueueBlod( mkBloodDrop b )
@@ -137,8 +132,7 @@ extend Class SWWMHandler
 			m.prevmeat = hnd.meats_end;
 			hnd.meats_end = m;
 		}
-		if ( !hnd.maxgibs ) hnd.maxgibs = CVar.FindCVar(SWWMMODPREFIX.."_maxgibs");
-		while ( hnd.meats && (hnd.maxgibs.GetInt() >= 0) && (hnd.meats_cnt > hnd.maxgibs.GetInt()) )
+		while ( hnd.meats && (swwm_maxgibs >= 0) && (hnd.meats_cnt > swwm_maxgibs) )
 			DeQueueMeat(hnd.meats);
 	}
 	static void DeQueueMeat( mkFlyingGib m )
@@ -166,52 +160,43 @@ extend Class SWWMHandler
 
 	private void RecheckQueues()
 	{
-		if ( !maxcasings ) maxcasings = CVar.FindCVar(SWWMMODPREFIX.."_maxcasings");
-		if ( !maxdebris ) maxdebris = CVar.FindCVar(SWWMMODPREFIX.."_maxdebris");
-		if ( !maxblood ) maxblood = CVar.FindCVar(SWWMMODPREFIX.."_maxblood");
-		if ( !maxgibs ) maxgibs = CVar.FindCVar(SWWMMODPREFIX.."_maxgibs");
-		while ( casings && (casings_cnt > maxcasings.GetInt()) )
+		while ( casings && (casings_cnt > swwm_maxcasings) )
 			DeQueueCasing(casings);
-		while ( chips && (chips_cnt > maxdebris.GetInt()) )
+		while ( chips && (chips_cnt > swwm_maxdebris) )
 			DeQueueChip(chips);
-		while ( blods && (blods_cnt > maxblood.GetInt()) )
+		while ( blods && (blods_cnt > swwm_maxblood) )
 			DeQueueBlod(blods);
-		while ( meats && (meats_cnt > maxgibs.GetInt()) )
+		while ( meats && (meats_cnt > swwm_maxgibs) )
 			DeQueueMeat(meats);
 	}
 
 	private void QueueMaintenance()
 	{
-		if ( !maxcasings ) maxcasings = CVar.FindCVar(SWWMMODPREFIX.."_maxcasings");
-		if ( !maxdebris ) maxdebris = CVar.FindCVar(SWWMMODPREFIX.."_maxdebris");
-		if ( !maxblood ) maxblood = CVar.FindCVar(SWWMMODPREFIX.."_maxblood");
-		if ( !maxgibs ) maxgibs = CVar.FindCVar(SWWMMODPREFIX.."_maxgibs");
-		if ( maxcasings.GetInt() != oldmaxcasings )
+		if ( swwm_maxcasings != oldmaxcasings )
 		{
-			while ( casings && (maxcasings.GetInt() >= 0) && (casings_cnt > maxcasings.GetInt()) )
+			while ( casings && (swwm_maxcasings >= 0) && (casings_cnt > swwm_maxcasings) )
 				DeQueueCasing(casings);
 		}
-		if ( maxdebris.GetInt() != oldmaxdebris )
+		if ( swwm_maxdebris != oldmaxdebris )
 		{
-			while ( chips && (maxdebris.GetInt() >= 0) && (chips_cnt > maxdebris.GetInt()) )
+			while ( chips && (swwm_maxdebris >= 0) && (chips_cnt > swwm_maxdebris) )
 				DeQueueChip(chips);
 		}
-		if ( maxblood.GetInt() != oldmaxblood )
+		if ( swwm_maxblood != oldmaxblood )
 		{
-			while ( blods && (maxblood.GetInt() >= 0) && (blods_cnt > maxblood.GetInt()) )
+			while ( blods && (swwm_maxblood >= 0) && (blods_cnt > swwm_maxblood) )
 				DeQueueBlod(blods);
 		}
-		if ( maxgibs.GetInt() != oldmaxgibs )
+		if ( swwm_maxgibs != oldmaxgibs )
 		{
-			while ( meats && (maxgibs.GetInt() >= 0) && (meats_cnt > maxgibs.GetInt()) )
+			while ( meats && (swwm_maxgibs >= 0) && (meats_cnt > swwm_maxgibs) )
 				DeQueueMeat(meats);
 		}
-		oldmaxcasings = maxcasings.GetInt();
-		oldmaxdebris = maxdebris.GetInt();
-		oldmaxblood = maxblood.GetInt();
-		oldmaxgibs = maxgibs.GetInt();
-		if ( !modblood ) modblood = CVar.FindCVar(SWWMMODPREFIX.."_blood");
-		if ( modblood.GetBool() ) return;
+		oldmaxcasings = swwm_maxcasings;
+		oldmaxdebris = swwm_maxdebris;
+		oldmaxblood = swwm_maxblood;
+		oldmaxgibs = swwm_maxgibs;
+		if ( swwm_blood ) return;
 		while ( blods ) DeQueueBlod(blods);
 		while ( meats ) DeQueueMeat(meats);
 	}

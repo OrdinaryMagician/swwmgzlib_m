@@ -8,6 +8,7 @@ Class SWWMPlayer : PlayerPawn abstract
 	Vector3 oldlagvel;
 	double lagangle, lagpitch, lagready;
 	Vector3 lagvel;
+	transient CVar bobstr;
 
 	int lastdamage;
 	transient int lastdamagetic;
@@ -434,7 +435,7 @@ Class SWWMPlayer : PlayerPawn abstract
 		if ( lastbump <= 0. ) lastbump = 1.;
 		if ( lastbump != 1. )
 		{
-			if ( !bumpstr ) bumpstr = CVar.GetCVar(SWWMMODPREFIX.."_bumpstrength",player);
+			if ( !bumpstr ) bumpstr = CVar.GetCVar('swwm_bumpstrength',player);
 			double str = bumpstr.GetFloat();
 			player.fov *= lastbump*str+1.-str;
 			lastbump = 1.;
@@ -563,10 +564,12 @@ Class SWWMPlayer : PlayerPawn abstract
 			bumppitch *= .8;
 		}
 		// move tilting
+		if ( !bobstr ) bobstr = CVar.GetCVar('swwm_bobstrength',player);
+		double str = bobstr.GetFloat();
 		double bobangle = level.maptime/(20*TICRATE/35.)*360.;
-		ViewAngle += cos(bobangle/2.)*(player.bob*ViewBob)/90.;
-		ViewPitch += cos(bobangle)*(player.bob*ViewBob)/90.;
-		ViewRoll += sin(bobangle/2.)*(player.bob*ViewBob)/90.;
+		ViewAngle += cos(bobangle/2.)*(player.bob*ViewBob*str)/90.;
+		ViewPitch += cos(bobangle)*(player.bob*ViewBob*str)/90.;
+		ViewRoll += sin(bobangle/2.)*(player.bob*ViewBob*str)/90.;
 		// stabilize view angles
 		A_SetViewAngle(ViewAngle*.8,SPF_INTERPOLATE);
 		A_SetViewPitch(ViewPitch*.8,SPF_INTERPOLATE);
@@ -1199,37 +1202,33 @@ Class SWWMPlayer : PlayerPawn abstract
 		// inventory wipes
 		if ( invwipe && (player.playerstate != PST_DEAD) )
 		{
-			let rf = CVar.FindCVar(SWWMMODPREFIX.."_ps_fullreset").GetInt();
-			let ra = CVar.FindCVar(SWWMMODPREFIX.."_ps_resetammo").GetInt();
-			let ri = CVar.FindCVar(SWWMMODPREFIX.."_ps_resetitems").GetInt();
-			let rh = CVar.FindCVar(SWWMMODPREFIX.."_ps_resethealth").GetInt();
 			bool wiped = false;
 			bool resetammo = false;
 			bool resetitems = false;
 			bool resethealth = false;
 			if ( invwipe&WIPE_EPISODE )
 			{
-				SWWMUtility.WipeInventory(self,swwm_resetscore);
+				SWWMUtility.WipeInventory(self);
 				wiped = true;
 			}
 			if ( invwipe&WIPE_CLUSTER )
 			{
-				if ( (rf == 2) && !wiped )
+				if ( (swwm_ps_fullreset == 2) && !wiped )
 				{
-					SWWMUtility.WipeInventory(self,swwm_resetscore);
+					SWWMUtility.WipeInventory(self);
 					wiped = true;
 				}
-				if ( (ra == 2) && !wiped )
+				if ( (swwm_ps_resetammo == 2) && !wiped )
 				{
 					SWWMUtility.ResetAmmo(self);
 					resetammo = true;
 				}
-				if ( (ri == 2) && !wiped )
+				if ( (swwm_ps_resetitems == 2) && !wiped )
 				{
 					SWWMUtility.ResetItems(self);
 					resetitems = true;
 				}
-				if ( (rh == 2) && !wiped )
+				if ( (swwm_ps_resethealth == 2) && !wiped )
 				{
 					SWWMUtility.ResetHealth(self);
 					resethealth = true;
@@ -1237,16 +1236,16 @@ Class SWWMPlayer : PlayerPawn abstract
 			}
 			if ( invwipe&WIPE_MAP )
 			{
-				if ( (rf == 1) && !wiped )
+				if ( (swwm_ps_fullreset == 1) && !wiped )
 				{
-					SWWMUtility.WipeInventory(self,swwm_resetscore);
+					SWWMUtility.WipeInventory(self);
 					wiped = true;
 				}
-				if ( (ra == 1) && !wiped && !resetammo )
+				if ( (swwm_ps_resetammo == 1) && !wiped && !resetammo )
 					SWWMUtility.ResetAmmo(self);
-				if ( (ri == 1) && !wiped && !resetitems )
+				if ( (swwm_ps_resetitems == 1) && !wiped && !resetitems )
 					SWWMUtility.ResetItems(self);
-				if ( (rh == 1) && !wiped && !resethealth )
+				if ( (swwm_ps_resethealth == 1) && !wiped && !resethealth )
 					SWWMUtility.ResetHealth(self);
 			}
 		}
@@ -1257,7 +1256,7 @@ Class SWWMPlayer : PlayerPawn abstract
 		// prevent sudden stomping if we were previously falling
 		lastvelz = vel.z;
 		// re-attach shadow
-		if ( CVar.FindCVar(SWWMMODPREFIX.."_shadows").GetInt() <= 0 ) return;
+		if ( !swwm_shadows ) return;
 		let ti = ThinkerIterator.Create("SWWMShadow");
 		Actor a;
 		while ( a = Actor(ti.Next()) )

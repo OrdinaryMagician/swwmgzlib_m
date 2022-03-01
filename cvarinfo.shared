@@ -1,0 +1,32 @@
+// shared cvars
+nosave float swwm_flashstrength = 1.0;		// strength of screen flashes
+user float swwm_bumpstrength = 1.0;		// intensity of fov bumping
+user float swwm_bobstrength = 1.0;		// intensity of viewangle bobbing
+nosave int swwm_hudmargin = 10;			// margin around fullscreen hud elements
+nosave bool swwm_hudscale = false;		// HUD scaling (false = tight scaling, true = loose scaling)
+nosave int swwm_maxshown = 4;			// max messages to show normally
+nosave int swwm_maxshownbig = 10;		// max messages to show when chatting
+nosave int swwm_maxpickup = 5;			// total pickup messages visible
+nosave int swwm_chatduration = 25;		// lifespan of chat messages
+nosave int swwm_msgduration = 5;		// lifespan of other messages
+nosave int swwm_pickduration = 3;		// lifespan of pickup messages
+nosave bool swwm_shaders = true;		// use pp shaders for some effects
+server bool swwm_blood = true;			// custom blood/gibbing
+server int swwm_maxblood = 200;			// max blood effects at any time
+server int swwm_maxgibs = 100;			// max gibs at any time
+server int swwm_maxcasings = 100;		// max casings and spent mags at any time
+server int swwm_maxdebris = 200;		// max chunks of debris at any time
+nosave bool swwm_fuzz = true;			// allows toggling the fuzz shader on menus/backgrounds, useful if you're streaming/recording since it destroys the encoding quality
+server int swwm_enemydrops = 0;			// allow enemies to drop ammo and weapons (-1 - no ammo or weapons, 0 - ammo only, 1 - both)
+server bool swwm_shadows = true;		// enables blob shadows under mod entities, like in UT (except it also affects inventory items)
+nosave int swwm_shadowdist = 2000;		// max distance beyond which blob shadows are no longer rendered, helps performance
+nosave int swwm_forcestats = 1;			// always shows level stats on the HUD, not just when the automap is open (2 - also show map name, otherwise only stats)
+server int swwm_drlaskill = 3;			// [DRLA Monsters] skill setting for monster spawns
+server int swwm_ps_fullreset = 0;		// full reset of inventory (0: no, 1: all maps excluding hubs, 2: between clusters)
+server int swwm_ps_resetammo = 0;		// resets all ammo to zero
+server int swwm_ps_resetitems = 0;		// removes all carried items
+server int swwm_ps_resethealth = 0;		// sets health back to 100
+nosave bool swwm_weapontooltips = true;		// shows a tooltip on weapon operation when first selected
+nosave string swwm_tooltipshown = "";		// which weapons have already had their tooltips displayed
+nosave noarchive bool swwm_tooltipnote = false;	// set if the note on how to disable tooltips was already displayed
+nosave bool swwm_mm_enable = true;		// show a minimap below the score counter

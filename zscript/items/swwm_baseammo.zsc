@@ -86,9 +86,7 @@ Class SWWMAmmo : Ammo
 
 	override bool SpecialDropAction( Actor dropper )
 	{
-		// never drop ammo in hexen
-		if ( gameinfo.gametype&GAME_Hexen ) return true;
-		if ( CVar.FindCVar(SWWMMODPREFIX.."_enemydrops").GetInt() >= 0 )
+		if ( swwm_enemydrops >= 0 )
 		{
 			// random chance to not drop
 			if ( Random[DropChance](1,100) <= Accuracy ) return true;
@@ -509,9 +507,7 @@ Class MagAmmo : Inventory abstract
 
 	override bool SpecialDropAction( Actor dropper )
 	{
-		// never drop ammo in hexen
-		if ( gameinfo.gametype&GAME_Hexen ) return true;
-		if ( CVar.FindCVar(SWWMMODPREFIX.."_enemydrops").GetInt() >= 0 )
+		if ( swwm_enemydrops >= 0 )
 		{
 			// random chance to not drop
 			if ( Random[DropChance](1,100) <= Accuracy ) return true;

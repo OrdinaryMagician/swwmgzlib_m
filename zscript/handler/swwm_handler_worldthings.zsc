@@ -2,8 +2,6 @@
 
 extend Class SWWMHandler
 {
-	transient CVar useshadows;
-
 	private bool HexenMap40()
 	{
 		if ( level.GetChecksum() ~== "2A6C4235B942467D25FD50D5B313E67A" ) return true;	// 1.1
@@ -112,8 +110,7 @@ extend Class SWWMHandler
 				m.target = e.Thing;
 			}
 		}
-		if ( !useshadows ) useshadows = CVar.FindCVar(SWWMMODPREFIX.."_shadows");
-		if ( useshadows.GetBool() && (e.Thing.bSHOOTABLE || e.Thing.bISMONSTER || (e.Thing is 'Inventory')) && ((e.Thing is 'SWWMPlayer') || (e.Thing.SpawnState.sprite == e.Thing.GetSpriteIndex('XZW1'))) )
+		if ( swwm_shadows && (e.Thing.bSHOOTABLE || e.Thing.bISMONSTER || (e.Thing is 'Inventory')) && ((e.Thing is 'SWWMPlayer') || (e.Thing.SpawnState.sprite == e.Thing.GetSpriteIndex('XZW1'))) )
 			SWWMShadow.Track(e.Thing);
 		// vanilla blood color changes
 		if ( (e.Thing.GetClass() == "BaronOfHell") || (e.Thing.GetClass() == "HellKnight") || (e.Thing.GetClass() == "Bishop") || (e.Thing.GetClass() == "Korax") )
