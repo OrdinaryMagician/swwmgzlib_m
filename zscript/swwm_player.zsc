@@ -14,6 +14,7 @@ Class SWWMPlayer : PlayerPawn abstract
 	transient int lastdamagetic;
 	bool lastground;
 	int lastgroundtic, lastairtic;
+	int lastwalljump;
 	double lastvelz, prevvelz, landvelz;
 	double ssup;
 	bool sendtoground;
@@ -57,6 +58,8 @@ Class SWWMPlayer : PlayerPawn abstract
 	FlagDef CanAirDodge : SPlayerFlags, 1;
 	FlagDef CanBunnyhop : SPlayerFlags, 2;
 	FlagDef CanLongJump : SPlayerFlags, 3;
+	FlagDef CanWallKick : SPlayerFlags, 4;
+	FlagDef CanWallClimb : SPlayerFlags, 5;
 
 	double walkspeed, runspeed;
 	double dodgespeed;
@@ -805,11 +808,105 @@ Class SWWMPlayer : PlayerPawn abstract
 	override void CheckJump()
 	{
 		if ( !(player.cmd.buttons&BT_JUMP) || (gamestate != GS_LEVEL) ) return;
+		bool wallkick = false, wallclimb = false;
+		Vector2 walldir = (cos(angle),sin(angle));
+		double climbvelz = 0.;
+		Actor jumpactor = null;
+		FLineTraceData d;
+		for ( int i=-4; i<int(height*.8); i++ )
+		{
+			if ( !wallkick )
+			{
+				for ( int k=0; k<60; k+=10 )
+				{
+					for ( int j=-1; j<=1; j+=2 )
+					{
+						double ang = (angle-180)+k*j;
+						wallkick = LineTrace(ang,Radius+12,0,TRF_NOSKY|TRF_THRUHITSCAN|TRF_BLOCKSELF|TRF_SOLIDACTORS,i,data:d);
+						if ( wallkick )
+						{
+							jumpactor = d.HitActor;
+							walldir = (walldir*.7+(cos(ang+180),sin(ang+180))*.3);
+							break;
+						}
+					}
+					if ( wallkick ) break;
+				}
+				if ( wallkick ) break;
+			}
+			if ( wallkick ) break;
+			if ( !wallclimb )
+			{
+				for ( int k=0; k<30; k+=10 )
+				{
+					for ( int j=-1; j<=1; j+=2 )
+					{
+						double ang = angle+k*j;
+						wallclimb = LineTrace(ang,Radius+12,0,TRF_NOSKY|TRF_THRUHITSCAN|TRF_BLOCKSELF|TRF_SOLIDACTORS,i,data:d);
+						if ( wallclimb )
+						{
+							// double-check that it's climbable
+							if ( d.HitType == TRACE_HitWall )
+							{
+								if ( !d.HitLine.sidedef[1] || !!(d.HitLine.flags&(Line.ML_BLOCKING|Line.ML_BLOCKEVERYTHING|Line.ML_BLOCK_PLAYERS)) )	// nope
+								{
+									wallclimb = false;
+									wallkick = true;
+									walldir = -(walldir*.7+(cos(ang),sin(ang))*.3);
+									break;
+								}
+								Sector s = d.HitLine.sidedef[!d.LineSide].sector;
+								double backfloorz = s.floorplane.ZAtPoint(d.HitLocation.xy);
+								double backceilz = s.ceilingplane.ZAtPoint(d.HitLocation.xy);
+								// cling to 3D floor if hit
+								if ( d.Hit3DFloor ) backfloorz = d.Hit3DFloor.top.ZAtPoint(d.HitLocation.xy);
+								if ( ((backceilz-backfloorz) < Height) || ((pos.z+Height+32) < backfloorz) )	// nope
+								{
+									wallclimb = false;
+									wallkick = true;
+									walldir = -(walldir*.7+(cos(ang),sin(ang))*.3);
+									break;
+								}
+								climbvelz = 1.5*sqrt(max(1.,backfloorz-pos.z));
+							}
+							else if ( d.HitType == TRACE_HitActor )
+							{
+								if ( ((d.HitActor.ceilingz-d.HitActor.pos.z+d.HitActor.Height) < Height) || ((pos.z+Height+32) < (d.HitActor.pos.z+d.HitActor.Height)) )	// nope
+								{
+									wallclimb = false;
+									wallkick = true;
+									jumpactor = d.HitActor;
+									walldir = -(walldir*.7+(cos(ang),sin(ang))*.3);
+									break;
+								}
+								climbvelz = 1.5*sqrt(max(1.,(d.HitActor.pos.z+d.HitActor.Height)-pos.z));
+							}
+							jumpactor = d.HitActor;
+							walldir = (walldir*.7+(cos(ang),sin(ang))*.3);
+							break;
+						}
+					}
+					if ( wallclimb ) break;
+				}
+				if ( wallclimb ) break;
+			}
+			if ( wallclimb ) break;
+		}
+		wallkick &= bCANWALLKICK;
+		wallclimb &= bCANWALLCLIMB;
+		// cooldown before we can do these, avoids accidental walljumps off ledges we just fell off from
+		if ( level.maptime < (lastgroundtic+4) )
+		{
+			wallkick = false;
+			wallclimb = false;
+			jumpactor = null;
+		}
 		if ( player.crouchoffset ) player.crouching = 1;
 		else if ( waterlevel >= 2 ) vel.z = 4*Speed;
 		else if ( (waterlevel < 2) && bFly && !bFlyCheat && !(player.cheats&CF_NOCLIP2) ) return;
 		else if ( bNoGravity ) vel.z = 3;
-		else if ( level.IsJumpingAllowed() && player.onground && (player.jumptics == 0) )
+		else if ( level.IsJumpingAllowed() && ((player.onground && (player.jumptics == 0))
+			|| (!player.onground && !(player.oldbuttons&BT_JUMP) && (level.maptime > lastwalljump+8) && (wallkick || wallclimb))) )
 		{
 			double jumpvelz = JumpZ;
 			double jumpfac = 0;
@@ -823,11 +920,40 @@ Class SWWMPlayer : PlayerPawn abstract
 				}
 			}
 			if ( jumpfac > 0 ) jumpvelz *= jumpfac;
+			double pvelz = vel.z;
 			bOnMobj = false;
 			player.jumpTics = -1;
+			if ( wallkick )
+			{
+				if ( vel.z < 10. )
+					vel.z += 2.*jumpvelz+clamp(-pvelz*.6,0.,30.);
+				vel.xy += walldir*dodgespeed;
+				lastbump *= .97;
+				if ( jumpactor && jumpactor.bSHOOTABLE )
+				{
+					SWWMUtility.DoKnockback(jumpactor,(-walldir,0),120*mass);
+					jumpactor.DamageMobj(self,self,mass/10,'Melee');
+				}
+				bumppitch += clamp((vel.length()-10)/5.,0.,20.);
+				if ( !(player.cheats&CF_PREDICTING) )
+					PlayWallJump(walldir);
+				lastwalljump = level.maptime;
+				return;
+			}
+			else if ( wallclimb )
+			{
+				if ( vel.z < 10. )
+					vel.z += climbvelz+clamp(-pvelz*.95,0.,30.);
+				vel.xy += walldir*dodgespeed/2.;
+				bumppitch += clamp((vel.length()-10)/5.,0.,20.);
+				if ( !(player.cheats&CF_PREDICTING) )
+					PlayWallClimb();
+				lastwalljump = level.maptime;
+				return;
+			}
+			bumppitch += clamp((vel.length()-10)/5.,0.,20.);
 			if ( !(player.cheats&CF_PREDICTING) )
 				PlayJumping();
-			bumppitch += clamp((vel.length()-10)/5.,0.,20.);
 			if ( bCANBUNNYHOP && (player.cmd.buttons&BT_RUN) && (level.maptime < (lastairtic+10)) )
 			{
 				// bhop, z vel relative to vel size
@@ -1287,8 +1413,18 @@ Class SWWMPlayer : PlayerPawn abstract
 	{
 	}
 
+	virtual void PlayWallJump( Vector2 dir )
+	{
+		PlayJumping();
+	}
+	virtual void PlayWallClimb()
+	{
+		PlayJumping();
+	}
+
 	virtual void PlayDodge( Vector3 dir )
 	{
+		PlayJumping();
 	}
 
 	virtual void PlayLanded()
@@ -1297,10 +1433,12 @@ Class SWWMPlayer : PlayerPawn abstract
 
 	virtual void PlayFire()
 	{
+		SetStateLabel("Missile");
 	}
 
 	virtual void PlayMelee()
 	{
+		SetStateLabel("Melee");
 	}
 
 	virtual void PlayReload()
@@ -1313,6 +1451,7 @@ Class SWWMPlayer : PlayerPawn abstract
 
 	virtual void PlayRevive()
 	{
+		SetStateLabel("Spawn");
 	}
 }
 
