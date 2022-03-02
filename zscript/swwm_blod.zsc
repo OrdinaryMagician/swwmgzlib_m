@@ -585,10 +585,10 @@ Class mkFlyingGib : Actor
 	States
 	{
 	Spawn:
-		SGIB # 1;
+		MEAT # 1;
 		Wait;
 	Bounce:
-		SGIB # 0
+		MEAT # 0
 		{
 			A_Bleed();
 			A_StartSound("misc/gibhit",CHAN_BODY,CHANF_OVERLAP);
@@ -598,10 +598,10 @@ Class mkFlyingGib : Actor
 		}
 		Goto Spawn;
 	Death:
-		SGIB # 1 A_JumpIf(pos.z<=floorz,"Death2");
+		MEAT # 1 A_JumpIf(pos.z<=floorz,"Death2");
 		Wait;
 	Death2:
-		SGIB # -1
+		MEAT # -1
 		{
 			A_StartSound("misc/gibhit",CHAN_BODY,CHANF_OVERLAP);
 			pitch = Random[Gibs](-5,5);
