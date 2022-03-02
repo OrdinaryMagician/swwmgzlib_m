@@ -43,6 +43,9 @@ Class SWWMPlayer : PlayerPawn abstract
 	Color undercol;
 	int deadtimer;
 
+	int thr_xpain, thr_hipain, thr_pain, thr_lopain;
+	Property PainThresholds : thr_lopain, thr_pain, thr_hipain, thr_xpain;
+
 	transient int bumptic;
 	transient double lastbump;
 	transient CVar bumpstr;
@@ -89,13 +92,14 @@ Class SWWMPlayer : PlayerPawn abstract
 		Player.AirCapacity 0;
 		Player.ForwardMove 1., 1.;
 		Player.SideMove 1., 1.;
-		Player.GruntSpeed 30;
+		Player.GruntSpeed 25;
 		DamageFactor "Drowning", 0.;
 		SWWMPlayer.MoveSpeed .5, 1.;
 		SWWMPlayer.DodgeSpeed 20;
 		SWWMPlayer.CrouchingSpeed CROUCHSPEED;
 		SWWMPlayer.MinCrouch .5;
 		SWWMPlayer.ResurrectType RT_NONE;
+		SWWMPlayer.PainThresholds 0, 25, 50, 75;
 		+DONTGIB;
 		+NOICEDEATH;
 		+DONTMORPH;
@@ -1065,7 +1069,6 @@ Class SWWMPlayer : PlayerPawn abstract
 		player.bonuscount = 0;
 		player.poisoncount = 0;
 		PlayRevive();
-		if ( special1 > 2 ) special1 = 0;
 	}
 
 	void DoRespawn()
@@ -1277,25 +1280,25 @@ Class SWWMPlayer : PlayerPawn abstract
 
 	void A_SWWMPain()
 	{
-		if ( lastdamage > 75 )
+		if ( lastdamage > thr_xpain )
 		{
 			A_QuakeEx(4,4,4,9,0,8,"",QF_RELATIVE|QF_SCALEDOWN);
 			A_StartSound("*pain25",CHAN_VOICE);
 			lastbump *= 1.04;
 		}
-		else if ( lastdamage > 50 )
+		else if ( lastdamage > thr_hipain )
 		{
 			A_QuakeEx(3,3,3,7,0,8,"",QF_RELATIVE|QF_SCALEDOWN);
 			A_StartSound("*pain50",CHAN_VOICE);
 			lastbump *= 1.03;
 		}
-		else if ( lastdamage > 25 )
+		else if ( lastdamage > thr_pain )
 		{
 			A_QuakeEx(2,2,2,5,0,8,"",QF_RELATIVE|QF_SCALEDOWN);
 			A_StartSound("*pain75",CHAN_VOICE);
 			lastbump *= 1.02;
 		}
-		else if ( lastdamage > 0 )
+		else if ( lastdamage > thr_lopain )
 		{
 			A_QuakeEx(1,1,1,3,0,8,"",QF_RELATIVE|QF_SCALEDOWN);
 			A_StartSound("*pain100",CHAN_VOICE);
