@@ -9,7 +9,6 @@ Class SWWMStatScreen : StatusScreen abstract
 {
 	TextureID gradtex;
 	int glarestr;
-	double FracTic;
 	int sndcnt;
 	int whichtip;
 	int tipalphastate;
@@ -69,7 +68,7 @@ Class SWWMStatScreen : StatusScreen abstract
 	override int DrawLF()
 	{
 		if ( sp_state < 1 ) return 0;
-		double GameSecs = (bcnt+FracTic)/GameTicRate;
+		double GameSecs = bcnt/double(GameTicRate);
 		int th = (smallfont.GetHeight()*(8+(!!wbs.partime)+(wbs.totaltime!=Plrs[me].stime))+32)*CleanYFac_1; // height of the stats box + margin
 		int bh = ((authortexts[0]!="")?(smallfont2.GetHeight()+smallfont.GetHeight()*2+bigfont.GetHeight()):(smallfont.GetHeight()*2+bigfont.GetHeight()))*CleanYFac_1; // height of the "level finished" box
 		double xx = Screen.GetWidth()/2-120*CleanXFac_1;
@@ -209,7 +208,7 @@ Class SWWMStatScreen : StatusScreen abstract
 		}
 		if ( tipalpha > 0. )
 		{
-			double alf = clamp(tipalpha+(FracTic/GameTicRate)*tipalphastate,0.,1.);
+			double alf = clamp(tipalpha+GameTicRate*tipalphastate,0.,1.);
 			String stra = String.Format(StringTable.Localize("$"..SWWMMODPREFIX.."_INTERTIP"),whichtip);
 			String strb = StringTable.Localize("$"..SWWMMODPREFIX.."_INTERTIP"..whichtip);
 			int wb = smallfont.StringWidth(strb);
@@ -223,7 +222,7 @@ Class SWWMStatScreen : StatusScreen abstract
 			double alph;
 			if ( tipflash && (gametic < tipflash) )
 			{
-				alph = max((tipflash-(gametic+FracTic))/25.,0.)**1.5;
+				alph = max((tipflash-gametic)/25.,0.)**1.5;
 					Screen.DrawText(smallfont,Font.FindFontColor('MiniHUDFlash'),xx,yy,stra,DTA_ScaleX,CleanXFac_1,DTA_ScaleY,CleanYFac_1,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alf*alph);
 			}
 			yy += smallfont.GetHeight()*CleanYFac_1;
@@ -236,7 +235,6 @@ Class SWWMStatScreen : StatusScreen abstract
 
 	override void Drawer( void )
 	{
-		FracTic = System.GetTimeFrac();
 		switch ( CurState )
 		{
 		case StatCount:

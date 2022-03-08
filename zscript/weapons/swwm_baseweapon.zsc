@@ -241,11 +241,6 @@ Class SWWMWeapon : Weapon abstract
 		let demo = SWWMPlayer(player.mo);
 		if ( demo && (demo.Health > 0) ) demo.PlayReload();
 	}
-	action void A_PlayerCheckGun()
-	{
-		let demo = SWWMPlayer(player.mo);
-		if ( demo && (demo.Health > 0) ) demo.PlayCheckGun();
-	}
 	// instant raise/lower
 	action void A_FullRaise()
 	{
