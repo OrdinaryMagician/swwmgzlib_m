@@ -691,6 +691,13 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		}
 	}
 
+	// actually does nothing since actor displays are a Demolitionist-exclusive feature
+	// but kept around and made virtual so side mods can draw their own stuff here
+	// (e.g.: show special markers or whatever)
+	virtual void DrawMapThings( Vector2 basepos )
+	{
+	}
+
 	private void DrawTopStuff()
 	{
 		// obviously, don't draw the minimap if the automap is open
@@ -703,6 +710,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			Screen.Dim(mm_backcolor,1.,int((basemappos.x-HALFMAPSIZE)*hs),int((basemappos.y-HALFMAPSIZE)*hs),int(HALFMAPSIZE*2*hs),int(HALFMAPSIZE*2*hs));
 			// draw dat stuff
 			DrawMapLines(basemappos*hs);
+			DrawMapThings(basemappos*hs);
 			DrawMapMarkers(basemappos*hs);
 			// draw the player arrow
 			Vector2 tv[3];

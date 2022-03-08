@@ -1238,6 +1238,50 @@ Class SWWMBulletTrail : LineTracer
 	}
 }
 
+// Dummy "puff" actor used for hitscan compatibility
+// (don't forget to pass DMG_INFLICTOR_IS_PUFF to DamageMobj calls for this to work)
+Class SWWMPuff : Actor
+{
+	static Actor Setup( Vector3 pos, Vector3 dir, Actor inflictor = null, Actor source = null, Actor victim = null )
+	{
+		let p = Spawn("SWWMPuff",pos);
+		p.angle = atan2(dir.y,dir.x);
+		p.pitch = asin(-dir.z);
+		p.master = inflictor;	// so certain scripts can fetch the weapon that spawned this puff
+		p.target = source;	// as expected with PUFFGETSOWNER
+		p.tracer = victim;	// as expected with HITTRACER
+		return p;
+	}
+
+	// make sure obituaries work as intended
+	override String GetObituary( Actor victim, Actor inflictor, Name mod, bool playerattack )
+	{
+		if ( master ) return master.GetObituary(victim,master,mod,playerattack);
+		return Super.GetObituary(victim,inflictor,mod,playerattack);
+	}
+
+	default
+	{
+		Radius .1;
+		Height 0.;
+		+NOBLOCKMAP;
+		+NOINTERACTION;
+		+DONTSPLASH;
+		+NOTELEPORT;
+		+ALWAYSPUFF;
+		+PUFFONACTORS;
+		+PUFFGETSOWNER;
+		+HITTRACER;
+		FloatBobPhase 0;
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 5;	// should be enough for damage accumulators, just to be safe
+		Stop;
+	}
+}
+
 // finds the first pickup-able item
 Class SWWMItemTracer : LineTracer
 {
