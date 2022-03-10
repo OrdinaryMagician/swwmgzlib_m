@@ -3,7 +3,24 @@
 Class MsgLine
 {
 	String str;
+	transient BrokenLines l, ls;
 	int tic, type, rep;
+	int lastrep;
+	int lastsz;
+
+	void UpdateText( int sz = 0 )
+	{
+		bool mustupdate = (!l||!ls||(lastrep!=rep)||((type==PRINT_LOW)&&(sz!=lastsz)));
+		if ( !mustupdate ) return;
+		if ( l ) l.Destroy();
+		if ( ls ) ls.Destroy();
+		lastsz = sz;
+		lastrep = rep;
+		String nstr = str;
+		if ( rep > 1 ) nstr.AppendFormat(" (x%d)",rep);
+		l = SmallFont.BreakLines(nstr,(type==PRINT_LOW)?sz:361);
+		if ( type != PRINT_LOW ) ls = SmallFont.BreakLines(nstr,211);
+	}
 }
 
 Class KeyGet
@@ -65,6 +82,8 @@ Class SWWMStatusBar : BaseStatusBar abstract
 
 	String midstr;
 	int midtic, midtype;
+	transient BrokenLines midl;
+	int midsz;
 
 	SWWMWeaponTooltip ctip;
 
@@ -176,14 +195,14 @@ Class SWWMStatusBar : BaseStatusBar abstract
 
 	override bool ProcessNotify( EPrintLevel printlevel, String outline )
 	{
+		// ignore during intermission
+		if ( gamestate != GS_LEVEL ) return false;
+		if ( (printlevel < PRINT_LOW) || (printlevel > PRINT_TEAMCHAT) ) return true;	// we couldn't care less about these
 		let m = new("MsgLine");
 		m.str = outline.Left(outline.Length()-1);	// strip newline
 		m.type = printlevel;
 		m.tic = level.totaltime;
 		m.rep = 1;
-		// ignore during intermission
-		if ( gamestate != GS_LEVEL ) return false;
-		if ( (printlevel < PRINT_LOW) || (printlevel > PRINT_TEAMCHAT) ) return true;	// we couldn't care less about these
 		if ( printlevel == PRINT_LOW )
 		{
 			// check if repeated
@@ -195,6 +214,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 				PickupQueue.Delete(i);
 				break;
 			}
+			m.UpdateText(int(ss.x*.75));
 			PickupQueue.Push(m);
 		}
 		else
@@ -208,6 +228,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 				MainQueue.Delete(i);
 				break;
 			}
+			m.UpdateText();
 			MainQueue.Push(m);
 		}
 		return true;
@@ -990,11 +1011,10 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		if ( nalph > 0. ) yy -= int((smallfont.GetHeight()+6)*clamp(nalph*2.,0.,1.));
 		for ( int i=PickupQueue.Size()-1; i>=mend; i-- )
 		{
-			String cstr = PickupQueue[i].str;
-			if ( PickupQueue[i].rep > 1 ) cstr.AppendFormat(" (x%d)",PickupQueue[i].rep);
+			PickupQueue[i].UpdateText(int(ss.x*.75));
 			double curtime = (PickupQueue[i].tic+GameTicRate*swwm_pickduration)-(level.totaltime+fractic);
 			double alph = clamp(curtime/20.,0.,1.);
-			BrokenLines l = smallfont.BreakLines(cstr,int(ss.x*.75));
+			let l = PickupQueue[i].l;
 			int maxlen = 0;
 			for ( int j=0; j<l.Count(); j++ )
 			{
@@ -1010,7 +1030,6 @@ Class SWWMStatusBar : BaseStatusBar abstract
 				Screen.DrawText(smallfont,msg0color,xx,yy+2,l.StringAt(j),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
 				yy -= h;
 			}
-			l.Destroy();
 			yy -= 6;
 		}
 	}
@@ -1025,22 +1044,25 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			int col = (midtype&2)?msgmidcolor2:msgmidcolor;
 			double curtime = (midtic+int(GameTicRate*con_midtime))-(level.totaltime+fractic);
 			double alph = clamp(curtime/20.,0.,1.);
-			BrokenLines l = smallfont.BreakLines(midstr,int(ss.x*ssp));
+			if ( !midl || (midsz != int(ss.x*ssp)) )
+			{
+				if ( midl ) midl.Destroy();
+				midl = SmallFont.BreakLines(midstr,int(ss.x*ssp));
+			}
 			int h = smallfont.GetHeight();
 			int maxlen = 0;
-			for ( int i=0; i<l.Count(); i++ ) maxlen = max(maxlen,smallfont.StringWidth(l.StringAt(i)));
+			for ( int i=0; i<midl.Count(); i++ ) maxlen = max(maxlen,smallfont.StringWidth(midl.StringAt(i)));
 			xx = int((ss.x*ssp-maxlen)/2.);
 			yy = ss.y*ssp*.375;
-			yy -= (h*l.Count()+4)/2;	// center
-			Screen.Dim("Black",.8*alph,int((xx-6)*hs*hsp),int(yy*hs*hsp),int((maxlen+12)*hs*hsp),int((h*l.Count()+4)*hs*hsp));
-			for ( int i=0; i<l.Count(); i++ )
+			yy -= (h*midl.Count()+4)/2;	// center
+			Screen.Dim("Black",.8*alph,int((xx-6)*hs*hsp),int(yy*hs*hsp),int((maxlen+12)*hs*hsp),int((h*midl.Count()+4)*hs*hsp));
+			for ( int i=0; i<midl.Count(); i++ )
 			{
-				int len = smallfont.StringWidth(l.StringAt(i));
+				int len = smallfont.StringWidth(midl.StringAt(i));
 				xx = int((ss.x*ssp-len)/2.);
-				Screen.DrawText(smallfont,col,int(xx),yy+2,l.StringAt(i),DTA_VirtualWidthF,ss.x*ssp,DTA_VirtualHeightF,ss.y*ssp,DTA_KeepRatio,true,DTA_Alpha,alph);
+				Screen.DrawText(smallfont,col,int(xx),yy+2,midl.StringAt(i),DTA_VirtualWidthF,ss.x*ssp,DTA_VirtualHeightF,ss.y*ssp,DTA_KeepRatio,true,DTA_Alpha,alph);
 				yy += h;
 			}
-			l.Destroy();
 		}
 		if ( MainQueue.Size() <= 0 ) return;
 		int mstart = max(0,MainQueue.Size()-((chatopen>=gametic)?swwm_maxshownbig:swwm_maxshown));
@@ -1055,20 +1077,18 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			if ( MainQueue[i].type == PRINT_MEDIUM ) col = msg1color;
 			else if ( MainQueue[i].type == PRINT_CHAT ) col = msg3color;
 			else if ( MainQueue[i].type == PRINT_TEAMCHAT ) col = msg4color;
-			String cstr = MainQueue[i].str;
-			if ( MainQueue[i].rep > 1 ) cstr.AppendFormat(" (x%d)",MainQueue[i].rep);
+			MainQueue[i].UpdateText();
+			let l = smol?MainQueue[i].l:MainQueue[i].ls;
 			double curtime = MainQueue[i].tic-(level.totaltime+fractic);
 			if ( MainQueue[i].type < PRINT_CHAT ) curtime += GameTicRate*swwm_msgduration;
 			else curtime += GameTicRate*swwm_chatduration;
 			double alph = clamp(curtime/20.,0.,1.);
-			BrokenLines l = smallfont.BreakLines(cstr,smol?211:361);
 			for ( int j=0; j<l.Count(); j++ )
 			{
 				Screen.DrawTexture(ChatTex[smol?4:1],false,xx,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,boxalph);
 				Screen.DrawText(smallfont,col,xx+4,yy,l.StringAt(j),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
 				yy += 13;
 			}
-			l.Destroy();
 		}
 		Screen.DrawTexture(ChatTex[smol?5:2],false,xx,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,boxalph);
 	}

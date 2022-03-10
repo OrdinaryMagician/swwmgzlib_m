@@ -13,6 +13,8 @@ Class SWWMStatScreen : StatusScreen abstract
 	int whichtip;
 	int tipalphastate;
 	double tipalpha;
+	String tipstr;
+	transient BrokenLines tipl;
 
 	// customizable colors
 	int lnamecolor, lauthcolor;	// name / author text
@@ -204,32 +206,34 @@ Class SWWMStatScreen : StatusScreen abstract
 				}
 			}
 			whichtip = ents[Random[InterArt](0,ents.Size()-1)];
+			tipstr = String.Format(StringTable.Localize("$"..SWWMMODPREFIX.."_INTERTIP"),whichtip).."\n"..StringTable.Localize("$"..SWWMMODPREFIX.."_INTERTIP"..whichtip);
+			if ( tipl ) tipl.Destroy();
 			pdata.lasttip.Push(whichtip);
 		}
 		if ( tipalpha > 0. )
 		{
 			double alf = clamp(tipalpha+GameTicRate*tipalphastate,0.,1.);
-			String stra = String.Format(StringTable.Localize("$"..SWWMMODPREFIX.."_INTERTIP"),whichtip);
-			String strb = StringTable.Localize("$"..SWWMMODPREFIX.."_INTERTIP"..whichtip);
-			int wb = smallfont.StringWidth(strb);
-			int tw = max(smallfont.StringWidth(stra),16+wb);
-			double xx = (Screen.GetWidth()-tw*CleanXFac_1)/2;
+			if ( !tipl ) tipl = smallfont.BreakLines(tipstr,600);
+			int lw = 0;
+			for ( int i=0; i<tipl.Count(); i++ )
+				if ( tipl.StringWidth(i) > lw )
+					lw = tipl.StringWidth(i);
+			double xx = (Screen.GetWidth()-lw*CleanXFac_1)/2;
 			double yy = Screen.GetHeight()-60*CleanYFac_1;
+			yy -= (tipl.Count()-1)*smallfont.GetHeight();
 			if ( !gradtex ) gradtex = TexMan.CheckForTexture("graphics/title_grad.png",TexMan.Type_Any);
-			Screen.DrawTexture(gradtex,false,Screen.GetWidth()/2,yy+smallfont.GetHeight()*CleanYFac_1,DTA_DestWidth,400*CleanXFac_1,DTA_DestHeight,(smallfont.GetHeight()*2+8)*CleanYFac_1,DTA_Rotate,90,DTA_LegacyRenderStyle,STYLE_Shaded,DTA_FillColor,Color(0,0,0),DTA_Alpha,.8*alf,DTA_TopOffset,256,DTA_LeftOffset,128);
-			Screen.DrawTexture(gradtex,false,Screen.GetWidth()/2,yy+smallfont.GetHeight()*CleanYFac_1,DTA_DestWidth,400*CleanXFac_1,DTA_DestHeight,(smallfont.GetHeight()*2+8)*CleanYFac_1,DTA_Rotate,270,DTA_LegacyRenderStyle,STYLE_Shaded,DTA_FillColor,Color(0,0,0),DTA_Alpha,.8*alf,DTA_TopOffset,256,DTA_LeftOffset,128);
-			Screen.DrawText(smallfont,tipcolor0,xx,yy,stra,DTA_ScaleX,CleanXFac_1,DTA_ScaleY,CleanYFac_1,DTA_Alpha,alf);
+			Screen.DrawTexture(gradtex,false,Screen.GetWidth()/2,yy+smallfont.GetHeight()*tipl.Count()*CleanYFac_1/2.,DTA_DestWidth,400*CleanXFac_1,DTA_DestHeight,(smallfont.GetHeight()*tipl.Count()+8)*CleanYFac_1,DTA_Rotate,90,DTA_LegacyRenderStyle,STYLE_Shaded,DTA_FillColor,Color(0,0,0),DTA_Alpha,.8*alf,DTA_TopOffset,256,DTA_LeftOffset,128);
+			Screen.DrawTexture(gradtex,false,Screen.GetWidth()/2,yy+smallfont.GetHeight()*tipl.Count()*CleanYFac_1/2.,DTA_DestWidth,400*CleanXFac_1,DTA_DestHeight,(smallfont.GetHeight()*tipl.Count()+8)*CleanYFac_1,DTA_Rotate,270,DTA_LegacyRenderStyle,STYLE_Shaded,DTA_FillColor,Color(0,0,0),DTA_Alpha,.8*alf,DTA_TopOffset,256,DTA_LeftOffset,128);
 			double alph;
-			if ( tipflash && (gametic < tipflash) )
+			if ( tipflash && (gametic < tipflash) ) alph = max((tipflash-gametic)/25.,0.)**1.5;
+			for ( int i=0; i<tipl.Count(); i++ )
 			{
-				alph = max((tipflash-gametic)/25.,0.)**1.5;
-					Screen.DrawText(smallfont,Font.FindFontColor('MiniHUDFlash'),xx,yy,stra,DTA_ScaleX,CleanXFac_1,DTA_ScaleY,CleanYFac_1,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alf*alph);
+				Screen.DrawText(smallfont,(i==0)?tipcolor0:tipcolor1,xx,yy,tipl.StringAt(i),DTA_ScaleX,CleanXFac_1,DTA_ScaleY,CleanYFac_1,DTA_Alpha,alf);
+				if ( tipflash && (gametic < tipflash) )
+					Screen.DrawText(smallfont,Font.FindFontColor('MiniHUDFlash'),xx,yy,tipl.StringAt(i),DTA_ScaleX,CleanXFac_1,DTA_ScaleY,CleanYFac_1,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alf*alph);
+				yy += smallfont.GetHeight()*CleanYFac_1;
+				if ( i == 0 ) xx += 16*CleanXFac_1;
 			}
-			yy += smallfont.GetHeight()*CleanYFac_1;
-			xx += (tw-wb)*CleanXFac_1;
-			Screen.DrawText(smallfont,tipcolor1,xx,yy,strb,DTA_ScaleX,CleanXFac_1,DTA_ScaleY,CleanYFac_1,DTA_Alpha,alf);
-			if ( tipflash && (gametic < tipflash) )
-				Screen.DrawText(smallfont,Font.FindFontColor('MiniHUDFlash'),xx,yy,strb,DTA_ScaleX,CleanXFac_1,DTA_ScaleY,CleanYFac_1,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alf*alph);
 		}
 	}
 

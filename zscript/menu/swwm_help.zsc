@@ -8,6 +8,9 @@ Class SWWMHelpMenu : GenericMenu
 	bool isrclick;
 	int pagedir;
 
+	Array<String> pagehdr;
+	Array<BrokenLines> pagetxt;
+
 	override void Init( Menu parent )
 	{
 		Super.Init(parent);
@@ -18,6 +21,14 @@ Class SWWMHelpMenu : GenericMenu
 		numpages = StringTable.Localize("$"..SWWMMODPREFIX.."_HELP_NPAGE").ToInt();
 		if ( numpages <= 0 ) ThrowAbortException("Tried to open SWWMHelpMenu with no help pages defined");
 		bgtex = TexMan.CheckForTexture("graphics/tempbg.png",TexMan.Type_Any);
+		String str;
+		for ( int i=0; i<numpages; i++ )
+		{
+			str = StringTable.Localize("$"..SWWMMODPREFIX.."_HELP_PAGE"..(i+1));
+			pagehdr.Push(str);
+			str = StringTable.Localize("$"..SWWMMODPREFIX.."_HELP_PAGE"..(i+1).."_TXT");
+			pagetxt.Push(SmallFont.BreakLines(str,600));
+		}
 	}
 
 	override bool MenuEvent( int mkey, bool fromcontroller )
@@ -110,13 +121,10 @@ Class SWWMHelpMenu : GenericMenu
 	private void DrawPage( int page, double xofs = 0., double alpha = 1. )
 	{
 		int h = smallfont.GetHeight();
-		String hdr = "", txt = "";
-		BrokenLines l;
 		int maxlen = 0, lh;
 		double y = 0;
-		hdr = StringTable.Localize("$"..SWWMMODPREFIX.."_HELP_PAGE"..(page+1));
-		txt = StringTable.Localize("$"..SWWMMODPREFIX.."_HELP_PAGE"..(page+1).."_TXT");
-		l = smallfont.BreakLines(txt,600);
+		let hdr = pagehdr[page];
+		let l = pagetxt[page];
 		lh = l.Count()*h;
 		Screen.DrawText(smallfont,SWWMCREDITSCOL0,xofs+(Screen.GetWidth()-smallfont.StringWidth(hdr)*CleanXFac_1)/2,(Screen.GetHeight()-(h*3+lh)*CleanYFac_1)/2,hdr,DTA_CleanNoMove_1,true,DTA_Alpha,alpha);
 		for ( int i=0; i<l.Count(); i++ )
@@ -129,7 +137,6 @@ Class SWWMHelpMenu : GenericMenu
 			Screen.DrawText(smallfont,SWWMCREDITSCOL2,xofs+(Screen.GetWidth()-maxlen*CleanXFac_1)/2,(Screen.GetHeight()-lh*CleanYFac_1)/2+y,l.StringAt(i),DTA_CleanNoMove_1,true,DTA_Alpha,alpha);
 			y += h*CleanYFac_1;
 		}
-		l.Destroy();
 	}
 
 	override void Drawer()
