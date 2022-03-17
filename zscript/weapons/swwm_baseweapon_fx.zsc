@@ -163,7 +163,7 @@ Class SWWMWeaponLight : DynamicLight
 		if ( target.player )
 		{
 			Vector3 x, y, z, origin;
-			[x, y, z] = swwm_CoordUtil.GetAxes(target.pitch,target.angle,target.roll);
+			[x, y, z] = swwm_CoordUtil.GetAxes(target.pitch+target.viewpitch,target.angle+target.viewangle,target.roll+target.viewroll);
 			origin = level.Vec3Offset(target.Vec2OffsetZ(0,0,target.player.viewz),x*12);
 			SetOrigin(origin,true);
 		}

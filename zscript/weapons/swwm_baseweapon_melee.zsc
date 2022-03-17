@@ -97,7 +97,7 @@ extend Class SWWMWeapon
 	private action bool TryMelee( double spread, int dmg, String hitsound = "", double rangemul = 1., double kickmul = 1. )
 	{
 		Vector3 x, y, z, dir;
-		[x, y, z] = swwm_CoordUtil.GetAxes(pitch,angle,roll);
+		[x, y, z] = swwm_CoordUtil.GetAxes(pitch+viewpitch,angle+viewangle,roll+viewroll);
 		Vector3 origin = Vec2OffsetZ(0,0,player.viewz);
 		Array<MHitList> hits;
 		hits.Clear();
