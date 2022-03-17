@@ -586,6 +586,8 @@ Class SWWMPlayer : PlayerPawn abstract
 		ViewAngle += cos(bobangle/2.)*(player.bob*ViewBob*str)/90.;
 		ViewPitch += cos(bobangle)*(player.bob*ViewBob*str)/90.;
 		ViewRoll += sin(bobangle/2.)*(player.bob*ViewBob*str)/90.;
+		Vector2 nmove = NormalizedMove()*TweakSpeed();
+		ViewRoll -= (nmove.y*str)/12800.;
 		// stabilize view angles
 		A_SetViewAngle(ViewAngle*.8,SPF_INTERPOLATE);
 		A_SetViewPitch(ViewPitch*.8,SPF_INTERPOLATE);
@@ -1164,7 +1166,7 @@ Class SWWMPlayer : PlayerPawn abstract
 				let b = Spawn("InvisibleSplasher",level.Vec3Offset(pos,(RotateVector((0,yofs*.25*radius),angle),0)));
 				b.A_CheckTerrain();
 			}
-			vel.xy += (RotateVector(NormalizedMove(),angle)/3600.)*TweakSpeed();
+			vel.xy += (RotateVector(NormalizedMove(),angle)/6400.)*TweakSpeed();
 			return;
 		}
 		if ( !nosplash )

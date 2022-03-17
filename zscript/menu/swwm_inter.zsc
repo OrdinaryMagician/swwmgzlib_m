@@ -212,7 +212,7 @@ Class SWWMStatScreen : StatusScreen abstract
 		}
 		if ( tipalpha > 0. )
 		{
-			double alf = clamp(tipalpha+GameTicRate*tipalphastate,0.,1.);
+			double alf = clamp(tipalpha,0.,1.);
 			if ( !tipl ) tipl = smallfont.BreakLines(tipstr,600);
 			int lw = 0;
 			for ( int i=0; i<tipl.Count(); i++ )
@@ -222,8 +222,8 @@ Class SWWMStatScreen : StatusScreen abstract
 			double yy = Screen.GetHeight()-60*CleanYFac_1;
 			yy -= (tipl.Count()-1)*smallfont.GetHeight();
 			if ( !gradtex ) gradtex = TexMan.CheckForTexture("graphics/title_grad.png",TexMan.Type_Any);
-			Screen.DrawTexture(gradtex,false,Screen.GetWidth()/2,yy+smallfont.GetHeight()*tipl.Count()*CleanYFac_1/2.,DTA_DestWidth,400*CleanXFac_1,DTA_DestHeight,(smallfont.GetHeight()*tipl.Count()+8)*CleanYFac_1,DTA_Rotate,90,DTA_LegacyRenderStyle,STYLE_Shaded,DTA_FillColor,Color(0,0,0),DTA_Alpha,.8*alf,DTA_TopOffset,256,DTA_LeftOffset,128);
-			Screen.DrawTexture(gradtex,false,Screen.GetWidth()/2,yy+smallfont.GetHeight()*tipl.Count()*CleanYFac_1/2.,DTA_DestWidth,400*CleanXFac_1,DTA_DestHeight,(smallfont.GetHeight()*tipl.Count()+8)*CleanYFac_1,DTA_Rotate,270,DTA_LegacyRenderStyle,STYLE_Shaded,DTA_FillColor,Color(0,0,0),DTA_Alpha,.8*alf,DTA_TopOffset,256,DTA_LeftOffset,128);
+			Screen.DrawTexture(gradtex,false,Screen.GetWidth()/2,yy+smallfont.GetHeight()*tipl.Count()*CleanYFac_1/2.,DTA_DestWidth,450*CleanXFac_1,DTA_DestHeight,(smallfont.GetHeight()*tipl.Count()+8)*CleanYFac_1,DTA_Rotate,90,DTA_LegacyRenderStyle,STYLE_Shaded,DTA_FillColor,Color(0,0,0),DTA_Alpha,.8*alf,DTA_TopOffset,256,DTA_LeftOffset,128);
+			Screen.DrawTexture(gradtex,false,Screen.GetWidth()/2,yy+smallfont.GetHeight()*tipl.Count()*CleanYFac_1/2.,DTA_DestWidth,450*CleanXFac_1,DTA_DestHeight,(smallfont.GetHeight()*tipl.Count()+8)*CleanYFac_1,DTA_Rotate,270,DTA_LegacyRenderStyle,STYLE_Shaded,DTA_FillColor,Color(0,0,0),DTA_Alpha,.8*alf,DTA_TopOffset,256,DTA_LeftOffset,128);
 			double alph;
 			if ( tipflash && (gametic < tipflash) ) alph = max((tipflash-gametic)/25.,0.)**1.5;
 			for ( int i=0; i<tipl.Count(); i++ )
