@@ -1078,7 +1078,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			else if ( MainQueue[i].type == PRINT_CHAT ) col = msg3color;
 			else if ( MainQueue[i].type == PRINT_TEAMCHAT ) col = msg4color;
 			MainQueue[i].UpdateText();
-			let l = smol?MainQueue[i].l:MainQueue[i].ls;
+			let l = smol?MainQueue[i].ls:MainQueue[i].l;
 			double curtime = MainQueue[i].tic-(level.totaltime+fractic);
 			if ( MainQueue[i].type < PRINT_CHAT ) curtime += GameTicRate*swwm_msgduration;
 			else curtime += GameTicRate*swwm_chatduration;
