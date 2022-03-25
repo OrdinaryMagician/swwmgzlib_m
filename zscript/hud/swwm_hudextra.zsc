@@ -92,7 +92,6 @@ Class QueuedFlash
 // weapon tooltips
 Class SWWMWeaponTooltip : HUDMessageBase
 {
-	TextureID icon;
 	String wpn, txt;
 	double tics, holdtics, fadeintics, fadeouttics;
 	transient BrokenLines l;
@@ -101,10 +100,9 @@ Class SWWMWeaponTooltip : HUDMessageBase
 	SWWMWeaponTooltip Init( Class<SWWMWeapon> weapon )
 	{
 		let def = GetDefaultByType(weapon);
-		icon = def.Icon;
 		wpn = def.GetTag();
 		txt = StringTable.Localize(def.tooltip);
-		holdtics = 120;
+		holdtics = 160;
 		fadeintics = 5;
 		fadeouttics = 15;
 		tics = -10;
@@ -122,35 +120,283 @@ Class SWWMWeaponTooltip : HUDMessageBase
 	{
 		if ( tics <= 0 ) return;
 		double hs;
-		if ( swwm_hudscale ) hs = CleanXFac_1;
-		else hs = max(floor(Screen.GetWidth()/640.),1.);
+		if ( swwm_hudscale ) hs = max(CleanXFac_1-1.,1.);
+		else hs = max(floor(Screen.GetWidth()/640.)-1.,1.);
 		Vector2 ss = (Screen.GetWidth(),Screen.GetHeight())/hs;
-		double alpha = (tics<fadeintics)?(tics/fadeintics):(tics<(fadeintics+holdtics))?1.:(1.-(tics-(fadeintics+holdtics))/fadeouttics);
-		int w, h;
-		[w, h] = TexMan.GetSize(icon);
-		int w2 = w;
-		Vector2 pos = (int(ss.x/2),int(ss.y/2)+h/2);
-		w = smallfont.StringWidth(wpn);
-		if ( !l ) l = smallfont2.BreakLines(txt,600);
+		double fractic = SWWMStatusBar(statusbar)?SWWMStatusBar(statusbar).fractic:0;
+		double ftics = tics+fractic;
+		double alpha = (ftics<fadeintics)?(ftics/fadeintics):(ftics<(fadeintics+holdtics))?1.:(1.-(ftics-(fadeintics+holdtics))/fadeouttics);
+		int w = bigfont.StringWidth(wpn);
+		if ( !l ) l = smallfont.BreakLines(txt,600);
 		int w1 = w;
+		int w2 = 0, w3 = 0;
 		w = 0;
 		for ( int i=0; i<l.Count(); i++ )
 		{
-			let lw = smallfont2.StringWidth(l.StringAt(i));
+			let lw = smallfont.StringWidth(l.StringAt(i));
 			if ( lw > w ) w = lw;
+			if ( (i == 0) && (lw > w3) ) w3 = lw;
+			else if ( (i > 0) && (lw > w2) ) w2 = lw;
 		}
-		int cw = int(ceil((max(max(w1,w2),w)+8)/6.))*6;
-		Screen.Dim("Black",.5*alpha,int((pos.x-(cw+4)/2)*hs),int((pos.y-(h+6))*hs),int((cw+4)*hs),int((8+h+4+smallfont.GetHeight()+8+smallfont2.GetHeight()*l.Count())*hs));
-		Screen.DrawTexture(icon,false,pos.x,pos.y,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha,DTA_CenterBottomOffset,true);
-		pos.y += 4;
-		Screen.DrawText(smallfont,Font.CR_FIRE,pos.x-w1/2,pos.y,wpn,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
+		int cw = int(ceil((max(w1,w)+8)/6.))*6;
+		int h = bigfont.GetHeight()+8+smallfont.GetHeight()*l.Count();
+		Vector2 pos = (int(ss.x/2),ss.y-(swwm_hudmargin+60+h));
+		Screen.Dim("Black",.5*alpha,int((pos.x-(cw+4)/2)*hs),int((pos.y-2)*hs),int((cw+4)*hs),int((h+4)*hs));
+		Screen.DrawText(bigfont,SWWMCREDITSCOL1,pos.x-w1/2,pos.y,wpn,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
 		for ( int i=0; i<cw; i+=6 )
-			Screen.DrawChar(smallfont,Font.CR_FIRE,(pos.x-cw/2)+i,pos.y+6,0x5F,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
-		pos.y += smallfont.GetHeight()+8;
+			Screen.DrawChar(smallfont,SWWMCREDITSCOL1,(pos.x-cw/2)+i,pos.y+32,0x5F,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
+		pos.y += bigfont.GetHeight()+8;
 		for ( int i=0; i<l.Count(); i++ )
 		{
-			Screen.DrawText(smallfont2,Font.CR_WHITE,pos.x-w/2,pos.y,l.StringAt(i),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
-			pos.y += smallfont2.GetHeight();
+			Screen.DrawText(smallfont,Font.CR_WHITE,pos.x-((i>0)?(w2/2):(w3/2)),pos.y,l.StringAt(i),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
+			pos.y += smallfont.GetHeight();
 		}
+	}
+}
+
+// I'm just doing this as an experiment, don't mind me
+
+Class DSMapTitle : HUDMessageBase
+{
+	Struct FntGlyph
+	{
+		int x, y, width, height, xofs, yofs, advance;
+	};
+
+	TextureID atlas, atlas_sub;
+	FntGlyph glyphs[256], glyphs_sub[256];
+	int fheight, fheight_sub;
+
+	String txt, txtsub;
+	int tics, holdtics, fadeintics, fadeouttics;
+	int ultics;
+
+	// all the actual hard code
+	int MyStringWidth( String str )
+	{
+		int w = 0;
+		int lw = 0;
+		int len = str.CodePointCount();
+		for ( int i=0, pos=0; i<len; i++ )
+		{
+			int ch;
+			[ch, pos] = str.GetNextCodePoint(pos);
+			if ( ch > 255 ) continue;
+			lw += glyphs[ch].advance;
+			// newline, restart line width
+			if ( ch == 0x0a )
+			{
+				w = max(w,lw);
+				lw = 0;
+			}
+		}
+		w = max(w,lw);
+		return w;
+	}
+	int MySubStringWidth( String str )
+	{
+		int w = 0;
+		int lw = 0;
+		int len = str.CodePointCount();
+		for ( int i=0, pos=0; i<len; i++ )
+		{
+			int ch;
+			[ch, pos] = str.GetNextCodePoint(pos);
+			if ( ch > 255 ) continue;
+			lw += glyphs_sub[ch].advance;
+			// newline, restart line width
+			if ( ch == 0x0a )
+			{
+				w = max(w,lw);
+				lw = 0;
+			}
+		}
+		w = max(w,lw);
+		return w;
+	}
+	void MyDrawText( String str, double x, double y, Vector2 ss, double alpha = 1. )
+	{
+		int len = str.CodePointCount();
+		double xx = x;
+		double yy = y;
+		for ( int i=0, pos=0; i<len; i++ )
+		{
+			int ch;
+			[ch, pos] = str.GetNextCodePoint(pos);
+			if ( ch > 255 ) continue;
+			if ( glyphs[ch].width && glyphs[ch].height )
+			{
+				Screen.DrawTexture(atlas,false,xx-glyphs[ch].xofs,yy-glyphs[ch].yofs,
+					DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,
+					DTA_SrcX,glyphs[ch].x,DTA_SrcY,glyphs[ch].y,
+					DTA_SrcWidth,glyphs[ch].width,DTA_SrcHeight,glyphs[ch].height,
+					DTA_DestWidth,glyphs[ch].width,DTA_DestHeight,glyphs[ch].height,
+					DTA_Alpha,alpha);
+			}
+			xx += glyphs[ch].advance;
+			// newline
+			if ( ch == 0x0a )
+			{
+				xx = x;
+				yy += fheight;
+			}
+		}
+	}
+	void MySubDrawText( String str, double x, double y, Vector2 ss, double alpha = 1. )
+	{
+		int len = str.CodePointCount();
+		double xx = x;
+		double yy = y;
+		for ( int i=0, pos=0; i<len; i++ )
+		{
+			int ch;
+			[ch, pos] = str.GetNextCodePoint(pos);
+			if ( ch > 255 ) continue;
+			if ( glyphs_sub[ch].width && glyphs_sub[ch].height )
+			{
+				Screen.DrawTexture(atlas_sub,false,xx-glyphs_sub[ch].xofs,yy-glyphs_sub[ch].yofs,
+					DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,
+					DTA_SrcX,glyphs_sub[ch].x,DTA_SrcY,glyphs_sub[ch].y,
+					DTA_SrcWidth,glyphs_sub[ch].width,DTA_SrcHeight,glyphs_sub[ch].height,
+					DTA_DestWidth,glyphs_sub[ch].width,DTA_DestHeight,glyphs_sub[ch].height,
+					DTA_Alpha,alpha);
+			}
+			xx += glyphs_sub[ch].advance;
+			// newline
+			if ( ch == 0x0a )
+			{
+				xx = x;
+				yy += fheight_sub;
+			}
+		}
+	}
+	// stretches the "_" glyph over a specific width, center-aligned
+	void DrawUnderline( double x, double y, Vector2 ss, double width, double alpha = 1. )
+	{
+		double xx = x-width/2;
+		// l stem
+		Screen.DrawTexture(atlas,false,xx-4,y,
+			DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,
+			DTA_SrcX,glyphs[95].x,DTA_SrcY,glyphs[95].y,
+			DTA_SrcWidth,4,DTA_SrcHeight,glyphs[95].height,
+			DTA_DestWidthF,4,DTA_DestHeight,glyphs[95].height,
+			DTA_Alpha,alpha);
+		// long
+		Screen.DrawTexture(atlas,false,xx,y,
+			DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,
+			DTA_SrcX,glyphs[95].x+4,DTA_SrcY,glyphs[95].y,
+			DTA_SrcWidth,glyphs[95].width-8,DTA_SrcHeight,glyphs[95].height,
+			DTA_DestWidthF,width,DTA_DestHeight,glyphs[95].height,
+			DTA_Alpha,alpha);
+		// r stem
+		Screen.DrawTexture(atlas,false,xx+width,y,
+			DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,
+			DTA_SrcX,glyphs[95].x+(glyphs[95].width-4),DTA_SrcY,glyphs[95].y,
+			DTA_SrcWidth,4,DTA_SrcHeight,glyphs[95].height,
+			DTA_DestWidthF,4,DTA_DestHeight,glyphs[95].height,
+			DTA_Alpha,alpha);
+	}
+
+	DSMapTitle Init()
+	{
+		txt = level.levelname;
+		txtsub = level.authorname;
+		if ( txt.Left(1) == "$" ) txt = StringTable.Localize(txt);
+		if ( txtsub.Left(1) == "$" ) txtsub = StringTable.Localize(txtsub);
+		tics = -10;
+		holdtics = 140;
+		fadeintics = 20;
+		fadeouttics = 40;
+		ultics = 50;
+		atlas = TexMan.CheckForTexture("graphics/dsmapfont.png",TexMan.Type_Any);
+		if ( !atlas.IsValid() || atlas.IsNull() ) ThrowAbortException("font atlas texture not found");
+		let lmp = Wads.CheckNumForFullname("graphics/dsmapfont.txt");
+		if ( lmp == -1 ) ThrowAbortException("font definition file not found");
+		String dat = Wads.ReadLump(lmp);
+		Array<String> list, ln;
+		// fucking Windows
+		dat.Replace("\r","");
+		list.Clear();
+		dat.Split(list,"\n");
+		int ch = 0;
+		for ( int i=0; i<list.Size(); i++ )
+		{
+			if ( (list[i].Length() == 0) || (list[i].Left(2) == "//") || (list[i].Left(1) == "") )
+				continue;
+			if ( i == 0 )
+			{
+				// first line is always font height
+				fheight = list[i].ToInt();
+				continue;
+			}
+			ln.Clear();
+			list[i].Split(ln," ",0);
+			glyphs[ch].x = ln[0].ToInt();
+			glyphs[ch].y = ln[1].ToInt();
+			glyphs[ch].width = ln[2].ToInt();
+			glyphs[ch].height = ln[3].ToInt();
+			glyphs[ch].xofs = ln[4].ToInt();
+			glyphs[ch].yofs = ln[5].ToInt();
+			glyphs[ch].advance = ln[6].ToInt();
+			ch++;
+		}
+		if ( ch != 256 ) ThrowAbortException("font definition does not list all 256 glyphs");
+		atlas_sub = TexMan.CheckForTexture("graphics/dsmapfont_sub.png",TexMan.Type_Any);
+		if ( !atlas_sub.IsValid() || atlas_sub.IsNull() ) ThrowAbortException("sub font atlas texture not found");
+		lmp = Wads.CheckNumForFullname("graphics/dsmapfont_sub.txt");
+		if ( lmp == -1 ) ThrowAbortException("sub font definition file not found");
+		dat = Wads.ReadLump(lmp);
+		// fucking Windows
+		dat.Replace("\r","");
+		list.Clear();
+		dat.Split(list,"\n");
+		ch = 0;
+		for ( int i=0; i<list.Size(); i++ )
+		{
+			if ( (list[i].Length() == 0) || (list[i].Left(2) == "//") || (list[i].Left(1) == "") )
+				continue;
+			if ( i == 0 )
+			{
+				// first line is always font height
+				fheight_sub = list[i].ToInt();
+				continue;
+			}
+			ln.Clear();
+			list[i].Split(ln," ",0);
+			glyphs_sub[ch].x = ln[0].ToInt();
+			glyphs_sub[ch].y = ln[1].ToInt();
+			glyphs_sub[ch].width = ln[2].ToInt();
+			glyphs_sub[ch].height = ln[3].ToInt();
+			glyphs_sub[ch].xofs = ln[4].ToInt();
+			glyphs_sub[ch].yofs = ln[5].ToInt();
+			glyphs_sub[ch].advance = ln[6].ToInt();
+			ch++;
+		}
+		if ( ch != 256 ) ThrowAbortException("sub font definition does not list all 256 glyphs");
+		return self;
+	}
+
+	override bool Tick()
+	{
+		if ( tics == 0 ) S_StartSound("misc/newarea",CHAN_VOICE,CHANF_UI,pitch:.75);	// dunno why the source file is pitched up
+		return (++tics > holdtics+fadeintics+fadeouttics);
+	}
+
+	override void Draw( int bottom, int visibility )
+	{
+		if ( tics <= 0 ) return;
+		double hs = max(floor(Screen.GetWidth()/640.),1.);
+		Vector2 ss = (Screen.GetWidth(),Screen.GetHeight())/hs;
+		double fractic = SWWMStatusBar(statusbar)?SWWMStatusBar(statusbar).fractic:0;
+		double ftics = tics+fractic;
+		double alpha = (ftics<fadeintics)?(ftics/fadeintics):(ftics<(fadeintics+holdtics))?1.:(1.-(ftics-(fadeintics+holdtics))/fadeouttics);
+		int w = MyStringWidth(txt);
+		int w2 = MySubStringWidth(txtsub);
+		double xx = int(ss.x/2.);
+		double yy = int(ss.y/2.)-64.;
+		double wfact = clamp(ftics/double(ultics),0.,1.);
+		DrawUnderline(xx,yy+1,ss,(w+32)*wfact,alpha);
+		MyDrawText(txt,xx-w/2,yy,ss,alpha);
+		MySubDrawText(txtsub,xx-w2/2,yy+fheight_sub+12,ss,alpha);
 	}
 }

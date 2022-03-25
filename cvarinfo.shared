@@ -30,3 +30,4 @@ nosave bool swwm_weapontooltips = true;		// shows a tooltip on weapon operation 
 nosave string swwm_tooltipshown = "";		// which weapons have already had their tooltips displayed
 nosave noarchive bool swwm_tooltipnote = false;	// set if the note on how to disable tooltips was already displayed
 nosave bool swwm_mm_enable = true;		// show a minimap below the score counter
+nosave bool swwm_showmaptitle = false;		// shows the name of the map when entering, just like in dark souls!

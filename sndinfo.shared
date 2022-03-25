@@ -61,6 +61,7 @@ misc/blooddrop		sounds/general/bloddrop.ogg
 misc/bodythump		sounds/general/thump.ogg
 misc/heartbeat		sounds/general/hbeat.ogg
 misc/youdied		sounds/general/YouDied.ogg
+misc/newarea		sounds/general/AreaName.ogg
 
 misc/underwater	sounds/general/uWater1a.ogg
 misc/underslime	sounds/general/uGoop1.ogg

@@ -24,6 +24,8 @@ Class SWWMStaticHandler : StaticEventHandler
 	bool unloading;
 	// title stuff
 	bool titlefirst;
+	// map title stuff
+	int mttics;
 
 	override void NewGame()
 	{
@@ -42,6 +44,7 @@ Class SWWMStaticHandler : StaticEventHandler
 
 	override void WorldTick()
 	{
+		if ( mttics > 0 ) mttics--;
 		maptime++;
 		if ( !isbd ) return;
 		for ( int i=0; i<MAXPLAYERS; i++ ) if ( playeringame[i] ) players[i].cheats |= CF_TOTALLYFROZEN;
@@ -49,7 +52,11 @@ Class SWWMStaticHandler : StaticEventHandler
 
 	override void WorldLoaded( WorldEvent e )
 	{
-		if ( gamestate != GS_TITLELEVEL ) titlefirst = true;	// we skip it
+		if ( gamestate != GS_TITLELEVEL )
+		{
+			titlefirst = true;	// we skip it
+			mttics = 10;	// count down to show the "area name"
+		}
 		unloading = false;
 		maptime = 0;
 		if ( e.IsSavegame || e.IsReopen )
@@ -198,6 +205,8 @@ Class SWWMStaticHandler : StaticEventHandler
 			uptime.SetInt(ct+1);
 		}
 		if ( gamestate != GS_LEVEL ) return;
+		if ( (mttics == 1) && swwm_showmaptitle )
+			StatusBar.AttachMessage(new("DSMapTitle").Init(),-7777);
 		if ( checked || (gametic < checktic) ) return;
 		checked = true;
 		String cver = StringTable.Localize("$SWWM_SHORTVER");

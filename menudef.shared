@@ -59,6 +59,7 @@ OptionMenu "SWWMOptionMenu"
 	Slider "$SWWM_MSGLEN", "swwm_msgduration", 1, 30, 1, 0
 	Slider "$SWWM_PICKLEN", "swwm_pickduration", 1, 30, 1, 0
 	Option "$SWWM_FUZZ", "swwm_fuzz", "YesNo"
+	Option "$SWWM_SHOWMAPTITLE", "swwm_showmaptitle", "YesNo"
 	StaticText " "
 	StaticText "$SWWM_ETITLE", 1
 	Option "$SWWM_SHADOWS", "swwm_shadows", "YesNo"

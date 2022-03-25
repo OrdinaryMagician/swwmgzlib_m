@@ -14,6 +14,7 @@ Most of the work here is original, but there are some notable exceptions:
  - The crash handler uses a short clip of the Curb Your Enthusiasm theme.
  - Tewi font by lucy (https://github.com/lucy/tewi-font). Modified to add gradients and drop shadow.
  - Miniwi font by Josuah Demangeon (http://josuah.net). Modified to add gradients and drop shadow.
+ - EB Garamond font by Octavio Pardo et al (https://github.com/octaviopardo/EBGaramond12). Rendered to texture atlas with outline.
  - Slope alignment utility code by ZZYZX & Nash.
  - Extra gib anims for vanilla monsters:
    * Ryan Cordell (Demon, Cacodemon, Revenant, Archvile)

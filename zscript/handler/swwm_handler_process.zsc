@@ -19,6 +19,37 @@ extend Class SWWMHandler
 			if ( !bar ) return;
 			bar.mm_zoom = min(1.,bar.mm_zoom+.25);
 		}
+		else if ( e.Name.Left(16) ~== "swwmtesttooltip." )
+		{
+			let bar = SWWMStatusBar(StatusBar);
+			if ( !bar ) return;
+			String wname = e.Name.Mid(16);
+			Class<SWWMWeapon> w = wname;
+			if ( w )
+			{
+				if ( GetDefaultByType(w).tooltip == "" )
+				{
+					Console.Printf("'%s' has no tooltip defined.",wname);
+					return;
+				}
+				let tt = new("SWWMWeaponTooltip").Init(w);
+				bool appended = false;
+				for ( SWWMWeaponTooltip t=bar.ctip; t; t=t.next )
+				{
+					if ( t.next ) continue;
+					appended = true;
+					t.next = tt;
+					break;
+				}
+				if ( !appended )
+				{
+					bar.ctip = tt;
+					bar.AttachMessage(tt,-2910);
+				}
+			}
+			return;
+			Console.Printf("'%s' is not a valid SWWM weapon.",wname);
+		}
 		else ModConsoleProcess(e);
 	}
 

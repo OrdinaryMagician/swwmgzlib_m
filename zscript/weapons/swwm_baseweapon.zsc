@@ -297,7 +297,7 @@ Class SWWMWeapon : Weapon abstract
 		}
 		if ( tooltipsent ) return;
 		tooltipsent = true;
-		if ( Owner.player == players[consoleplayer] )
+		if ( (tooltip != "") && (Owner.player == players[consoleplayer]) )
 			SWWMUtility.SendTooltip(GetClass());
 	}
 	action void A_SWWMFlash( StateLabel flashlabel = null )

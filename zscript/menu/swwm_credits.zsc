@@ -165,6 +165,7 @@ Class SWWMCreditsMenu : GenericMenu abstract
 		cassets.Push(new("SWWMCreditsEntry").Init("Epic Games","Unreal\nUnreal Tournament\nUnreal Tournament 2004\nUnreal Tournament 3"));
 		cassets.Push(new("SWWMCreditsEntry").Init("Ion Storm","Deus Ex"));
 		cassets.Push(new("SWWMCreditsEntry").Init("Looking Glass Studios","Thief\nSystem Shock 2"));
+		cassets.Push(new("SWWMCreditsEntry").Init("From Software","Dark Souls\nDark Souls II\nDark Souls III"));
 		clocal.Push(new("SWWMCreditsEntry").Init("Marisa Kirisame","$SWWM_LOCES"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Snacks"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("john"));
