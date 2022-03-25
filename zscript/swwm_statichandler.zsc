@@ -19,7 +19,6 @@ Class SWWMStaticHandler : StaticEventHandler
 	bool tainted;
 	String taintver, taintmodver;
 	int checktic;
-	ui bool checked;
 	int maptime;
 	bool unloading;
 	// title stuff
@@ -207,8 +206,7 @@ Class SWWMStaticHandler : StaticEventHandler
 		if ( gamestate != GS_LEVEL ) return;
 		if ( (mttics == 1) && swwm_showmaptitle )
 			StatusBar.AttachMessage(new("DSMapTitle").Init(),-7777);
-		if ( checked || (gametic < checktic) ) return;
-		checked = true;
+		if ( gametic != checktic ) return;
 		String cver = StringTable.Localize("$SWWM_SHORTVER");
 		String cmodver = StringTable.Localize("$"..SWWMMODPREFIX.."_SHORTVER");
 		if ( tainted )
