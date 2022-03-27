@@ -286,7 +286,7 @@ Class SWWMPlayer : PlayerPawn abstract
 		}
 		else if ( name ~== "health" ) CheatGive_Health(amount);
 		else if ( name ~== "backpack" ) CheatGive_Backpack();
-		else if ( name ~== "ammo" ) CheatGive_Backpack();
+		else if ( name ~== "ammo" ) CheatGive_Ammo();
 		else if ( name ~== "armor" ) CheatGive_Armor();
 		else if ( name ~== "keys" ) CheatGive_Keys();
 		else if ( name ~== "weapons" ) CheatGive_Weapons();
