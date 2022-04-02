@@ -35,7 +35,7 @@ Class SWWMPlayer : PlayerPawn abstract
 		RT_REVIVE,	// get back up
 		RT_RESPAWN	// destroy the body and respawn
 	};
-	int restype;
+	readonly int restype;
 	int restimer;
 	Property ResurrectType : restype;
 
@@ -43,7 +43,7 @@ Class SWWMPlayer : PlayerPawn abstract
 	Color undercol;
 	int deadtimer;
 
-	int thr_xpain, thr_hipain, thr_pain, thr_lopain;
+	readonly int thr_xpain, thr_hipain, thr_pain, thr_lopain;
 	Property PainThresholds : thr_lopain, thr_pain, thr_hipain, thr_xpain;
 
 	transient int bumptic;
@@ -53,7 +53,10 @@ Class SWWMPlayer : PlayerPawn abstract
 	Actor oldencroached;
 	Vector3 oldencroachedpos;
 
-	int healdecay, healtimer;
+	readonly int healdecrease, healdecreasefact, healdecay;
+	int healtimer;
+	Property HealthDecay : healdecay;
+	Property HealthDecrease : healdecrease, healdecreasefact;
 
 	transient SWWMItemTracer itrace;
 
@@ -66,15 +69,14 @@ Class SWWMPlayer : PlayerPawn abstract
 	FlagDef CanWallKick : SPlayerFlags, 4;
 	FlagDef CanWallClimb : SPlayerFlags, 5;
 
-	double walkspeed, runspeed;
-	double dodgespeed;
-	double crouchingspeed;
-	double mincrouch;
+	readonly double walkspeed, runspeed;
+	readonly double dodgespeed;
+	readonly double crouchingspeed;
+	readonly double mincrouch;
 	Property MoveSpeed : walkspeed, runspeed;
 	Property DodgeSpeed : dodgespeed;
 	Property CrouchingSpeed : crouchingspeed;
 	Property MinCrouch : mincrouch;
-	Property HealthDecay : healdecay;
 	bool bDucking;
 
 	enum EInvWipe
@@ -141,7 +143,10 @@ Class SWWMPlayer : PlayerPawn abstract
 
 	virtual void CheatGive_Health( int amount = 0 )
 	{
-		player.health = health = (amount>0)?(health+amount):default.health;
+		// prevent going over sane limits unless we have decay
+		player.health = health = (amount>0)?(healdecay<=0)?min(default.health*2,health+amount):(health+amount):default.health;
+		// reset max health capping if we go over
+		if ( health > maxhealth ) maxhealth = starthealth = min(default.health,health);
 	}
 
 	virtual void CheatGive_Backpack()
@@ -703,6 +708,13 @@ Class SWWMPlayer : PlayerPawn abstract
 		lastdamage = max(lastdamage,realdmg);
 		lastdamagetic = max(lastdamagetic,gametic+clamp(lastdamage/2,10,40));
 		return realdmg;
+	}
+
+	override void Die( Actor source, Actor inflictor, int dmgflags, Name MeansOfDeath )
+	{
+		Super.Die(source,inflictor,dmgflags,MeansOfDeath);
+		if ( healdecrease > 0 )
+			MaxHealth = StartHealth = clamp(SpawnHealth()-healdecreasefact,healdecrease,default.health);
 	}
 
 	override void CalcHeight()

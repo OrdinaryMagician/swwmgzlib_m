@@ -1,0 +1,13 @@
+// all the player* virtuals
+
+extend Class SWWMHandler
+{
+	// player_t::Ressurect() does not respect SpawnHealth
+	// so we need to manually adjust here if we use health decrease
+	override void PlayerRespawned( PlayerEvent e )
+	{
+		PlayerInfo p = players[e.PlayerNumber];
+		if ( p.mo && (p.mo is 'SWWMPlayer') && (SWWMPlayer(p.mo).healdecrease > 0) )
+			p.Health = p.mo.Health = p.mo.SpawnHealth();
+	}
+}
