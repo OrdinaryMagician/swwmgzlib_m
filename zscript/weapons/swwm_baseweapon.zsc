@@ -4,6 +4,7 @@ Class SWWMWeapon : Weapon abstract
 	Mixin SWWMOverlapPickupSound;
 	Mixin SWWMRespawn;
 	Mixin SWWMCountNoPickup;
+	Mixin SWWMUseToPickup;
 
 	bool wasused;
 	private int SWeaponFlags;
@@ -17,96 +18,6 @@ Class SWWMWeapon : Weapon abstract
 
 	FlagDef NoFirstGive : SWeaponFlags, 0;	// don't give ammo on first pickup (for weapons with a clip count)
 	FlagDef HideInMenu : SWeaponFlags, 1;	// don't show in inventory menu (usually for sister weapons)
-	FlagDef NoSwapWeapon : SWeaponFlags, 2;	// weapon is not affected by slot swapping
-
-	// used by "pending load" system, which allows for interruptible reloading
-	// this is implemented per-subclass but the variables are here
-	Class<Ammo> pendingload;
-	int pendingamount;
-
-	bool IsSwapWeapon( Inventory i ) const
-	{
-		if ( bNoSwapWeapon || (i.GetClass() == GetClass()) ) return false;
-		let w = SWWMWeapon(i);
-		if ( w && !w.bNoSwapWeapon && (SlotNumber != -1) && (w.SlotNumber == SlotNumber) )
-			return true;
-		return false;
-	}
-
-	SWWMWeapon HasSwapWeapon( Actor other ) const
-	{
-		if ( bNoSwapWeapon ) return null;
-		for ( Inventory i=other.inv; i; i=i.inv )
-		{
-			if ( IsSwapWeapon(i) )
-				return SWWMWeapon(i);
-		}
-		return null;
-	}
-
-	override void Touch( Actor toucher )
-	{
-		// show prompt to swap weapon, and prevent normal pickup
-		SWWMWeapon sw;
-		if ( bSPECIAL && (sw = HasSwapWeapon(toucher)) )
-		{
-			// we can simplify things here since no side mods have dual-wieldable swapweapons
-			if ( toucher.CheckLocalView() )
-				Console.MidPrint(SmallFont,String.Format(StringTable.Localize("$SWWM_SWAPWEAPON"),sw.GetTag(),GetTag()));
-			return;
-		}
-		Super.Touch(toucher);
-	}
-	// allow pickup by use + swap weapon support
-	override bool Used( Actor user )
-	{
-		// can't pick up
-		if ( !bSPECIAL ) return false;
-		Vector3 itempos = Vec3Offset(0,0,Height/2),
-			userpos = user.Vec2OffsetZ(0,0,user.player.viewz);
-		// test vertical range
-		Vector3 diff = level.Vec3Diff(user.Vec3Offset(0,0,user.Height/2),Vec3Offset(0,0,Height/2));
-		double rang = user.player?PlayerPawn(user.player.mo).UseRange:(user.Height/2);
-		if ( abs(diff.z) > rang ) return false;
-		// if the toucher owns our SwapWeapon, drop it before picking us up
-		bool swapto = false;
-		SWWMWeapon sw;
-		if ( sw = HasSwapWeapon(user) )
-		{
-			// simplified compared to upstream, since no mod uses dual-wieldable swapweapons
-			// (we can even have the swap be seamless by placing the weapon in the same spot)
-			if ( sw == user.player.ReadyWeapon )
-				swapto = true;
-			let d = user.DropInventory(sw);
-			d.SetOrigin(pos,false);
-			d.angle = angle;
-			d.vel = vel;
-			d.FloatBobPhase = FloatBobPhase;
-			// don't autoswitch just yet (hacky)
-			if ( swapto )
-			{
-				user.player.ReadyWeapon = null;
-				user.player.PendingWeapon = WP_NOCHANGE;
-			}
-		}
-		Touch(user);
-		// we got picked up
-		if ( bDestroyed || Owner || !bSPECIAL )
-		{
-			// autoswitch to us if we got swapped
-			if ( swapto ) user.A_SelectWeapon(GetClass());
-			Vector3 tracedir = level.Vec3Diff(userpos,itempos);
-			double dist = tracedir.length();
-			tracedir /= dist;
-			let cf = new("CrossLineFinder");
-			cf.Trace(userpos,level.PointInSector(userpos.xy),tracedir,dist,0);
-			// trigger all player cross lines found between user and item
-			for ( int i=0; i<cf.clines.Size(); i++ )
-				cf.clines[i].Activate(user,cf.csides[i],SPAC_Cross);
-			return true;
-		}
-		return false;
-	}
 
 	action void A_BumpFOV( double factor )
 	{
@@ -165,9 +76,6 @@ Class SWWMWeapon : Weapon abstract
 	}
 	override bool HandlePickup( Inventory item )
 	{
-		// can't hold both weapons at once
-		if ( IsSwapWeapon(item) )
-			return true;
 		if ( (GetClass() == item.GetClass()) && !item.ShouldStay() )
 		{
 			if ( SWWMWeapon(item).PickupForAmmoSWWM(self) )

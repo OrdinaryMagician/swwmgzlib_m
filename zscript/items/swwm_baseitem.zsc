@@ -16,8 +16,41 @@ Class CrossLineFinder : LineTracer
 	}
 }
 
+// hitbox with default collision size for items
+Class SWWMExtendedItemHitbox : Actor
+{
+	override void Tick()
+	{
+		if ( !master )
+		{
+			Destroy();
+			return;
+		}
+		if ( pos != master.pos ) SetOrigin(master.pos,false);
+	}
+	override void Touch( Actor toucher )
+	{
+		if ( !master || !master.bSPECIAL || Inventory(master).Owner || !swwm_extendedpickup )
+			return;
+		master.Touch(toucher);
+	}
+	default
+	{
+		+NOGRAVITY;
+		+SPECIAL;
+	}
+}
+
 Mixin Class SWWMUseToPickup
 {
+	override void BeginPlay()
+	{
+		Super.BeginPlay();
+		if ( !swwm_extendedpickup ) return;
+		let box = Spawn("SWWMExtendedItemHitbox",pos);
+		box.master = self;
+	}
+
 	// allow pickup by use
 	override bool Used( Actor user )
 	{

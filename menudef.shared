@@ -79,6 +79,7 @@ OptionMenu "SWWMOptionMenu"
 	Option "$SWWM_ENEMYDROPS", "swwm_enemydrops", "SWWMEnemyDropType"
 	StaticText " "
 	StaticText "$SWWM_ITITLE", 1
+	Option "$SWWM_EXTENDEDPICKUP", "swwm_extendedpickup", "YesNo"
 	Option "$SWWM_WEAPONTOOLTIPS", "swwm_weapontooltips", "YesNo"
 	SafeCommand "$SWWM_RESETTOOLTIPS", "event swwmresettooltips"
 	IfGame(Doom)

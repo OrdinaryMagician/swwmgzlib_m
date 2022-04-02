@@ -26,6 +26,7 @@ server int swwm_ps_fullreset = 0;		// full reset of inventory (0: no, 1: all map
 server int swwm_ps_resetammo = 0;		// resets all ammo to zero
 server int swwm_ps_resetitems = 0;		// removes all carried items
 server int swwm_ps_resethealth = 0;		// sets health back to 100
+server bool swwm_extendedpickup = false;	// items will have an additional "virtual hitbox" that's the same size as vanilla
 nosave bool swwm_weapontooltips = true;		// shows a tooltip on weapon operation when first selected
 nosave string swwm_tooltipshown = "";		// which weapons have already had their tooltips displayed
 nosave noarchive bool swwm_tooltipnote = false;	// set if the note on how to disable tooltips was already displayed
