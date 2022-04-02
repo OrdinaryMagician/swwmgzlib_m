@@ -288,10 +288,12 @@ Class SWWMChargeItem : Inventory
 	bool bActive, bActivated;	// active: turned on, activated: has been used at least once (used for hud display)
 	int Charge;
 	TextureID OnIcon;
+	String dmsg;
 
 	private int SItemFlags;
 
 	Property Charge : Charge;	// total charge (in seconds)
+	Property DepleteMessage : dmsg;
 
 	FlagDef KeepActivated : SItemFlags, 0;	// will not deactivate if charge is fully drained and a spare is available
 	FlagDef TravelActive : SItemFlags, 1;	// does not deactivate when changing maps
@@ -310,9 +312,10 @@ Class SWWMChargeItem : Inventory
 
 	// this is the most bullshit thing ever
 	// why can't we declare our own texture properties?
-	virtual protected string GetOnIcon()
+	virtual protected TextureID GetOnIcon()
 	{
-		return "";
+		// safe default
+		return default.Icon;
 	}
 
 	override bool HandlePickup( Inventory item )
@@ -350,7 +353,7 @@ Class SWWMChargeItem : Inventory
 	override void Activate( Actor activator )
 	{
 		bActive = true;
-		if ( !OnIcon ) OnIcon = TexMan.CheckForTexture(GetOnIcon(),TexMan.Type_Any);
+		if ( !OnIcon ) OnIcon = GetOnIcon();
 		Icon = OnIcon;
 	}
 
@@ -369,13 +372,21 @@ Class SWWMChargeItem : Inventory
 	override void DoEffect()
 	{
 		Super.DoEffect();
-		if ( bActive && !(level.maptime%35) && !isFrozen() ) Charge--;
+		if ( bActive && !isFrozen() ) Charge--;
 		if ( Charge <= 0 )
 		{
 			Amount--;
 			if ( bActive && ((Amount <= 0) || !bKeepActivated) )
+			{
+				bActivated = false;
 				Deactivate(Owner);
-			if ( Amount <= 0 ) DepleteOrDestroy();
+			}
+			if ( Amount <= 0 )
+			{
+				if ( Owner.CheckLocalView() && (dmsg != "") )
+					Console.Printf(StringTable.Localize(dmsg));
+				DepleteOrDestroy();
+			}
 			else Charge = default.Charge;
 		}
 	}
@@ -400,7 +411,7 @@ Class SWWMChargeItem : Inventory
 
 	clearscope bool isBlinking() const
 	{
-		return ( (Charge < 10) && (level.maptime&8) );
+		return ( bActive && (Charge < 10*GameTicRate) && (level.maptime&8) );
 	}
 
 	override void DetachFromOwner()
