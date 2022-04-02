@@ -53,6 +53,8 @@ Class SWWMPlayer : PlayerPawn abstract
 	Actor oldencroached;
 	Vector3 oldencroachedpos;
 
+	int healdecay, healtimer;
+
 	transient SWWMItemTracer itrace;
 
 	private int SPlayerFlags;
@@ -72,6 +74,7 @@ Class SWWMPlayer : PlayerPawn abstract
 	Property DodgeSpeed : dodgespeed;
 	Property CrouchingSpeed : crouchingspeed;
 	Property MinCrouch : mincrouch;
+	Property HealthDecay : healdecay;
 	bool bDucking;
 
 	enum EInvWipe
@@ -536,6 +539,93 @@ Class SWWMPlayer : PlayerPawn abstract
 		Super.Tick();
 		if ( gamestate != GS_LEVEL ) return;
 		if ( (gamestate != GS_LEVEL) || !player || (player.mo != self) ) return;
+		// overheal fading
+		if ( healdecay && !isFrozen() && !(player.cheats&CF_TOTALLYFROZEN) && (Health > healdecay) )
+		{
+			if ( Health > 1000 )
+			{
+				healtimer = 0;
+				A_SetHealth(Health-8);
+			}
+			else if ( Health > 900 )
+			{
+				healtimer = 0;
+				A_SetHealth(Health-4);
+			}
+			else if ( Health > 800 )
+			{
+				healtimer = 0;
+				A_SetHealth(Health-2);
+			}
+			else if ( Health > 700 )
+			{
+				healtimer = 0;
+				A_SetHealth(Health-1);
+			}
+			else if ( Health > 600 )
+			{
+				if ( healtimer > 0 )
+				{
+					healtimer = 0;
+					A_SetHealth(Health-1);
+				}
+				else healtimer++;
+			}
+			else if ( Health > 500 )
+			{
+				if ( healtimer > 1 )
+				{
+					healtimer = 0;
+					A_SetHealth(Health-1);
+				}
+				else healtimer++;
+			}
+			else if ( Health > 400 )
+			{
+				if ( healtimer > 3 )
+				{
+					healtimer = 0;
+					A_SetHealth(Health-1);
+				}
+				else healtimer++;
+			}
+			else if ( Health > 300 )
+			{
+				if ( healtimer > 7 )
+				{
+					healtimer = 0;
+					A_SetHealth(Health-1);
+				}
+				else healtimer++;
+			}
+			else if ( Health > 200 )
+			{
+				if ( healtimer > 15 )
+				{
+					healtimer = 0;
+					A_SetHealth(Health-1);
+				}
+				else healtimer++;
+			}
+			else if ( Health > 100 )
+			{
+				if ( healtimer > 31 )
+				{
+					healtimer = 0;
+					A_SetHealth(Health-1);
+				}
+				else healtimer++;
+			}
+			else if ( Health > 1 )
+			{
+				if ( healtimer > 63 )
+				{
+					healtimer = 0;
+					A_SetHealth(Health-1);
+				}
+				else healtimer++;
+			}
+		}
 		oldlagvel = lagvel;
 		oldlagready = lagready;
 		if ( player.weaponstate&WF_WEAPONBOBBING ) lagready = lagready*.9+.1;
