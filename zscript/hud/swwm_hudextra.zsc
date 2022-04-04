@@ -125,7 +125,7 @@ Class SWWMOneLiner : HUDMessageBase
 		double alph = clamp((fcurtime/20.)+1.,0.,1.);
 		alph *= clamp((lifespan-fcurtime)/10.,0.,1.);
 		Screen.Dim("Black",alph*.8,int((Screen.GetWidth()-(maxlen+12)*hs)/2.),int(bottom-(margin+2+fh+nofs)*hs),int((maxlen+12)*hs),int((fh+4)*hs));
-		int yy = double(margin+fh+nofs);
+		int yy = int(margin+fh+nofs);
 		for ( int i=0; i<l.Count(); i++ )
 		{
 			int len = smallfont.StringWidth(l.StringAt(i));
