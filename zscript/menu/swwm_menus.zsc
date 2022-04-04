@@ -190,7 +190,7 @@ Class SWWMMainMenu : SWWMCleanMenu
 // skill/episode menu hack
 Class SWWMBigMenuHack : SWWMCleanMenu
 {
-	const BIGMENUSPACING = 36;
+	const BIGMENUSPACING = 32;
 
 	bool longlist;	// more than 10 entries, scrolls
 	int ofs;
@@ -288,18 +288,18 @@ Class SWWMBigMenuHack : SWWMCleanMenu
 		}
 		String str = "⌃ ⌃ ⌃";
 		double x = (w-smallfont.StringWidth(str))/2;
-		double y = (h-280)/2;
+		double y = (h-224)/2;
 		if ( isclean ) SWWMUtility.AdjustClean_1(x,y);
 		if ( ofs > 0 )
 		{
-			if ( isclean ) Screen.DrawText(smallfont,Font.CR_FIRE,x,y+30*CleanYFac_1,str,DTA_CleanNoMove_1,true);
-			else Screen.DrawText(smallfont,Font.CR_FIRE,x,y+30,str,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43);
+			if ( isclean ) Screen.DrawText(smallfont,Font.CR_FIRE,x,y+16*CleanYFac_1,str,DTA_CleanNoMove_1,true);
+			else Screen.DrawText(smallfont,Font.CR_FIRE,x,y+16,str,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43);
 		}
 		if ( ofs < (mDesc.mItems.Size()-8) )
 		{
 			str = "⌄ ⌄ ⌄";
-			if ( isclean ) Screen.DrawText(smallfont,Font.CR_FIRE,x,y+296*CleanYFac_1,str,DTA_CleanNoMove_1,true);
-			else Screen.DrawText(smallfont,Font.CR_FIRE,x,y+296,str,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43);
+			if ( isclean ) Screen.DrawText(smallfont,Font.CR_FIRE,x,y+256*CleanYFac_1,str,DTA_CleanNoMove_1,true);
+			else Screen.DrawText(smallfont,Font.CR_FIRE,x,y+256,str,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43);
 		}
 		for ( int i=0; i<mDesc.mItems.Size(); i++ )
 		{
@@ -386,15 +386,15 @@ Class ListMenuItemSWWMStaticTextM : ListMenuItem
 		let font = menuDelegate.PickFont(mFont);
 		if ( w == ListMenuDescriptor.CleanScale )
 		{
-			double x = (320-font.StringWidth(text))/2;
+			double x = int(320-font.StringWidth(text)*1.5)/2;
 			double y = mYpos;
 			SWWMUtility.AdjustClean_1(x,y);
-			Screen.DrawText(font,mColor,x,y,text,DTA_CleanNoMove_1,true);
+			Screen.DrawText(font,mColor,x,y,text,DTA_ScaleX,CleanXFac_1*1.5,DTA_ScaleY,CleanYFac_1*1.5);
 		}
 		else
 		{
-			double x = (w-font.StringWidth(text))/2;
-			Screen.DrawText(font,mColor,x,mYpos,text,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43);
+			double x = int(w-font.StringWidth(text)*1.5)/2;
+			Screen.DrawText(font,mColor,x,mYpos,text,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43,DTA_ScaleX,1.5,DTA_ScaleY,1.5);
 		}
 	}
 }
@@ -450,10 +450,10 @@ Class SWWMMessageBox : MessageBoxMenu
 		}
 		else
 		{
-			destWidth = CleanWidth_1*3;
-			destHeight = CleanHeight_1*3;
+			destWidth = CleanWidth_1*2;
+			destHeight = CleanHeight_1*2;
 			textfont = bigfont;
-			mMessage = textfont.BreakLines(Stringtable.Localize(message),640);
+			mMessage = textfont.BreakLines(Stringtable.Localize(message),480);
 		}
 	}
 
@@ -509,8 +509,8 @@ Class SWWMMessageBox : MessageBoxMenu
 			Screen.DrawText(textfont,messageSelection==0?OptionMenuSettings.mFontColorSelection:OptionMenuSettings.mFontColor,(destWidth-2*textfont.StringWidth(stryes))/2,y,stryes, DTA_VirtualWidth,destWidth,DTA_VirtualHeight,destHeight,DTA_KeepRatio,true,DTA_ScaleX,2.,DTA_ScaleY,2.);
 			Screen.DrawText(textfont,messageSelection==1?OptionMenuSettings.mFontColorSelection:OptionMenuSettings.mFontColor,(destWidth-2*textfont.StringWidth(strno))/2,y+fontheight*2,strno,DTA_VirtualWidth,destWidth,DTA_VirtualHeight,destHeight,DTA_KeepRatio,true,DTA_ScaleX,2.,DTA_ScaleY,2.);
 			if ( (messageSelection < 0) || ((MenuTime()%8) >= 4) ) return;
-			Screen.DrawText(textfont,OptionMenuSettings.mFontColorSelection,(destWidth-2*textfont.StringWidth(messageSelection?strno:stryes))/2-72,y+fontheight*2*messageSelection,"►",DTA_VirtualWidth,destWidth,DTA_VirtualHeight,destHeight,DTA_KeepRatio,true,DTA_ScaleX,2.,DTA_ScaleY,2.);
-			Screen.DrawText(textfont,OptionMenuSettings.mFontColorSelection,(destWidth+2*textfont.StringWidth(messageSelection?strno:stryes))/2+24,y+fontheight*2*messageSelection,"◄",DTA_VirtualWidth,destWidth,DTA_VirtualHeight,destHeight,DTA_KeepRatio,true,DTA_ScaleX,2.,DTA_ScaleY,2.);
+			Screen.DrawText(textfont,OptionMenuSettings.mFontColorSelection,(destWidth-2*textfont.StringWidth(messageSelection?strno:stryes))/2-46,y+fontheight*2*messageSelection,"►",DTA_VirtualWidth,destWidth,DTA_VirtualHeight,destHeight,DTA_KeepRatio,true,DTA_ScaleX,2.,DTA_ScaleY,2.);
+			Screen.DrawText(textfont,OptionMenuSettings.mFontColorSelection,(destWidth+2*textfont.StringWidth(messageSelection?strno:stryes))/2+16,y+fontheight*2*messageSelection,"◄",DTA_VirtualWidth,destWidth,DTA_VirtualHeight,destHeight,DTA_KeepRatio,true,DTA_ScaleX,2.,DTA_ScaleY,2.);
 		}
 	}
 

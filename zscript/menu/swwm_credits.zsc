@@ -119,7 +119,7 @@ Class SWWMCreditsMenu : GenericMenu abstract
 	bool muschanged;
 
 	const ENTRY_PAD = 8;
-	const SECTION_PAD = 10;
+	const SECTION_PAD = 20;
 	const SECTION_SHIFT = -4;
 
 	double spos, speed;

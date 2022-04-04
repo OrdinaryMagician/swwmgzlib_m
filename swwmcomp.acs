@@ -79,9 +79,9 @@ SCRIPT "DUMP2_HUB" ( void )
 		}
 		SetFont("BigFont");
 		int progress = mapstodo-lvent;
-		SetHudSize(640,480,0);
-		if ( progress > 0 ) HudMessageBold(d:progress,s:" more maps to go...";HUDMSG_PLAIN,1,CR_GOLD,320.0,40.0,0);
-		else HudMessageBold(s:"The final room is open...";HUDMSG_PLAIN,1,CR_GOLD,320.0,40.0,0);
+		SetHudSize(480,360,0);
+		if ( progress > 0 ) HudMessageBold(d:progress,s:" more maps to go...";HUDMSG_PLAIN,1,CR_GOLD,240.0,30.0,0);
+		else HudMessageBold(s:"The final room is open...";HUDMSG_PLAIN,1,CR_GOLD,240.0,30.0,0);
 		Delay(1);
 	}
 }
@@ -139,10 +139,10 @@ SCRIPT "DUMP3_HUB" ( void )
 		}
 		SetFont("BigFont");
 		int progress = mapstodo-lvent;
-		SetHudSize(640,480,0);
-		if ( progress > 1 ) HudMessageBold(d:progress,s:" more maps to go...";HUDMSG_PLAIN,1,CR_GOLD,320.0,40.0,0);
-		else if ( progress > 0 ) HudMessageBold(d:progress,s:" more map to go...";HUDMSG_PLAIN,1,CR_GOLD,320.0,40.0,0);
-		else HudMessageBold(s:"The final room is open...";HUDMSG_PLAIN,1,CR_GOLD,320.0,40.0,0);
+		SetHudSize(480,360,0);
+		if ( progress > 1 ) HudMessageBold(d:progress,s:" more maps to go...";HUDMSG_PLAIN,1,CR_GOLD,240.0,30.0,0);
+		else if ( progress > 0 ) HudMessageBold(d:progress,s:" more map to go...";HUDMSG_PLAIN,1,CR_GOLD,240.0,30.0,0);
+		else HudMessageBold(s:"The final room is open...";HUDMSG_PLAIN,1,CR_GOLD,240.0,30.0,0);
 		Delay(1);
 	}
 }
@@ -229,9 +229,9 @@ str DUMP3MapNames[74][2] =
 SCRIPT "DUMP3_DISPLAY" ( int f1, int f2 )
 {
 	int fuck = (f1*10)+f2;
-	SetHudSize(640,480,0);
+	SetHudSize(480,360,0);
 	SetFont("BigFont");
-	HudMessage(s:DUMP3MapNames[fuck][0];HUDMSG_FADEINOUT,2,CR_WHITE,320.4,380.2,2.5,0.15,0.65);
+	HudMessage(s:DUMP3MapNames[fuck][0];HUDMSG_FADEINOUT,2,CR_WHITE,240.4,285.2,2.5,0.15,0.65);
 	SetHudSize(320,240,0);
 	SetFont("SmallFont");
 	HudMessage(s:DUMP3MapNames[fuck][1];HUDMSG_FADEINOUT,3,CR_GOLD,160.4,200.0,2.5,0.15,0.65);
