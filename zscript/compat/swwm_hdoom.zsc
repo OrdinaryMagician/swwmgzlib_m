@@ -4,10 +4,13 @@
 // bonked, you pervy perv
 Class SWWMHDoomHandler : StaticEventHandler
 {
+	int callout_len;
 	ui int timer;
 	ui TextureID bonker, bonk, bonked;
 	bool detected;
 	ui int rss;
+
+	ui SWWMOneLiner cl;
 
 	private ui int GetUIRandom()
 	{
@@ -30,6 +33,7 @@ Class SWWMHDoomHandler : StaticEventHandler
 		}
 		if ( !detected )
 			return;
+		callout_len = int(ceil((S_GetLength("hdoom/horny")*GameTicRate)/16)*16);
 		SetRandomSeed[hdscreen](Random[hdscreen]()+consoleplayer+MSTime());
 		Console.Printf(
 			"\cx┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\c-\n"
@@ -73,7 +77,23 @@ Class SWWMHDoomHandler : StaticEventHandler
 			timer = 0;
 			return;
 		}
-		if ( timer == 24 )
+		if ( timer == 16 )
+		{
+			S_StartSound("hdoom/horny",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+			S_StartSound("hdoom/horny",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+			cl = SWWMOneLiner.Make("HORNY",int(S_GetLength("hdoom/horny")*GameTicRate),force:true);
+			StatusBar.AttachMessage(cl,-3473);
+		}
+		else if ( (timer == 56) && (players[consoleplayer].mo.GetClassName() == "MarisaPlayer") )
+		{
+			S_StartSound("hdoom/horny2",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+			S_StartSound("hdoom/horny2",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
+			let l = SWWMOneLiner.Make("HORNY2",int(S_GetLength("hdoom/horny2")*GameTicRate),force:true);
+			l.nextl = cl;
+			cl.prevl = l;
+			StatusBar.AttachMessage(l,-3472);
+		}
+		else if ( timer == callout_len+24 )
 		{
 			S_StartSound("misc/spawn",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
 			S_StartSound("misc/spawn",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
@@ -81,7 +101,7 @@ Class SWWMHDoomHandler : StaticEventHandler
 			bonk = TexMan.CheckForTexture("graphics/HDoom_Bonk.png",TexMan.Type_Any);
 			bonked = TexMan.CheckForTexture("graphics/HDoom_Bonked.png",TexMan.Type_Any);
 		}
-		else if ( (timer >= 32) && !(timer%16) )
+		else if ( (timer >= callout_len+32) && !(timer%16) )
 		{
 			double ptch = FRandom[hdscreen](.95,1.05);
 			S_StartSound("hdoom/bonk",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE,ptch);
@@ -92,7 +112,7 @@ Class SWWMHDoomHandler : StaticEventHandler
 
 	override void RenderOverlay( RenderEvent e )
 	{
-		if ( !detected || (timer < 24) ) return;
+		if ( !detected || (timer < callout_len+24) ) return;
 		double scl = max(min(floor(Screen.GetWidth()/120.),floor(Screen.GetHeight()/100)),1.);
 		double iscl = scl/4.;
 		double ox = Screen.GetWidth()/2;

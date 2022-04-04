@@ -159,6 +159,8 @@ SWWM_URDED4 = "Press \cfUse\c- to restart from the most recent save";
 SWWM_URDEDMP = "Press \cfUse\c- to respawn";
 SWWM_SETSLOTSTRICT = "\cg!!!WARNING!!!\c-\n\cj\"setslotstrict\" is enabled. This will cause the mod's weapons to not have slots assigned. Please go into Miscellaneous Options and toggle the \"Strict KEYCONF Weapons/Players\" setting.\c-";
 SWWM_PAUSE = "PAUSED";
+SWWM_HORNY = "\cdDemo\c-: Go to horny jail.";
+SWWM_HORNY2 = "";
 // weapon tooltips
 SWWM_TTNOTE = "Note: Weapon tooltips can be deactivated in the mod options.";
 // keybinds

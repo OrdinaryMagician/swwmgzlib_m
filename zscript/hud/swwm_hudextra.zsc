@@ -52,6 +52,89 @@ Class PayRespects : HUDMessageBase
 	}
 }
 
+// One-liners
+Class SWWMOneLiner : HUDMessageBase
+{
+	String whichline;
+	transient BrokenLines l;
+	int lifespan, curtime;
+	int color;
+	bool force;
+
+	SWWMOneLiner prevl, nextl;
+	double nofs;
+
+	static SWWMOneLiner Make( String whichline, int lifespan, int color = Font.CR_UNTRANSLATED, bool force = false )
+	{
+		let l = new("SWWMOneLiner");
+		String locstr = SWWMMODPREFIX.."_"..whichline;
+		if ( StringTable.Localize(locstr,false) == locstr )
+			l.whichline = StringTable.Localize("SWWM_"..whichline,false);
+		else l.whichline = StringTable.Localize(locstr,false);
+		l.curtime = l.lifespan = lifespan;
+		l.color = color;
+		l.force = force;
+		l.nofs = 0;
+		return l;
+	}
+
+	override void OnDestroy()
+	{
+		Super.OnDestroy();
+		if ( prevl ) prevl.nextl = nextl;
+		if ( nextl ) nextl.prevl = prevl;
+	}
+
+	override bool Tick()
+	{
+		if ( !force && (players[consoleplayer].Health <= 0) ) curtime = int.min;
+		curtime--;
+		nofs *= .95;
+		return (curtime<-20);
+	}
+
+	override void ScreenSizeChanged()
+	{
+		if ( l ) l.Destroy();
+	}
+
+	override void Draw( int bottom, int visibility )
+	{
+		int margin = swwm_hudmargin;
+		int rofs = 0;
+		for ( SWWMOneLiner l=nextl; l; l=l.nextl )
+			rofs += 20;
+		nofs = max(nofs,rofs);
+		double hs;
+		if ( swwm_hudscale ) hs = CleanXFac_1;
+		else hs = max(floor(Screen.GetWidth()/640.),1.);
+		Vector2 ss = (Screen.GetWidth()/hs,Screen.GetHeight()/hs);
+		if ( whichline == "" ) return;	// don't draw empty strings
+		// split so it can fit
+		if ( !l ) l = smallfont.BreakLines(whichline,int(ss.x*.5));
+		int maxlen = 0;
+		for ( int i=0; i<l.Count(); i++ )
+		{
+			int len = smallfont.StringWidth(l.StringAt(i));
+			if ( len > maxlen ) maxlen = len;
+		}
+		int h = smallfont.GetHeight();
+		int fh = h*l.Count();
+		double fractic = SWWMStatusBar(statusbar)?SWWMStatusBar(statusbar).fractic:0;
+		double fcurtime = curtime-fractic;
+		double alph = clamp((fcurtime/20.)+1.,0.,1.);
+		alph *= clamp((lifespan-fcurtime)/10.,0.,1.);
+		Screen.Dim("Black",alph*.8,int((Screen.GetWidth()-(maxlen+12)*hs)/2.),int(bottom-(margin+2+fh+nofs)*hs),int((maxlen+12)*hs),int((fh+4)*hs));
+		int yy = double(margin+fh+nofs);
+		for ( int i=0; i<l.Count(); i++ )
+		{
+			int len = smallfont.StringWidth(l.StringAt(i));
+			Screen.DrawText(smallfont,color,int((ss.x-len)/2.),(bottom/hs)-yy,l.StringAt(i),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+			yy -= h;
+		}
+	}
+}
+
 // Screen flashes from DT
 Class GenericFlash : HUDMessageBase
 {
