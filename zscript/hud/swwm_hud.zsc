@@ -741,7 +741,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			tv[2] = (3,2);
 			for ( int i=0; i<3; i++ ) tv[i] = (tv[i]+basemappos)*hs;
 			for ( int i=0; i<3; i++ ) Screen.DrawThickLine(int(tv[i].x),int(tv[i].y),int(tv[(i+1)%3].x),int(tv[(i+1)%3].y),max(1.,hs*.5),mm_yourcolor);
-			yy += ((HALFMAPSIZE+2)*2)+3;
+			yy += ((HALFMAPSIZE+2)*2)+5;
 		}
 		// draw stats and timer when automap is open
 		int fstats = swwm_forcestats;
@@ -757,81 +757,81 @@ Class SWWMStatusBar : BaseStatusBar abstract
 				if ( iof != -1 ) ln.Truncate(iof);
 				if ( !label || ((level.clusterflags&level.CLUSTER_HUB) && (label == 2)) ) str = ln;
 				else str = String.Format("%s - %s",level.mapname.MakeUpper(),ln);
-				Screen.DrawText(smallfont,tclabel,xx-smallfont.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-				yy += smallfont.GetHeight();
+				Screen.DrawText(bigfont,tclabel,xx-bigfont.StringWidth(str)/2,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_ScaleX,.5,DTA_ScaleY,.5);
+				yy += bigfont.GetHeight()/2+4;
 			}
 			if ( (level.total_monsters > 0) && am_showmonsters && !deathmatch )
 			{
 				str = String.Format("\c"..tclabel_s.."K \c-%d\c"..tcextra_s.."/\c-%d",level.killed_monsters,level.total_monsters);
-				Screen.DrawText(smallfont2,(level.killed_monsters>=level.total_monsters)?tccompl:tcvalue,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				Screen.DrawText(MiniHUDFontOutline,(level.killed_monsters>=level.total_monsters)?tccompl:tcvalue,xx-MiniHUDFontOutline.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 				if ( killflash && (gametic < killflash) )
 				{
 					double alph = max((killflash-(gametic+FracTic))/25.,0.)**1.5;
 					str = String.Format("%d/%d",level.killed_monsters,level.total_monsters);
 					int slashpos = str.IndexOf("/");
-					Screen.DrawText(smallfont2,mhudfontcol[MCR_FLASH],xx-smallfont2.StringWidth(str),yy,str.Left(slashpos),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
+					Screen.DrawText(MiniHUDFontOutline,mhudfontcol[MCR_FLASH],xx-MiniHUDFontOutline.StringWidth(str),yy,str.Left(slashpos),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
 				}
 				if ( tkillflash && (gametic < tkillflash) )
 				{
 					double alph = max((tkillflash-(gametic+FracTic))/25.,0.)**1.5;
 					str = String.Format("%d",level.total_monsters);
-					Screen.DrawText(smallfont2,mhudfontcol[MCR_FLASH],xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
+					Screen.DrawText(MiniHUDFontOutline,mhudfontcol[MCR_FLASH],xx-MiniHUDFontOutline.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
 				}
-				yy += smallfont2.GetHeight();
+				yy += MiniHUDFontOutline.GetHeight()+2;
 			}
 			if ( (level.total_items > 0) && am_showitems && !deathmatch )
 			{
 				str = String.Format("\c"..tclabel_s.."I \c-%d\c"..tcextra_s.."/\c-%d",level.found_items,level.total_items);
-				Screen.DrawText(smallfont2,(level.found_items>=level.total_items)?tccompl:tcvalue,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				Screen.DrawText(MiniHUDFontOutline,(level.found_items>=level.total_items)?tccompl:tcvalue,xx-MiniHUDFontOutline.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 				if ( itemflash && (gametic < itemflash) )
 				{
 					double alph = max((itemflash-(gametic+FracTic))/25.,0.)**1.5;
 					str = String.Format("%d/%d",level.found_items,level.total_items);
 					int slashpos = str.IndexOf("/");
-					Screen.DrawText(smallfont2,mhudfontcol[MCR_FLASH],xx-smallfont2.StringWidth(str),yy,str.Left(slashpos),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
+					Screen.DrawText(MiniHUDFontOutline,mhudfontcol[MCR_FLASH],xx-MiniHUDFontOutline.StringWidth(str),yy,str.Left(slashpos),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
 				}
 				if ( titemflash && (gametic < titemflash) )
 				{
 					double alph = max((titemflash-(gametic+FracTic))/25.,0.)**1.5;
 					str = String.Format("%d",level.total_items);
-					Screen.DrawText(smallfont2,mhudfontcol[MCR_FLASH],xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
+					Screen.DrawText(MiniHUDFontOutline,mhudfontcol[MCR_FLASH],xx-MiniHUDFontOutline.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
 				}
-				yy += smallfont2.GetHeight();
+				yy += MiniHUDFontOutline.GetHeight()+2;
 			}
 			if ( (level.total_secrets > 0) && am_showsecrets && !deathmatch )
 			{
 				str = String.Format("\c"..tclabel_s.."S \c-%d\c"..tcextra_s.."/\c-%d",level.found_secrets,level.total_secrets);
-				Screen.DrawText(smallfont2,(level.found_secrets>=level.total_secrets)?tccompl:tcvalue,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				Screen.DrawText(MiniHUDFontOutline,(level.found_secrets>=level.total_secrets)?tccompl:tcvalue,xx-MiniHUDFontOutline.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 				if ( secretflash && (gametic < secretflash) )
 				{
 					double alph = max((secretflash-(gametic+FracTic))/25.,0.)**1.5;
 					str = String.Format("%d/%d",level.found_secrets,level.total_secrets);
 					int slashpos = str.IndexOf("/");
-					Screen.DrawText(smallfont2,mhudfontcol[MCR_FLASH],xx-smallfont2.StringWidth(str),yy,str.Left(slashpos),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
+					Screen.DrawText(MiniHUDFontOutline,mhudfontcol[MCR_FLASH],xx-MiniHUDFontOutline.StringWidth(str),yy,str.Left(slashpos),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
 				}
 				if ( tsecretflash && (gametic < tsecretflash) )
 				{
 					double alph = max((tsecretflash-(gametic+FracTic))/25.,0.)**1.5;
 					str = String.Format("%d",level.total_secrets);
-					Screen.DrawText(smallfont2,mhudfontcol[MCR_FLASH],xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
+					Screen.DrawText(MiniHUDFontOutline,mhudfontcol[MCR_FLASH],xx-MiniHUDFontOutline.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alph);
 				}
-				yy += smallfont2.GetHeight();
+				yy += MiniHUDFontOutline.GetHeight()+2;
 			}
 			int sec;
 			if ( am_showtime )
 			{
 				sec = Thinker.Tics2Seconds(level.maptime);
 				str = String.Format("\c"..tclabel_s.."T \c-%02d\c"..tcextra_s..":\c-%02d\c"..tcextra_s..":\c-%02d",sec/3600,(sec%3600)/60,sec%60);
-				Screen.DrawText(smallfont2,((level.sucktime>0)&&(sec>=(level.sucktime*3600)))?tcsucks:((level.partime>0)&&(sec<=level.partime))?tccompl:tcvalue,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-				yy += smallfont2.GetHeight();
+				Screen.DrawText(MiniHUDFontOutline,((level.sucktime>0)&&(sec>=(level.sucktime*3600)))?tcsucks:((level.partime>0)&&(sec<=level.partime))?tccompl:tcvalue,xx-MiniHUDFontOutline.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				yy += MiniHUDFontOutline.GetHeight()+2;
 			}
 			// don't show total time if it's equal to map time
 			if ( am_showtotaltime && (level.totaltime != level.maptime) )
 			{
 				sec = Thinker.Tics2Seconds(level.totaltime);
 				str = String.Format("\c"..tclabel_s.."TT \c-%02d\c"..tcextra_s..":\c-%02d\c"..tcextra_s..":\c-%02d",sec/3600,(sec%3600)/60,sec%60);
-				Screen.DrawText(smallfont2,tcvalue,xx-smallfont2.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-				yy += smallfont2.GetHeight();
+				Screen.DrawText(MiniHUDFontOutline,tcvalue,xx-MiniHUDFontOutline.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				yy += MiniHUDFontOutline.GetHeight()+2;
 			}
 			yy += 3;
 		}
