@@ -9,6 +9,7 @@ Class PayRespects : HUDMessageBase
 	double hs;
 	Vector2 ss;
 	int seed, seed2;
+	Font mSmallFont;
 
 	static PayRespects PressF()
 	{
@@ -20,6 +21,7 @@ Class PayRespects : HUDMessageBase
 		f.seed = Random[FInTheChat]();
 		f.seed2 = Random[FInTheChat]();
 		f.ScreenSizeChanged();
+		f.mSmallFont = Font.GetFont('TewiFont');
 		return f;
 	}
 
@@ -38,7 +40,7 @@ Class PayRespects : HUDMessageBase
 	override void Draw( int bottom, int visibility )
 	{
 		Vector2 realpos = (basepos.x*ss.x,basepos.y*ss.y);
-		Vector2 fo = (smallfont.StringWidth("F")/2.,-smallfont.GetHeight());
+		Vector2 fo = (mSmallFont.StringWidth("F")/2.,-mSmallFont.GetHeight());
 		// F rise up
 		int initspd = (128-seed);
 		if ( (initspd >= 0) && (initspd < 32) ) initspd = 32;
@@ -48,7 +50,7 @@ Class PayRespects : HUDMessageBase
 		fo.x += (.15*initspd)*((initialspan-(lifespan-fractic))**.6);
 		fo.y += ((initialspan-(lifespan-fractic))**1.6)-boostup*sin((90./initialspan)*(level.maptime+fractic-starttic));
 		double alph = clamp((lifespan+fractic)/double(initialspan),0.,1.);
-		Screen.DrawText(smallfont,Font.CR_GREEN,realpos.x-fo.x,realpos.y-fo.y,"F",DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+		Screen.DrawText(mSmallFont,Font.CR_GREEN,realpos.x-fo.x,realpos.y-fo.y,"F",DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
 	}
 }
 
@@ -58,6 +60,7 @@ Class SWWMOneLiner : HUDMessageBase
 	String whichline;
 	transient BrokenLines l;
 	int lifespan, curtime;
+	Font mSmallFont;
 	int color;
 	bool force;
 
@@ -72,6 +75,7 @@ Class SWWMOneLiner : HUDMessageBase
 			l.whichline = StringTable.Localize("SWWM_"..whichline,false);
 		else l.whichline = StringTable.Localize(locstr,false);
 		l.curtime = l.lifespan = lifespan;
+		l.mSmallFont = Font.GetFont('TewiFont');
 		l.color = color;
 		l.force = force;
 		l.nofs = 0;
@@ -111,14 +115,14 @@ Class SWWMOneLiner : HUDMessageBase
 		Vector2 ss = (Screen.GetWidth()/hs,Screen.GetHeight()/hs);
 		if ( whichline == "" ) return;	// don't draw empty strings
 		// split so it can fit
-		if ( !l ) l = smallfont.BreakLines(whichline,int(ss.x*.5));
+		if ( !l ) l = mSmallFont.BreakLines(whichline,int(ss.x*.5));
 		int maxlen = 0;
 		for ( int i=0; i<l.Count(); i++ )
 		{
-			int len = smallfont.StringWidth(l.StringAt(i));
+			int len = mSmallFont.StringWidth(l.StringAt(i));
 			if ( len > maxlen ) maxlen = len;
 		}
-		int h = smallfont.GetHeight();
+		int h = mSmallFont.GetHeight();
 		int fh = h*l.Count();
 		double fractic = SWWMStatusBar(statusbar)?SWWMStatusBar(statusbar).fractic:0;
 		double fcurtime = curtime-fractic;
@@ -128,8 +132,8 @@ Class SWWMOneLiner : HUDMessageBase
 		int yy = int(margin+fh+nofs);
 		for ( int i=0; i<l.Count(); i++ )
 		{
-			int len = smallfont.StringWidth(l.StringAt(i));
-			Screen.DrawText(smallfont,color,int((ss.x-len)/2.),(bottom/hs)-yy,l.StringAt(i),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+			int len = mSmallFont.StringWidth(l.StringAt(i));
+			Screen.DrawText(mSmallFont,color,int((ss.x-len)/2.),(bottom/hs)-yy,l.StringAt(i),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
 			yy -= h;
 		}
 	}
@@ -179,6 +183,7 @@ Class SWWMWeaponTooltip : HUDMessageBase
 	double tics, holdtics, fadeintics, fadeouttics;
 	transient BrokenLines l;
 	SWWMWeaponTooltip next;
+	Font mSmallFont;
 
 	SWWMWeaponTooltip Init( Class<SWWMWeapon> weapon )
 	{
@@ -189,6 +194,7 @@ Class SWWMWeaponTooltip : HUDMessageBase
 		fadeintics = 5;
 		fadeouttics = 15;
 		tics = -10;
+		mSmallFont = Font.GetFont('TewiFont');
 		return self;
 	}
 
@@ -210,29 +216,29 @@ Class SWWMWeaponTooltip : HUDMessageBase
 		double ftics = tics+fractic;
 		double alpha = (ftics<fadeintics)?(ftics/fadeintics):(ftics<(fadeintics+holdtics))?1.:(1.-(ftics-(fadeintics+holdtics))/fadeouttics);
 		int w = bigfont.StringWidth(wpn);
-		if ( !l ) l = smallfont.BreakLines(txt,600);
+		if ( !l ) l = mSmallFont.BreakLines(txt,600);
 		int w1 = w;
 		int w2 = 0, w3 = 0;
 		w = 0;
 		for ( int i=0; i<l.Count(); i++ )
 		{
-			let lw = smallfont.StringWidth(l.StringAt(i));
+			let lw = mSmallFont.StringWidth(l.StringAt(i));
 			if ( lw > w ) w = lw;
 			if ( (i == 0) && (lw > w3) ) w3 = lw;
 			else if ( (i > 0) && (lw > w2) ) w2 = lw;
 		}
 		int cw = int(ceil((max(w1,w)+8)/6.))*6;
-		int h = bigfont.GetHeight()+8+smallfont.GetHeight()*l.Count();
+		int h = bigfont.GetHeight()+8+mSmallFont.GetHeight()*l.Count();
 		Vector2 pos = (int(ss.x/2),ss.y-(swwm_hudmargin+60+h));
 		Screen.Dim("Black",.5*alpha,int((pos.x-(cw+4)/2)*hs),int((pos.y-2)*hs),int((cw+4)*hs),int((h+4)*hs));
 		Screen.DrawText(bigfont,SWWMCREDITSCOL1,pos.x-w1/2,pos.y,wpn,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
 		for ( int i=0; i<cw; i+=6 )
-			Screen.DrawChar(smallfont,SWWMCREDITSCOL1,(pos.x-cw/2)+i,pos.y+32,0x5F,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
+			Screen.DrawChar(mSmallFont,SWWMCREDITSCOL1,(pos.x-cw/2)+i,pos.y+32,0x5F,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
 		pos.y += bigfont.GetHeight()+8;
 		for ( int i=0; i<l.Count(); i++ )
 		{
-			Screen.DrawText(smallfont,Font.CR_WHITE,pos.x-((i>0)?(w2/2):(w3/2)),pos.y,l.StringAt(i),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
-			pos.y += smallfont.GetHeight();
+			Screen.DrawText(mSmallFont,Font.CR_WHITE,pos.x-((i>0)?(w2/2):(w3/2)),pos.y,l.StringAt(i),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
+			pos.y += mSmallFont.GetHeight();
 		}
 	}
 }

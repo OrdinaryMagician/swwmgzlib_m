@@ -65,7 +65,15 @@ Class OptionMenuItemSWWMPlayTime : OptionMenuItem
 // + some other changes
 Class SWWMOptionMenu : OptionMenu
 {
-	private String ttip;
+	private String ttip, olttip;
+	private Font mTipFont;
+	private BrokenLines ttlines;
+
+	override void Init( Menu parent, OptionMenuDescriptor desc )
+	{
+		Super.Init(parent,desc);
+		mTipFont = Font.GetFont('TewiFont');
+	}
 
 	override int DrawCaption( String title, int y, bool drawit )
 	{
@@ -83,20 +91,24 @@ Class SWWMOptionMenu : OptionMenu
 		String mcvar = mDesc.mItems[mDesc.mSelectedItem].GetAction();
 		mcvar.Replace(" ","_");	// need to strip whitespace for command actions
 		String locstr = String.Format("TOOLTIP_%s",mcvar);
+		olttip = ttip;
 		ttip = StringTable.Localize(locstr,false);
 		if ( ttip == locstr ) ttip = "";
+		if ( (ttip != olttip) && ttlines ) ttlines.Destroy();
+		if ( !ttlines ) ttlines = mTipFont.BreakLines(ttip,CleanWidth_1-8);
 	}
 	override void Drawer()
 	{
 		Super.Drawer();
-		if ( ttip == "" ) return;
+		if ( (ttip == "") || !ttlines ) return;
 		// re-evaluate y to check where the cursor is
 		int cy = 0;
 		int y = mDesc.mPosition;
 		if ( y <= 0 )
 		{
-			if ( mDesc.mTitle.Length() > 0 )
-				y = -y+smallfont.GetHeight();
+			let font = generic_ui||!mDesc.mFont?NewSmallFont:mDesc.mFont;
+			if ( font && (mDesc.mTitle.Length() > 0) )
+				y = -y+font.GetHeight();
 			else y = -y;
 		}
 		int fontheight = OptionMenuSettings.mLinespacing*CleanYfac_1;
@@ -117,22 +129,20 @@ Class SWWMOptionMenu : OptionMenu
 				break;
 			}
 		}
-		let lines = smallfont.BreakLines(ttip,CleanWidth_1-8);
-		int height = (4+smallfont.GetHeight()*lines.Count())*CleanYFac_1;
+		int height = (4+mTipFont.GetHeight()*ttlines.Count())*CleanYFac_1;
 		// draw at the bottom unless the selected option could be covered by the tooltip
 		int ypos = Screen.GetHeight()-height;
 		if ( cy > ypos ) ypos = 0;
 		Screen.Dim("Black",.75,0,ypos,Screen.GetWidth(),height);
 		ypos += 2*CleanYFac_1;
-		for ( int i=0; i<lines.Count(); i++ )
+		for ( int i=0; i<ttlines.Count(); i++ )
 		{
-			Screen.DrawText(smallfont,Font.CR_WHITE,4*CleanXFac_1,ypos,lines.StringAt(i),DTA_CleanNoMove_1,true);
-			ypos += smallfont.GetHeight()*CleanYFac_1;
+			Screen.DrawText(mTipFont,Font.CR_WHITE,4*CleanXFac_1,ypos,ttlines.StringAt(i),DTA_CleanNoMove_1,true);
+			ypos += mTipFont.GetHeight()*CleanYFac_1;
 		}
 	}
 }
 
-// main menu w/ version info
 Class SWWMCleanMenu : ListMenu
 {
 	override bool MouseEvent( int type, int x, int y )
@@ -165,25 +175,34 @@ Class SWWMCleanMenu : ListMenu
 	}
 }
 
+// main menu w/ version info
 Class SWWMMainMenu : SWWMCleanMenu
 {
+	Font mSmallFont;
+
+	override void Init( Menu parent, ListMenuDescriptor desc )
+	{
+		Super.Init(parent,desc);
+		mSmallFont = Font.GetFont('TewiFont');
+	}
+
 	override void Drawer()
 	{
 		Super.Drawer();
 		int xx, yy;
 		String str = StringTable.Localize("$"..SWWMMODPREFIX.."_MODVER");
-		int width = smallfont.StringWidth(str)+8;
-		int height = smallfont.GetHeight()+4;
+		int width = mSmallFont.StringWidth(str)+8;
+		int height = mSmallFont.GetHeight()+4;
 		xx = CleanWidth_1-width;
 		yy = CleanHeight_1-height*2;
 		Screen.Dim("Black",.75,int(xx*CleanXFac_1),int(yy*CleanYFac_1),int(width*CleanXFac_1),int(height*CleanYFac_1));
-		Screen.DrawText(smallfont,Font.CR_GOLD,(xx+4)*CleanXFac_1,(yy+2)*CleanYFac_1,str,DTA_CleanNoMove_1,true);
+		Screen.DrawText(mSmallFont,Font.CR_GOLD,(xx+4)*CleanXFac_1,(yy+2)*CleanYFac_1,str,DTA_CleanNoMove_1,true);
 		str = StringTable.Localize("$SWWM_MODVER");
-		width = smallfont.StringWidth(str)+8;
+		width = mSmallFont.StringWidth(str)+8;
 		xx = CleanWidth_1-width;
 		yy += height;
 		Screen.Dim("Black",.75,int(xx*CleanXFac_1),int(yy*CleanYFac_1),int(width*CleanXFac_1),int(height*CleanYFac_1));
-		Screen.DrawText(smallfont,Font.CR_GOLD,(xx+4)*CleanXFac_1,(yy+2)*CleanYFac_1,str,DTA_CleanNoMove_1,true);
+		Screen.DrawText(mSmallFont,Font.CR_GOLD,(xx+4)*CleanXFac_1,(yy+2)*CleanYFac_1,str,DTA_CleanNoMove_1,true);
 	}
 }
 
@@ -195,9 +214,12 @@ Class SWWMBigMenuHack : SWWMCleanMenu
 	bool longlist;	// more than 10 entries, scrolls
 	int ofs;
 
+	Font mSmallFont;
+
 	override void Init( Menu parent, ListMenuDescriptor desc )
 	{
 		Super.Init(parent,desc);
+		mSmallFont = Font.GetFont('TewiFont');
 		for ( int i=0; i<mDesc.mItems.Size(); i++ )
 		{
 			let itm = mDesc.mItems[i];
@@ -287,19 +309,19 @@ Class SWWMBigMenuHack : SWWMCleanMenu
 			isclean = true;
 		}
 		String str = "⌃ ⌃ ⌃";
-		double x = (w-smallfont.StringWidth(str))/2;
+		double x = (w-mSmallFont.StringWidth(str))/2;
 		double y = (h-224)/2;
 		if ( isclean ) SWWMUtility.AdjustClean_1(x,y);
 		if ( ofs > 0 )
 		{
-			if ( isclean ) Screen.DrawText(smallfont,Font.CR_FIRE,x,y+16*CleanYFac_1,str,DTA_CleanNoMove_1,true);
-			else Screen.DrawText(smallfont,Font.CR_FIRE,x,y+16,str,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43);
+			if ( isclean ) Screen.DrawText(mSmallFont,Font.CR_FIRE,x,y+16*CleanYFac_1,str,DTA_CleanNoMove_1,true);
+			else Screen.DrawText(mSmallFont,Font.CR_FIRE,x,y+16,str,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43);
 		}
 		if ( ofs < (mDesc.mItems.Size()-8) )
 		{
 			str = "⌄ ⌄ ⌄";
-			if ( isclean ) Screen.DrawText(smallfont,Font.CR_FIRE,x,y+256*CleanYFac_1,str,DTA_CleanNoMove_1,true);
-			else Screen.DrawText(smallfont,Font.CR_FIRE,x,y+256,str,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43);
+			if ( isclean ) Screen.DrawText(mSmallFont,Font.CR_FIRE,x,y+256*CleanYFac_1,str,DTA_CleanNoMove_1,true);
+			else Screen.DrawText(mSmallFont,Font.CR_FIRE,x,y+256,str,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43);
 		}
 		for ( int i=0; i<mDesc.mItems.Size(); i++ )
 		{
@@ -384,17 +406,20 @@ Class ListMenuItemSWWMStaticTextM : ListMenuItem
 		int w = desc?desc.DisplayWidth():ListMenuDescriptor.CleanScale;
 		int h = desc?desc.DisplayHeight():-1;
 		let font = menuDelegate.PickFont(mFont);
+		int scl;
+		if ( font != NewSmallFont ) scl = 3;
+		else scl = 2;
 		if ( w == ListMenuDescriptor.CleanScale )
 		{
-			double x = int(320-font.StringWidth(text)*1.5)/2;
+			double x = (320-font.StringWidth(text)*scl)/2;
 			double y = mYpos;
 			SWWMUtility.AdjustClean_1(x,y);
-			Screen.DrawText(font,mColor,x,y,text,DTA_ScaleX,CleanXFac_1*1.5,DTA_ScaleY,CleanYFac_1*1.5);
+			Screen.DrawText(font,mColor,x,y,text,DTA_ScaleX,CleanXFac_1*scl,DTA_ScaleY,CleanYFac_1*scl);
 		}
 		else
 		{
-			double x = int(w-font.StringWidth(text)*1.5)/2;
-			Screen.DrawText(font,mColor,x,mYpos,text,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43,DTA_ScaleX,1.5,DTA_ScaleY,1.5);
+			double x = (w-font.StringWidth(text)*scl)/2;
+			Screen.DrawText(font,mColor,x,mYpos,text,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43,DTA_ScaleX,scl,DTA_ScaleY,scl);
 		}
 	}
 }
@@ -450,9 +475,9 @@ Class SWWMMessageBox : MessageBoxMenu
 		}
 		else
 		{
-			destWidth = CleanWidth_1*2;
-			destHeight = CleanHeight_1*2;
-			textfont = bigfont;
+			destWidth = CleanWidth_1;
+			destHeight = CleanHeight_1;
+			textfont = Font.GetFont('TewiFontOutline');
 			mMessage = textfont.BreakLines(Stringtable.Localize(message),480);
 		}
 	}
@@ -509,8 +534,8 @@ Class SWWMMessageBox : MessageBoxMenu
 			Screen.DrawText(textfont,messageSelection==0?OptionMenuSettings.mFontColorSelection:OptionMenuSettings.mFontColor,(destWidth-2*textfont.StringWidth(stryes))/2,y,stryes, DTA_VirtualWidth,destWidth,DTA_VirtualHeight,destHeight,DTA_KeepRatio,true,DTA_ScaleX,2.,DTA_ScaleY,2.);
 			Screen.DrawText(textfont,messageSelection==1?OptionMenuSettings.mFontColorSelection:OptionMenuSettings.mFontColor,(destWidth-2*textfont.StringWidth(strno))/2,y+fontheight*2,strno,DTA_VirtualWidth,destWidth,DTA_VirtualHeight,destHeight,DTA_KeepRatio,true,DTA_ScaleX,2.,DTA_ScaleY,2.);
 			if ( (messageSelection < 0) || ((MenuTime()%8) >= 4) ) return;
-			Screen.DrawText(textfont,OptionMenuSettings.mFontColorSelection,(destWidth-2*textfont.StringWidth(messageSelection?strno:stryes))/2-46,y+fontheight*2*messageSelection,"►",DTA_VirtualWidth,destWidth,DTA_VirtualHeight,destHeight,DTA_KeepRatio,true,DTA_ScaleX,2.,DTA_ScaleY,2.);
-			Screen.DrawText(textfont,OptionMenuSettings.mFontColorSelection,(destWidth+2*textfont.StringWidth(messageSelection?strno:stryes))/2+16,y+fontheight*2*messageSelection,"◄",DTA_VirtualWidth,destWidth,DTA_VirtualHeight,destHeight,DTA_KeepRatio,true,DTA_ScaleX,2.,DTA_ScaleY,2.);
+			Screen.DrawText(textfont,OptionMenuSettings.mFontColorSelection,(destWidth-2*textfont.StringWidth(messageSelection?strno:stryes))/2-26,y+fontheight*2*messageSelection,"►",DTA_VirtualWidth,destWidth,DTA_VirtualHeight,destHeight,DTA_KeepRatio,true,DTA_ScaleX,2.,DTA_ScaleY,2.);
+			Screen.DrawText(textfont,OptionMenuSettings.mFontColorSelection,(destWidth+2*textfont.StringWidth(messageSelection?strno:stryes))/2+12,y+fontheight*2*messageSelection,"◄",DTA_VirtualWidth,destWidth,DTA_VirtualHeight,destHeight,DTA_KeepRatio,true,DTA_ScaleX,2.,DTA_ScaleY,2.);
 		}
 	}
 
@@ -608,7 +633,9 @@ class ListMenuItemSWWMTextItemM : ListMenuItemSelectable
 	override int GetWidth()
 	{
 		let font = menuDelegate.PickFont(mFont);
-		return max(1,font.StringWidth(StringTable.Localize(mText)));
+		int w = font.StringWidth(StringTable.Localize(mText));
+		if ( font != NewSmallFont ) w *= 2;
+		return max(1,w);
 	}
 
 	override void Draw( bool selected, ListMenuDescriptor desc )
@@ -617,13 +644,16 @@ class ListMenuItemSWWMTextItemM : ListMenuItemSelectable
 		int h = desc?desc.DisplayHeight():-1;
 		String text = StringTable.Localize(mText);
 		let font = menuDelegate.PickFont(mFont);
+		int scl;
+		if ( font != NewSmallFont ) scl = 2;
+		else scl = 1;
 		double x;
 		// centered
-		if ( w == ListMenuDescriptor.CleanScale ) x = (320-font.StringWidth(text))/2;
-		else x = (w-font.StringWidth(text))/2;
+		if ( w == ListMenuDescriptor.CleanScale ) x = (320-font.StringWidth(text)*scl)/2;
+		else x = (w-font.StringWidth(text)*scl)/2;
 		double y = mYpos;
 		// offset text so it's centered
-		y += (mHeight-font.GetHeight())/2;
+		y += (mHeight-font.GetHeight()*scl)/2;
 		if ( selected )
 		{
 			double xx = x;
@@ -638,8 +668,8 @@ class ListMenuItemSWWMTextItemM : ListMenuItemSelectable
 					int ch;
 					[ch, pos] = text.GetNextCodePoint(pos);
 					double yy = y+4*sin(32*i+8*Menu.MenuTime())*CleanYFac_1;
-					Screen.DrawChar(font,mColorSelected,xx,yy,ch,DTA_CleanNoMove_1,true);
-					xx += (font.GetCharWidth(ch)+kern)*CleanXFac_1;
+					Screen.DrawChar(font,mColorSelected,xx,yy,ch,DTA_ScaleX,CleanXFac_1*scl,DTA_ScaleY,CleanYFac_1*scl);
+					xx += (font.GetCharWidth(ch)+kern)*CleanXFac_1*scl;
 				}
 			}
 			else
@@ -649,17 +679,17 @@ class ListMenuItemSWWMTextItemM : ListMenuItemSelectable
 					int ch;
 					[ch, pos] = text.GetNextCodePoint(pos);
 					double yy = y+4*sin(32*i+8*Menu.MenuTime());
-					Screen.DrawChar(mFont,mColorSelected,xx,yy,ch,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43);
-					xx += (font.GetCharWidth(ch)+kern);
+					Screen.DrawChar(mFont,mColorSelected,xx,yy,ch,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43,DTA_ScaleX,scl,DTA_ScaleY,scl);
+					xx += (font.GetCharWidth(ch)+kern)*scl;
 				}
 			}
 		}
 		else if ( w == ListMenuDescriptor.CleanScale )
 		{
 			SWWMUtility.AdjustClean_1(x,y);
-			Screen.DrawText(font,mColor,x,y,text,DTA_CleanNoMove_1,true);
+			Screen.DrawText(font,mColor,x,y,text,DTA_ScaleX,CleanXFac_1*scl,DTA_ScaleY,CleanYFac_1*scl);
 		}
-		else Screen.DrawText(font,mColor,x,y,text,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43);
+		else Screen.DrawText(font,mColor,x,y,text,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43,DTA_ScaleX,scl,DTA_ScaleY,scl);
 	}
 
 }
@@ -734,15 +764,16 @@ Class OptionMenuItemScaleSliderFix : OptionMenuItemScaleSlider
 	}
 }
 
+// draw captions using our own font
 Class SWWMMenuDelegate : DoomMenuDelegate
 {
-	// we've got our own fonts 'round here
-	override Font PickFont( Font fnt )
+	Font mBigFont;
+
+	override int DrawCaption( String title, Font fnt, int y, bool drawit )
 	{
-		if ( generic_ui ) return NewSmallFont;
-		if ( !fnt ) return SmallFont;
-		if ( (fnt == AlternativeBigFont) || (fnt == OriginalBigFont) || (fnt == IntermissionFont) ) return BigFont;
-		if ( (fnt == AlternativeSmallFont) || (fnt == NewSmallFont) ) return SmallFont;
-		return fnt;
+		if ( !mBigFont ) mBigFont = Font.GetFont('TewiFontOutline');
+		fnt = mBigFont;
+		if ( drawit ) Screen.DrawText(fnt,OptionMenuSettings.mTitleColor,(Screen.GetWidth()-fnt.StringWidth(title)*CleanXFac_1*2)/2,8*CleanYFac_1,title,DTA_ScaleX,CleanXFac_1*2,DTA_ScaleY,CleanYFac_1*2);
+		return (y+fnt.GetHeight()*2)*CleanYFac_1;
 	}
 }

@@ -18,8 +18,9 @@ Class MsgLine
 		lastrep = rep;
 		String nstr = str;
 		if ( rep > 1 ) nstr.AppendFormat(" (x%d)",rep);
-		l = SmallFont.BreakLines(nstr,(type==PRINT_LOW)?sz:361);
-		if ( type != PRINT_LOW ) ls = SmallFont.BreakLines(nstr,211);
+		let fnt = Font.GetFont('TewiFont');
+		l = fnt.BreakLines(nstr,(type==PRINT_LOW)?sz:361);
+		if ( type != PRINT_LOW ) ls = fnt.BreakLines(nstr,211);
 	}
 }
 
@@ -51,7 +52,7 @@ Enum EMiniHUDFontColor
 Class SWWMStatusBar : BaseStatusBar abstract
 {
 	TextureID ChatTex[6], MiniBox, PauseTex, InventoryTex, bgtex;
-	Font MiniHUDFont, MiniHUDFontOutline;
+	Font MiniHUDFont, MiniHUDFontOutline, mSmallFont, mBigFont, mTinyFont;
 	int mhudfontcol[15];
 
 	Array<MsgLine> MainQueue, PickupQueue;
@@ -370,6 +371,9 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		mm_zoom = minimapzoom = oldminimapzoom = 1.;
 		MiniHudFont = Font.GetFont("MiniHUD");
 		MiniHudFontOutline = Font.GetFont("MiniHUDOutline");
+		mSmallFont = Font.GetFont('TewiFont');
+		mBigFont = Font.GetFont('TewiFontOutline');
+		mTinyFont = Font.GetFont('MiniwiFont');
 		mhudfontcol[MCR_WHITE] = Font.FindFontColor("MiniWhite");
 		mhudfontcol[MCR_RED] = Font.FindFontColor("MiniRed");
 		mhudfontcol[MCR_GREEN] = Font.FindFontColor("MiniGreen");
@@ -401,7 +405,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 	override void DrawMyPos()
 	{
 		String str = String.Format("(%d,%d,%d)",CPlayer.mo.pos.X,CPlayer.mo.pos.Y,CPlayer.mo.pos.Z);
-		Screen.DrawText(smallfont2,Font.CR_GREEN,(ss.x-smallfont2.StringWidth(str))/2,4,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+		Screen.DrawText(mTinyFont,Font.CR_GREEN,(ss.x-mTinyFont.StringWidth(str))/2,4,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 	}
 
 	override void DrawAutomapHUD( double ticFrac )
@@ -757,8 +761,8 @@ Class SWWMStatusBar : BaseStatusBar abstract
 				if ( iof != -1 ) ln.Truncate(iof);
 				if ( !label || ((level.clusterflags&level.CLUSTER_HUB) && (label == 2)) ) str = ln;
 				else str = String.Format("%s - %s",level.mapname.MakeUpper(),ln);
-				Screen.DrawText(bigfont,tclabel,xx-bigfont.StringWidth(str)/2,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_ScaleX,.5,DTA_ScaleY,.5);
-				yy += bigfont.GetHeight()/2+4;
+				Screen.DrawText(mBigFont,tclabel,xx-mBigFont.StringWidth(str),yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+				yy += mBigFont.GetHeight()+4;
 			}
 			if ( (level.total_monsters > 0) && am_showmonsters && !deathmatch )
 			{
@@ -990,7 +994,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 
 	private void DrawPickups()
 	{
-		int h = smallfont.GetHeight();
+		int h = mSmallFont.GetHeight();
 		// draw nametags below them
 		double yy;
 		double nalph = 0.;
@@ -999,17 +1003,17 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		{
 			nalph = clamp(tagtime/20.,0.,1.);
 			yy = ss.y-(margin+50);
-			int len = smallfont.StringWidth(ntagstr);
+			int len = mSmallFont.StringWidth(ntagstr);
 			double xx = (ss.x-len)/2.;
 			Screen.Dim("Black",.8*nalph,int((xx-6)*hs),int(yy*hs),int((len+12)*hs),int((h+4)*hs));
-			Screen.DrawText(smallfont,ntagcol,int(xx),yy+2,ntagstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,nalph);
+			Screen.DrawText(mSmallFont,ntagcol,int(xx),yy+2,ntagstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,nalph);
 		}
 		if ( PickupQueue.Size() <= 0 ) return;
 		// reverse order since they're drawn bottom to top
 		int mend = max(0,PickupQueue.Size()-swwm_maxpickup);
 		yy = ss.y-(margin+50);
 		// shift up if nametag is present
-		if ( nalph > 0. ) yy -= int((smallfont.GetHeight()+6)*clamp(nalph*2.,0.,1.));
+		if ( nalph > 0. ) yy -= int((mSmallFont.GetHeight()+6)*clamp(nalph*2.,0.,1.));
 		for ( int i=PickupQueue.Size()-1; i>=mend; i-- )
 		{
 			PickupQueue[i].UpdateText(int(ss.x*.75));
@@ -1019,16 +1023,16 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			int maxlen = 0;
 			for ( int j=0; j<l.Count(); j++ )
 			{
-				int len = smallfont.StringWidth(l.StringAt(j));
+				int len = mSmallFont.StringWidth(l.StringAt(j));
 				if ( len > maxlen ) maxlen = len;
 			}
 			double xx = (ss.x-maxlen)/2.;
 			Screen.Dim("Black",.8*alph,int((xx-6)*hs),int((yy-h*(l.Count()-1))*hs),int((maxlen+12)*hs),int((h*l.Count()+4)*hs));
 			for ( int j=l.Count()-1; j>=0; j-- )
 			{
-				int len = smallfont.StringWidth(l.StringAt(j));
+				int len = mSmallFont.StringWidth(l.StringAt(j));
 				xx = int((ss.x-len)/2.);
-				Screen.DrawText(smallfont,msg0color,xx,yy+2,l.StringAt(j),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+				Screen.DrawText(mSmallFont,msg0color,xx,yy+2,l.StringAt(j),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
 				yy -= h;
 			}
 			yy -= 6;
@@ -1048,20 +1052,20 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			if ( !midl || (midsz != int(ss.x*ssp)) )
 			{
 				if ( midl ) midl.Destroy();
-				midl = SmallFont.BreakLines(midstr,int(ss.x*ssp));
+				midl = mSmallFont.BreakLines(midstr,int(ss.x*ssp));
 			}
-			int h = smallfont.GetHeight();
+			int h = mSmallFont.GetHeight();
 			int maxlen = 0;
-			for ( int i=0; i<midl.Count(); i++ ) maxlen = max(maxlen,smallfont.StringWidth(midl.StringAt(i)));
+			for ( int i=0; i<midl.Count(); i++ ) maxlen = max(maxlen,mSmallFont.StringWidth(midl.StringAt(i)));
 			xx = int((ss.x*ssp-maxlen)/2.);
 			yy = ss.y*ssp*.375;
 			yy -= (h*midl.Count()+4)/2;	// center
 			Screen.Dim("Black",.8*alph,int((xx-6)*hs*hsp),int(yy*hs*hsp),int((maxlen+12)*hs*hsp),int((h*midl.Count()+4)*hs*hsp));
 			for ( int i=0; i<midl.Count(); i++ )
 			{
-				int len = smallfont.StringWidth(midl.StringAt(i));
+				int len = mSmallFont.StringWidth(midl.StringAt(i));
 				xx = int((ss.x*ssp-len)/2.);
-				Screen.DrawText(smallfont,col,int(xx),yy+2,midl.StringAt(i),DTA_VirtualWidthF,ss.x*ssp,DTA_VirtualHeightF,ss.y*ssp,DTA_KeepRatio,true,DTA_Alpha,alph);
+				Screen.DrawText(mSmallFont,col,int(xx),yy+2,midl.StringAt(i),DTA_VirtualWidthF,ss.x*ssp,DTA_VirtualHeightF,ss.y*ssp,DTA_KeepRatio,true,DTA_Alpha,alph);
 				yy += h;
 			}
 		}
@@ -1087,7 +1091,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			for ( int j=0; j<l.Count(); j++ )
 			{
 				Screen.DrawTexture(ChatTex[smol?4:1],false,xx,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,boxalph);
-				Screen.DrawText(smallfont,col,xx+4,yy,l.StringAt(j),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+				Screen.DrawText(mSmallFont,col,xx+4,yy,l.StringAt(j),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
 				yy += 13;
 			}
 		}
@@ -1104,22 +1108,24 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		Screen.Dim("Black",.8,0,Screen.GetHeight()-int(15*hs),Screen.GetWidth(),int(15*hs));
 		String fullstr = String.Format("\cd(>\c- %s_",txt);
 		// cut out to fit
-		int w = smallfont.StringWidth(fullstr);
+		int w = mSmallFont.StringWidth(fullstr);
 		if ( w > ss.x-4 )
 		{
 			// draw trailing dots
-			Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,"...",DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+			Screen.DrawText(mSmallFont,Font.CR_WHITE,xx,yy,"...",DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 			// shift back
 			xx -= w-(ss.x-4);
 			// draw trimmed
-			Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,fullstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_ClipLeft,int(26*hs));
+			Screen.DrawText(mSmallFont,Font.CR_WHITE,xx,yy,fullstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_ClipLeft,int(26*hs));
 		}
-		else Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,fullstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+		else Screen.DrawText(mSmallFont,Font.CR_WHITE,xx,yy,fullstr,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 		return true;
 	}
 
 	override bool DrawPaused( int player )
 	{
+		let fnt = mBigFont?mBigFont:NewSmallFont;
+		let fnt2 = mSmallFont?mSmallFont:NewConsoleFont;
 		if ( swwm_fuzz )
 		{
 			Vector2 tsize = TexMan.GetScaledSize(bgtex);
@@ -1139,31 +1145,31 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		{
 			pausepos.x += pausedir.x*CleanXFac;
 			pausepos.y += pausedir.y*CleanYFac;
-			if ( pausepos.x >= Screen.GetWidth()-((bigfont.StringWidth(str)+8)*CleanXFac/2) )
+			if ( pausepos.x >= Screen.GetWidth()-((fnt.StringWidth(str)*3+8)*CleanXFac/2) )
 				pausedir.x = -1;
-			if ( pausepos.x < ((bigfont.StringWidth(str)+8)*CleanXFac/2) )
+			if ( pausepos.x < ((fnt.StringWidth(str)*3+8)*CleanXFac/2) )
 				pausedir.x = 1;
-			if ( pausepos.y >= Screen.GetHeight()-((bigfont.GetHeight()+8)*CleanYFac/2) )
+			if ( pausepos.y >= Screen.GetHeight()-((fnt.GetHeight()*3+8)*CleanYFac/2) )
 				pausedir.y = -1;
-			if ( pausepos.y < ((bigfont.GetHeight()+8)*CleanYFac/2) )
+			if ( pausepos.y < ((fnt.GetHeight()*3+8)*CleanYFac/2) )
 				pausedir.y = 1;
 		}
-		double xx = pausepos.x-bigfont.StringWidth(str)*CleanXFac/2;
-		double yy = pausepos.y-bigfont.GetHeight()*CleanYFac/2;
+		double xx = pausepos.x-(fnt.StringWidth(str)*3*CleanXFac)/2;
+		double yy = pausepos.y-(fnt.GetHeight()*3*CleanYFac)/2;
 		int tlen = str.CodePointCount();
 		for ( int i=0, pos=0; i<tlen; i++ )
 		{
 			int ch;
 			[ch, pos] = str.GetNextCodePoint(pos);
-			Screen.DrawChar(bigfont,SWWMCREDITSCOL0,xx,yy+4*sin(32*i+8*gametic)*CleanYFac,ch,DTA_CleanNoMove,true);
-			xx += (bigfont.GetCharWidth(ch)+bigfont.GetDefaultKerning())*CleanXFac;
+			Screen.DrawChar(fnt,Font.CR_BLUE,xx,yy+4*sin(32*i+8*gametic)*CleanYFac,ch,DTA_ScaleX,CleanXFac*3,DTA_ScaleY,CleanYFac*3);
+			xx += (fnt.GetCharWidth(ch)+fnt.GetDefaultKerning())*3*CleanXFac;
 		}
-		yy += bigfont.GetHeight()*CleanYFac;
+		yy += fnt.GetHeight()*3*CleanYFac;
 		if ( multiplayer && (player != -1) )
 		{
 			str = String.Format(StringTable.Localize("$TXT_BY"),players[player].GetUserName());
-			xx = pausepos.x-smallfont.StringWidth(str)*CleanXFac/2;
-			Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,str,DTA_CleanNoMove,true);
+			xx = pausepos.x-fnt2.StringWidth(str)*CleanXFac/2;
+			Screen.DrawText(fnt2,Font.CR_WHITE,xx,yy,str,DTA_CleanNoMove,true);
 		}
 		return true;
 	}
@@ -1188,30 +1194,30 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		Screen.Dim("Black",dimalph,0,0,Screen.GetWidth(),Screen.GetHeight());
 		alph = clamp((deadtimer-60)/60.,0.,1.);
 		str = StringTable.Localize("$SWWM_URDED");
-		len = bigfont.StringWidth(str);
-		xx = int((ss.x-len)/2.);
-		yy = (ss.y-bigfont.GetHeight()*4)/2.;
-		Screen.DrawText(bigfont,Font.CR_RED,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+		len = mBigFont.StringWidth(str);
+		xx = int((ss.x-len*4)/2.);
+		yy = (ss.y-(mBigFont.GetHeight()*4+48))/2.;
+		Screen.DrawText(mBigFont,Font.CR_RED,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph,DTA_ScaleX,4,DTA_ScaleY,4);
 		if ( demo.restimer > 0 ) return (1.-dimalph);	// don't draw prompts while reviving
 		if ( multiplayer || level.AllowRespawn || sv_singleplayerrespawn || G_SkillPropertyInt(SKILLP_PlayerRespawn) )
 		{
 			if ( sv_norespawn ) return (1.-dimalph);
 			alph = clamp((deadtimer-90)/60.,0.,1.);
 			str = String.Format(StringTable.Localize("$SWWM_URDEDMP"));
-			len = smallfont.StringWidth(str);
+			len = mSmallFont.StringWidth(str);
 			xx = int((ss.x-len)/2.);
 			yy = ss.y/2.;
-			Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+			Screen.DrawText(mSmallFont,Font.CR_WHITE,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
 			return (1.-dimalph);
 		}
 		alph = clamp((deadtimer-140)/60.,0.,1.);
 		if ( demo.restype == SWWMPlayer.RT_REVIVE ) str = String.Format(StringTable.Localize("$SWWM_URDED2"));
 		else if ( demo.restype == SWWMPlayer.RT_RESPAWN ) str = String.Format(StringTable.Localize("$SWWM_URDED3"));
 		else str = String.Format(StringTable.Localize("$SWWM_URDED4"));
-		len = smallfont.StringWidth(str);
+		len = mSmallFont.StringWidth(str);
 		xx = int((ss.x-len)/2.);
 		yy = ss.y/2.;
-		Screen.DrawText(smallfont,Font.CR_WHITE,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+		Screen.DrawText(mSmallFont,Font.CR_WHITE,xx,yy,str,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
 		return (1.-dimalph);
 	}
 

@@ -8,9 +8,11 @@ Class SWWMCreditsEntry ui
 	BrokenLines btext;
 	int width, height;
 	int titlecol, btextcol;
+	Font mSmallFont;
 
 	SWWMCreditsEntry Init( String t, String b = "", int c1 = SWWMCREDITSCOL1, int c2 = SWWMCREDITSCOL2, String icon = "", int iconheight = 0 )
 	{
+		mSmallFont = Font.GetFont('TewiFont');
 		if ( icon != "" )
 		{
 			itex = TexMan.CheckForTexture(icon,TexMan.Type_Any);
@@ -35,7 +37,7 @@ Class SWWMCreditsEntry ui
 			return self;
 		}
 		String b2 = StringTable.Localize(b);
-		btext = smallfont.BreakLines(b2,320);
+		btext = mSmallFont.BreakLines(b2,320);
 		width = CalcWidth();
 		height = CalcHeight();
 		return self;
@@ -49,7 +51,7 @@ Class SWWMCreditsEntry ui
 
 	protected virtual int CalcWidth()
 	{
-		int len = smallfont.StringWidth(title);
+		int len = mSmallFont.StringWidth(title);
 		if ( !btext ) return len;
 		for ( int i=0; i<btext.Count(); i++ )
 		{
@@ -63,10 +65,10 @@ Class SWWMCreditsEntry ui
 	{
 		int h = 0;
 		if ( hasicon ) h = iheight;
-		h += smallfont.GetHeight();
+		h += mSmallFont.GetHeight();
 		if ( !btext ) return h;
 		h += 6;
-		h += smallfont.GetHeight()*btext.Count();
+		h += mSmallFont.GetHeight()*btext.Count();
 		return h;
 	}
 
@@ -80,21 +82,21 @@ Class SWWMCreditsEntry ui
 			yy += iheight;
 			Screen.DrawTexture(itex,true,x,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 		}
-		int w = smallfont.StringWidth(title);
+		int w = mSmallFont.StringWidth(title);
 		double xx = x-w/2;
-		Screen.DrawText(smallfont,titlecol,xx,yy,title,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+		Screen.DrawText(mSmallFont,titlecol,xx,yy,title,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 		if ( !btext ) return height;
 		// underline
 		int cw = int(ceil((w+8)/6.))*6;
 		xx = x-cw/2;
 		for ( int i=0; i<cw; i+=6 )
-			Screen.DrawChar(smallfont,titlecol,xx+i,yy+6,0x5F,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-		yy += smallfont.GetHeight()+6;
+			Screen.DrawChar(mSmallFont,titlecol,xx+i,yy+6,0x5F,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+		yy += mSmallFont.GetHeight()+6;
 		for ( int i=0; i<btext.Count(); i++ )
 		{
 			xx = x-(btext.StringWidth(i))/2;
-			Screen.DrawText(smallfont,btextcol,xx,yy,btext.StringAt(i),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-			yy += smallfont.GetHeight();
+			Screen.DrawText(mSmallFont,btextcol,xx,yy,btext.StringAt(i),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+			yy += mSmallFont.GetHeight();
 		}
 		return height;
 	}
@@ -112,6 +114,7 @@ Class SWWMCreditsMenu : GenericMenu abstract
 	double hs;
 	int logow, logoh;
 	int logoyofs;
+	Font mSmallFont, mBigFont;
 
 	String oldmus;
 	int oldorder;
@@ -145,6 +148,8 @@ Class SWWMCreditsMenu : GenericMenu abstract
 	override void Init( Menu parent )
 	{
 		Super.Init(parent);
+		mSmallFont = Font.GetFont('TewiFont');
+		mBigFont = Font.GetFont('TewiFontOutline');
 		bgtex = TexMan.CheckForTexture("graphics/tempbg.png",TexMan.Type_Any);
 		UpdateSize();
 		logo = TexMan.CheckForTexture("graphics/"..SWWMLOGONAME..".png",TexMan.Type_Any);
@@ -215,43 +220,43 @@ Class SWWMCreditsMenu : GenericMenu abstract
 		theight = logoh;
 		for ( int i=0; i<cdev.Size(); i++ )
 		{
-			if ( i == 0 ) theight += SECTION_PAD+bigfont.GetHeight();
+			if ( i == 0 ) theight += SECTION_PAD+mBigFont.GetHeight()*2;
 			theight += ENTRY_PAD;
 			theight += cdev[i].height;
 		}
 		for ( int i=0; i<cassets.Size(); i++ )
 		{
-			if ( i == 0 ) theight += SECTION_PAD+bigfont.GetHeight();
+			if ( i == 0 ) theight += SECTION_PAD+mBigFont.GetHeight()*2;
 			theight += ENTRY_PAD;
 			theight += cassets[i].height;
 		}
 		for ( int i=0; i<cmusic.Size(); i++ )
 		{
-			if ( i == 0 ) theight += SECTION_PAD+bigfont.GetHeight();
+			if ( i == 0 ) theight += SECTION_PAD+mBigFont.GetHeight()*2;
 			theight += ENTRY_PAD;
 			theight += cmusic[i].height;
 		}
 		for ( int i=0; i<cfanart.Size(); i++ )
 		{
-			if ( i == 0 ) theight += SECTION_PAD+bigfont.GetHeight();
+			if ( i == 0 ) theight += SECTION_PAD+mBigFont.GetHeight()*2;
 			theight += ENTRY_PAD;
 			theight += cfanart[i].height;
 		}
 		for ( int i=0; i<clocal.Size(); i++ )
 		{
-			if ( i == 0 ) theight += SECTION_PAD+bigfont.GetHeight();
+			if ( i == 0 ) theight += SECTION_PAD+mBigFont.GetHeight()*2;
 			theight += ENTRY_PAD;
 			theight += clocal[i].height;
 		}
 		for ( int i=0; i<cpatrons.Size(); i++ )
 		{
-			if ( i == 0 ) theight += SECTION_PAD+bigfont.GetHeight();
+			if ( i == 0 ) theight += SECTION_PAD+mBigFont.GetHeight()*2;
 			theight += ENTRY_PAD;
 			theight += cpatrons[i].height;
 		}
 		for ( int i=0; i<cthanks.Size(); i++ )
 		{
-			if ( i == 0 ) theight += SECTION_PAD+bigfont.GetHeight();
+			if ( i == 0 ) theight += SECTION_PAD+mBigFont.GetHeight()*2;
 			theight += ENTRY_PAD;
 			theight += cthanks[i].height;
 		}
@@ -276,23 +281,23 @@ Class SWWMCreditsMenu : GenericMenu abstract
 		// don't draw if we're offscreen, saves time
 		if ( (y+logoh+hy < 0) || (y-ly > ss.y) ) return logoh;
 		Screen.DrawTexture(logo,true,x-logow/2,y,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-		Screen.DrawText(smallfont,SWWMCREDITSCOL1,x-smallfont.StringWidth(stitle)/2,y+(logoh-28),stitle,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+		Screen.DrawText(mSmallFont,SWWMCREDITSCOL1,x-mSmallFont.StringWidth(stitle)/2,y+(logoh-28),stitle,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 		// underline
-		int w = max(smallfont.StringWidth(stitle),smallfont.StringWidth(stitle2));
+		int w = max(mSmallFont.StringWidth(stitle),mSmallFont.StringWidth(stitle2));
 		int cw = int(ceil((w+8)/6.))*6;
 		double xx = x-cw/2;
 		for ( int i=0; i<cw; i+=6 )
-			Screen.DrawChar(smallfont,SWWMCREDITSCOL1,xx+i,y+(logoh-22),0x5F,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-		Screen.DrawText(smallfont,SWWMCREDITSCOL2,x-smallfont.StringWidth(stitle2)/2,y+(logoh-9),stitle2,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+			Screen.DrawChar(mSmallFont,SWWMCREDITSCOL1,xx+i,y+(logoh-22),0x5F,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
+		Screen.DrawText(mSmallFont,SWWMCREDITSCOL2,x-mSmallFont.StringWidth(stitle2)/2,y+(logoh-9),stitle2,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 		return logoh;
 	}
 	double DrawSection( double x, double y, String txt )
 	{
 		// don't draw if we're offscreen, saves time
 		y += SECTION_SHIFT;
-		if ( (y+bigfont.GetHeight() < 0) || (y > ss.y) ) return bigfont.GetHeight();
-		Screen.DrawText(bigfont,SWWMCREDITSCOL0,x-bigfont.StringWidth(txt)/2,y,txt,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-		return bigfont.GetHeight();
+		if ( (y+mBigFont.GetHeight()*2 < 0) || (y > ss.y) ) return mBigFont.GetHeight()*2;
+		Screen.DrawText(mBigFont,SWWMCREDITSCOL0,x-mBigFont.StringWidth(txt),y,txt,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_ScaleX,2,DTA_ScaleY,2);
+		return mBigFont.GetHeight()*2;
 	}
 	override void Drawer()
 	{

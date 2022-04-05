@@ -84,17 +84,6 @@ Class SWWMLevelCompatibility : LevelPostProcessor
 		case '3805A661D5C4523AFF7BF86991071043':
 			EquinoxBossBrainHandle(4106,60);
 			break;
-		// DUMP 3 HUBMAP
-		case '7E77AA43AF7ACDBC52171E9EE2BF98D0':
-			// swap all the calls to script 12 with calls to 'DUMP3_DISPLAY'
-			// to fix the bigfont being too large
-			for ( int i=0; i<GetThingCount(); i++ )
-			{
-				if ( ((GetThingSpecial(i) != 226) && (GetThingSpecial(i) != 80)) || (GetThingArgument(i,0) != 12) )
-					continue;
-				SetThingArgument(i,0,-Int('DUMP3_DISPLAY'));
-			}
-			break;
 		// Doom 2 MAP07
 		case '291F24417FB3DD411339AE82EF9B3597':
 			// remove excess backpacks (there's 10 of them for fuck's sake)
