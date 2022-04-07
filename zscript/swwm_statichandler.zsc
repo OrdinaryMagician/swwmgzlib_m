@@ -37,7 +37,7 @@ Class SWWMStaticHandler : StaticEventHandler
 
 	override void WorldUnloaded( WorldEvent e )
 	{
-		SWWMHandler.ClearAllShaders(players[consoleplayer]);
+		SWWMHandler.ClearAllShaders();
 		unloading = true;
 	}
 
@@ -67,7 +67,7 @@ Class SWWMStaticHandler : StaticEventHandler
 				SWWMPlayer(players[i].mo).CheckUnderwaterAmb(true);
 			}
 		}
-		SWWMHandler.ClearAllShaders(players[consoleplayer]);
+		SWWMHandler.ClearAllShaders();
 		if ( !e.IsSaveGame ) return;
 		// save version checker
 		checktic = gametic+5;

@@ -2,12 +2,12 @@
 
 extend Class SWWMHandler
 {
-	static clearscope void ClearAllShaders( PlayerInfo p, bool noscope = false )
+	static clearscope void ClearAllShaders( bool noscope = false )
 	{
-		Shader.SetEnabled(p,"WaterWarp",false);
-		Shader.SetEnabled(p,"LavaWarp",false);
-		Shader.SetEnabled(p,"SlimeWarp",false);
-		ClearAllModShaders(p,noscope);	// define in sidemod
+		PPShader.SetEnabled("WaterWarp",false);
+		PPShader.SetEnabled("LavaWarp",false);
+		PPShader.SetEnabled("SlimeWarp",false);
+		ClearAllModShaders(noscope);	// define in sidemod
 	}
 
 	private ui void RenderShaders( RenderEvent e )
@@ -17,41 +17,41 @@ extend Class SWWMHandler
 		bool pc = (p.camera == mo);
 		if ( !mo || !swwm_shaders || !pc )
 		{
-			if ( !swwm_shaders ) ClearAllShaders(p,true);
+			if ( !swwm_shaders ) ClearAllShaders(true);
 			return;
 		}
-		bool coat = RenderModShaders(e,p,mo);	// define in sidemod
+		bool coat = RenderModShaders(e,mo);	// define in sidemod
 		if ( !(mo is 'SWWMPlayer') )
 		{
-			Shader.SetEnabled(p,"WaterWarp",false);
-			Shader.SetEnabled(p,"LavaWarp",false);
-			Shader.SetEnabled(p,"SlimeWarp",false);
+			PPShader.SetEnabled("WaterWarp",false);
+			PPShader.SetEnabled("LavaWarp",false);
+			PPShader.SetEnabled("SlimeWarp",false);
 			return;
 		}
 		let demo = SWWMPlayer(mo);
 		if ( demo.lastunder == SWWMPlayer.UNDER_WATER )
 		{
-			Shader.SetEnabled(p,"WaterWarp",true);
-			Shader.SetUniform1f(p,"WaterWarp","timer",(gametic+e.FracTic)/GameTicRate);
-			Shader.SetUniform1f(p,"WaterWarp","dfact",coat?.25:1.);
-			Shader.SetUniform3f(p,"WaterWarp","lightcol",(demo.undercol.r/255.,demo.undercol.g/255.,demo.undercol.b/255.));
+			PPShader.SetEnabled("WaterWarp",true);
+			PPShader.SetUniform1f("WaterWarp","timer",(gametic+e.FracTic)/GameTicRate);
+			PPShader.SetUniform1f("WaterWarp","dfact",coat?.25:1.);
+			PPShader.SetUniform3f("WaterWarp","lightcol",(demo.undercol.r/255.,demo.undercol.g/255.,demo.undercol.b/255.));
 		}
-		else Shader.SetEnabled(p,"WaterWarp",false);
+		else PPShader.SetEnabled("WaterWarp",false);
 		if ( demo.lastunder == SWWMPlayer.UNDER_LAVA )
 		{
-			Shader.SetEnabled(p,"LavaWarp",true);
-			Shader.SetUniform1f(p,"LavaWarp","timer",(gametic+e.FracTic)/GameTicRate);
-			Shader.SetUniform1f(p,"LavaWarp","dfact",coat?.25:1.);
-			Shader.SetUniform3f(p,"LavaWarp","lightcol",(demo.undercol.r/255.,demo.undercol.g/255.,demo.undercol.b/255.));
+			PPShader.SetEnabled("LavaWarp",true);
+			PPShader.SetUniform1f("LavaWarp","timer",(gametic+e.FracTic)/GameTicRate);
+			PPShader.SetUniform1f("LavaWarp","dfact",coat?.25:1.);
+			PPShader.SetUniform3f("LavaWarp","lightcol",(demo.undercol.r/255.,demo.undercol.g/255.,demo.undercol.b/255.));
 		}
-		else Shader.SetEnabled(p,"LavaWarp",false);
+		else PPShader.SetEnabled("LavaWarp",false);
 		if ( demo.lastunder == SWWMPlayer.UNDER_SLIME )
 		{
-			Shader.SetEnabled(p,"SlimeWarp",true);
-			Shader.SetUniform1f(p,"SlimeWarp","timer",(gametic+e.FracTic)/GameTicRate);
-			Shader.SetUniform1f(p,"SlimeWarp","dfact",coat?.25:1.);
-			Shader.SetUniform3f(p,"SlimeWarp","lightcol",(demo.undercol.r/255.,demo.undercol.g/255.,demo.undercol.b/255.));
+			PPShader.SetEnabled("SlimeWarp",true);
+			PPShader.SetUniform1f("SlimeWarp","timer",(gametic+e.FracTic)/GameTicRate);
+			PPShader.SetUniform1f("SlimeWarp","dfact",coat?.25:1.);
+			PPShader.SetUniform3f("SlimeWarp","lightcol",(demo.undercol.r/255.,demo.undercol.g/255.,demo.undercol.b/255.));
 		}
-		else Shader.SetEnabled(p,"SlimeWarp",false);
+		else PPShader.SetEnabled("SlimeWarp",false);
 	}
 }

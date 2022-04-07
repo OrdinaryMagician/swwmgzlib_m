@@ -6,10 +6,10 @@ Shared code and assets are added and tweaked as needed by the side mods. In most
 
 Functions that must be extended:
 
-- **`private ui bool SWWMHandler.RenderModShaders( RenderEvent e, PlayerInfo p, PlayerPawn mo )`**<br/>
-  Used for rendering mod-specific shaders. Passed pointers are there to avoid the need to re-set them.<br/>
+- **`private ui bool SWWMHandler.RenderModShaders( RenderEvent e, PlayerPawn mo )`**<br/>
+  Used for rendering mod-specific shaders. Passed pointer is there to avoid the need to re-fetch it.<br/>
   *return* : Bool indicating whether or not an **Elemental Coating** is active, for the underwater overlays.
-- **`static clearscope void SWWMHandler.ClearAllModShaders( PlayerInfo p, bool noscope )`**<br/>
+- **`static clearscope void SWWMHandler.ClearAllModShaders( bool noscope )`**<br/>
   Used when we want to disable all *(mod-specific)* shaders .<br/>
   *noscope* : Don't disable scope overlay shaders.
 - **`private bool SWWMHandler.ModReplacement( ReplaceEvent e )`**<br/>
