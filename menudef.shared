@@ -42,6 +42,8 @@ OptionMenu "SWWMOptionMenu"
 
 	StaticText "$SWWM_PTITLE", 1
 	SWWMPlayTime "$SWWM_PLAYTIME", "swwm_playtime"
+	Option "$SWWM_SKIPSKILL", "swwm_skipskill", "YesNo"
+
 	StaticText " "
 	StaticText "$SWWM_OTITLE", 1
 	Option "$SWWM_SHADERS", "swwm_shaders", "YesNo"

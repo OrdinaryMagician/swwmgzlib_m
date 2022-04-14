@@ -600,10 +600,26 @@ Mixin Class SWWMSelector
 	}
 }
 
+// allow the player to skip skill confirmation message boxes
+Mixin Class SWWMSkillConfirmSkippable
+{
+	override bool Activate()
+	{
+		Menu.SetMenu(((mAction=='StartgameConfirm')&&swwm_skipskill)?'Startgame':mAction,mParam);
+		return true;
+	}
+
+	override Name, int GetAction()
+	{
+		return (((mAction=='StartgameConfirm')&&swwm_skipskill)?'Startgame':mAction),mParam;
+	}
+}
+
 // main menu item with wiggly text when selected and Demo face selectors on both sides
-class ListMenuItemSWWMTextItemM : ListMenuItemSelectable
+Class ListMenuItemSWWMTextItemM : ListMenuItemSelectable
 {
 	Mixin SWWMSelector;
+	Mixin SWWMSkillConfirmSkippable;
 
 	String mText;
 	Font mFont;
@@ -698,6 +714,7 @@ class ListMenuItemSWWMTextItemM : ListMenuItemSelectable
 Class ListMenuItemSWWMPatchItemM : ListMenuItemSelectable
 {
 	Mixin SWWMSelector;
+	Mixin SWWMSkillConfirmSkippable;
 
 	TextureID mTexture;
 
