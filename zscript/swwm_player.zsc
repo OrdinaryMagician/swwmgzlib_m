@@ -342,6 +342,9 @@ Class SWWMPlayer : PlayerPawn abstract
 			v.player = player;
 			Destroy();
 		}
+		// sanity checks
+		if ( !EventHandler.Find("SWWMHandler") || !StaticEventHandler.Find("SWWMStaticHandler") )
+			ThrowAbortException("Panic! SWWM event handlers not detected!");
 	}
 
 	void CheckItemUsePickup()

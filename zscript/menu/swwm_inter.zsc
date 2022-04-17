@@ -1,5 +1,5 @@
 // shared intermission stat screen code
-Class SWWMStatScreenData : Thinker
+Class SWWMStatScreenData : SWWMStaticThinker
 {
 	// to prevent repetition
 	Array<int> lasttip;

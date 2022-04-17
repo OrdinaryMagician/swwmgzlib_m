@@ -1,5 +1,12 @@
 // various utility thinkers
 
+Class SWWMStaticThinker : Thinker abstract
+{
+	// shell class to iterate easier on sanity checks
+	// all subclasses should be guaranteed to have a statnum of STAT_STATIC
+	// if they don't, something is very wrong
+}
+
 // Korax instakill handler
 Class UglyBoyGetsFuckedUp : Thinker
 {
@@ -124,7 +131,7 @@ Class LIEntry
 	Color mapcolor;
 }
 
-Class SWWMCachedLockInfo : Thinker
+Class SWWMCachedLockInfo : SWWMStaticThinker
 {
 	Array<LIEntry> ent;
 
