@@ -50,6 +50,13 @@ Class SWWMHandler : EventHandler
 	{
 		QueueMaintenance();
 		FlashTick();
+		// healthbar on whatever the player is aiming at
+		for ( int i=0; i<MAXPLAYERS; i++ )
+		{
+			if ( !playeringame[i] || (players[i].Health <= 0) || !players[i].mo ) continue;
+			let t = players[i].mo.GetPointer(AAPTR_PLAYER_GETTARGET);
+			if ( t && t.bSHOOTABLE && (t.Health > 0) ) SWWMQuickCombatTracker.Update(t);
+		}
 	}
 
 	override void PostUiTick()

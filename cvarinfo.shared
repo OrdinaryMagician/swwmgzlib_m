@@ -33,3 +33,4 @@ nosave noarchive bool swwm_tooltipnote = false;	// set if the note on how to dis
 nosave bool swwm_mm_enable = true;		// show a minimap below the score counter
 nosave bool swwm_showmaptitle = false;		// shows the name of the map when entering, just like in dark souls!
 nosave bool swwm_skipskill = false;		// skips skill confirmations
+nosave bool swwm_ctrackers = true;		// shows enemy healthbars in the hud

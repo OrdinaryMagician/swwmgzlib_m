@@ -87,3 +87,90 @@ Class SWWMKeyMarker : MapMarker
 		if ( pos != target.pos ) SetOrigin(target.pos,true);
 	}
 }
+
+// very lightweight combat tracker, more Souls-y
+Class SWWMQuickCombatTracker : Inventory
+{
+	int lifespan, lasthealth, maxhealth;
+	int laghealth[10];
+	int cummdamage, cummspan, cummflash;	// please do not misread
+	int fadein;	// used for the hud
+	double lvheight;	// height while alive (used by the hud for positioning)
+	DynamicValueInterpolator intp, intpl;
+
+	static void Update( Actor target, int damage = 0 )
+	{
+		let t = SWWMQuickCombatTracker(target.FindInventory("SWWMQuickCombatTracker"));
+		if ( t )
+		{
+			// re-fade in
+			if ( t.lifespan < 20 ) t.fadein = t.lifespan/4;
+			t.lifespan = max(t.lifespan,target.bISMONSTER?((damage>0)?700:70):((damage>0)?140:35));
+			if ( damage > 0 )
+			{
+				t.cummdamage += damage;
+				t.cummspan = target.bISMONSTER?120:30;
+				t.cummflash = 15;
+			}
+			return;
+		}
+		t = SWWMQuickCombatTracker(Spawn("SWWMQuickCombatTracker"));
+		t.AttachToOwner(target);
+		t.maxhealth = target.SpawnHealth();
+		t.lasthealth = target.health;
+		int prevhealth = min(t.maxhealth,target.health+damage);	// guessed health before damage was dealt
+		for ( int i=0; i<10; i++ ) t.laghealth[i] = prevhealth;
+		if ( damage > 0 )
+		{
+			t.cummdamage = damage;
+			t.cummspan = target.bISMONSTER?120:30;
+			t.cummflash = 15;
+		}
+		t.intp = DynamicValueInterpolator.Create(t.lasthealth,.5,1,1000);
+		t.intpl = DynamicValueInterpolator.Create(t.laghealth[9],.1,1,1000);
+		t.lifespan = target.bISMONSTER?((damage>0)?700:70):((damage>0)?140:35);
+		t.fadein = 0;
+		t.lvheight = target.Height;
+	}
+
+	// expiration, and interpolator updates
+	override void DoEffect()
+	{
+		Super.DoEffect();
+		// cap lifespan if owner is dead
+		if ( Owner.Health <= 0 ) lifespan = min(lifespan,35);
+		else lvheight = Owner.Height;
+		if ( cummflash > 0 ) cummflash--;
+		if ( cummspan > 0 )
+		{
+			cummspan--;
+			if ( cummspan <= 0 ) cummdamage = 0;
+		}
+		if ( Owner.Health > lasthealth )
+		{
+			for ( int i=9; i>0; i-- )
+				laghealth[i] = Owner.Health;
+		}
+		laghealth[0] = lasthealth = Owner.Health;
+		intp.Update(lasthealth);
+		intpl.Update(laghealth[9]);
+		for ( int i=9; i>0; i-- )
+			laghealth[i] = laghealth[i-1];
+		if ( fadein < 5 ) fadein++;
+		lifespan--;
+		if ( lifespan <= 0 ) Destroy();
+	}
+
+	override void PreTravelled()
+	{
+		// expire immediately when switching maps
+		Destroy();
+	}
+
+	default
+	{
+		+INVENTORY.UNTOSSABLE;
+		+INVENTORY.UNDROPPABLE;
+		+INVENTORY.UNCLEARABLE;
+	}
+}

@@ -51,7 +51,7 @@ Enum EMiniHUDFontColor
 
 Class SWWMStatusBar : BaseStatusBar abstract
 {
-	TextureID ChatTex[6], MiniBox, PauseTex, InventoryTex, bgtex;
+	TextureID ChatTex[6], MiniBox, PauseTex, InventoryTex, bgtex, EnemyBTex, EnemyHTex[3];
 	Font MiniHUDFont, MiniHUDFontOutline, mSmallFont, mBigFont, mTinyFont;
 	int mhudfontcol[15];
 
@@ -75,6 +75,8 @@ Class SWWMStatusBar : BaseStatusBar abstract
 
 	// shared from renderunderlay, needed for proper interpolation of some things
 	Vector3 viewpos, viewrot;
+	// projection data cache
+	SWWMProjectionData projdata;
 
 	Inventory lastsel;
 	Weapon lastwep;
@@ -116,6 +118,9 @@ Class SWWMStatusBar : BaseStatusBar abstract
 	bool bAlwaysDrawInv,		// always draws the inventory box, even if empty
 		bAlwaysAboveInv;	// powerups are always drawn above the inventory box, even when shifted to the right
 	int AboveInvOffset;		// (Saya mod) additional offset applied to displays over inventory box
+
+	// for combat trackers
+	transient ThinkerIterator cti;
 
 	override void FlushNotify()
 	{
@@ -365,6 +370,10 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		ChatTex[4] = TexMan.CheckForTexture("graphics/HUD/ChatBoxLine_Smol.png",TexMan.Type_Any);
 		ChatTex[5] = TexMan.CheckForTexture("graphics/HUD/ChatBoxBottom_Smol.png",TexMan.Type_Any);
 		InventoryTex = TexMan.CheckForTexture("graphics/HUD/InventoryBox.png",TexMan.Type_Any);
+		EnemyBTex = TexMan.CheckForTexture("graphics/HUD/EnemyBox.png",TexMan.Type_Any);
+		EnemyHTex[0] = TexMan.CheckForTexture("graphics/HUD/EnemyBar.png",TexMan.Type_Any);
+		EnemyHTex[1] = TexMan.CheckForTexture("graphics/HUD/EnemyBarInvul.png",TexMan.Type_Any);
+		EnemyHTex[2] = TexMan.CheckForTexture("graphics/HUD/EnemyBarLag.png",TexMan.Type_Any);
 		MiniBox = TexMan.CheckForTexture("graphics/HUD/MinimapBox.png",TexMan.Type_Any);
 		PauseTex = TexMan.CheckForTexture("graphics/"..SWWMMODPREFIX.."pause.png",TexMan.Type_Any);
 		bgtex = TexMan.CheckForTexture("graphics/tempbg.png",TexMan.Type_Any);
@@ -400,6 +409,55 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		tcsucks = FONT.CR_RED;
 		tclabel_s = "x";
 		tcextra_s = "u";
+	}
+
+	private void DrawTarget()
+	{
+		// don't draw with automap open
+		if ( automapactive || !swwm_ctrackers ) return;
+		SWWMUtility.PrepareProjData(projdata,ViewPos,ViewRot.x,ViewRot.y,ViewRot.z,players[consoleplayer].fov);
+		int cliptop = projdata.viewy, clipbottom = projdata.viewy+projdata.viewh,
+			clipleft = projdata.viewx, clipright = projdata.viewx+projdata.vieww;
+		let cam = players[consoleplayer].camera;
+		Vector3 viewvec = (cos(viewrot.x)*cos(viewrot.y),sin(viewrot.x)*cos(viewrot.y),sin(-viewrot.y));
+		if ( !cti ) cti = ThinkerIterator.Create("SWWMQuickCombatTracker",Thinker.STAT_INVENTORY);
+		else cti.Reinit();
+		SWWMQuickCombatTracker ct;
+		double hsb = max(hs-1.,1.);	// always draw one level smaller
+		Vector2 ssb = (Screen.GetWidth(),Screen.GetHeight())/hsb;
+		while ( ct = SWWMQuickCombatTracker(cti.Next()) )
+		{
+			// ignore unowned (can happen?)
+			if ( !ct.Owner ) continue;
+			// ignore local player
+			if ( ct.Owner == CPlayer.mo ) continue;
+			// ignore trackers clearly outside of player view
+			Vector3 smpos = level.Vec3Offset(ct.Owner.prev*(1.-fractic)+ct.Owner.pos*fractic,(0,0,ct.lvheight));
+			Vector3 tdir = level.Vec3Diff(viewpos,smpos);
+			if ( viewvec dot tdir < 0 ) continue;
+			Vector3 ndc = SWWMUtility.ProjectPoint(projdata,viewpos+tdir);
+			if ( ndc.z >= 1. ) continue;
+			Vector2 vpos = SWWMUtility.NDCToViewport(projdata,ndc)/hsb;
+			if ( !SWWMUtility.TestScreenBounds(projdata,vpos) ) continue;
+			double fin = clamp(ct.fadein+fractic,0.,5.)/5.;
+			double fout = clamp(ct.lifespan-fractic,0.,25.)/25.;
+			double alph = fin*fout;
+			Vector2 barpos = vpos-(27,7);
+			Screen.DrawTexture(EnemyBTex,false,barpos.x,barpos.y,DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,alph,DTA_ClipTop,cliptop,DTA_ClipBottom,clipbottom,DTA_ClipLeft,clipleft,DTA_ClipRight,clipright);
+			int ht = clamp(ct.intp.GetValue(),0,ct.maxhealth);
+			double hw = (ht*50.)/ct.maxhealth;
+			Screen.DrawTexture(EnemyHTex[ct.Owner.bINVULNERABLE?1:0],false,barpos.x+2,barpos.y+2,DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,alph,DTA_WindowRightF,hw,DTA_ClipTop,cliptop,DTA_ClipBottom,clipbottom,DTA_ClipLeft,clipleft,DTA_ClipRight,clipright);
+			double ohw = hw;
+			ht = clamp(ct.intpl.GetValue(),0,ct.maxhealth);
+			hw = (ht*50.)/ct.maxhealth;
+			Screen.DrawTexture(EnemyHTex[2],false,barpos.x+2,barpos.y+2,DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,alph,DTA_WindowLeftF,ohw,DTA_WindowRightF,hw,DTA_ClipTop,cliptop,DTA_ClipBottom,clipbottom,DTA_ClipLeft,clipleft,DTA_ClipRight,clipright);
+			if ( ct.cummdamage <= 0 ) continue;
+			double calph = clamp(ct.cummspan-fractic,0.,20.)/20.;
+			Screen.DrawText(MiniHUDFontOutline,mhudfontcol[MCR_RED],barpos.x+3,barpos.y+10,String.Format("%d",ct.cummdamage),DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,calph*alph,DTA_ClipTop,cliptop,DTA_ClipBottom,clipbottom,DTA_ClipLeft,clipleft,DTA_ClipRight,clipright);
+			if ( ct.cummflash <= 0 ) continue;
+			double falph = max((ct.cummflash-FracTic)/15.,0.)**1.5;
+			Screen.DrawText(MiniHUDFontOutline,mhudfontcol[MCR_REDFLASH],barpos.x+3,barpos.y+10,String.Format("%d",ct.cummdamage),DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,falph*calph*alph,DTA_LegacyRenderStyle,STYLE_Add,DTA_ClipTop,cliptop,DTA_ClipBottom,clipbottom,DTA_ClipLeft,clipleft,DTA_ClipRight,clipright);
+		}
 	}
 
 	override void DrawMyPos()
@@ -1248,6 +1306,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		}
 		else
 		{
+			DrawTarget();
 			DrawTopStuff();
 			int invy = DrawStatus();
 			DrawInventory(invy);

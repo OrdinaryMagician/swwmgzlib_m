@@ -52,6 +52,7 @@ extend Class SWWMHandler
 
 	override void WorldThingDamaged( WorldEvent e )
 	{
+		if ( e.Damage > 0 ) SWWMQuickCombatTracker.Update(e.Thing,e.Damage);
 		if ( (e.Thing.Health > 0) || e.Thing.bKilled || e.Thing.bCorpse )
 			return;
 		DoGibThing(e);
