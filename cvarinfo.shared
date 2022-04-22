@@ -3,7 +3,6 @@ nosave float swwm_flashstrength = 1.0;		// strength of screen flashes
 user float swwm_bumpstrength = 1.0;		// intensity of fov bumping
 user float swwm_bobstrength = 1.0;		// intensity of viewangle bobbing
 nosave int swwm_hudmargin = 10;			// margin around fullscreen hud elements
-nosave bool swwm_hudscale = false;		// HUD scaling (false = tight scaling, true = loose scaling)
 nosave int swwm_maxshown = 4;			// max messages to show normally
 nosave int swwm_maxshownbig = 10;		// max messages to show when chatting
 nosave int swwm_maxpickup = 5;			// total pickup messages visible

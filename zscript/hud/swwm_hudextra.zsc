@@ -109,9 +109,7 @@ Class SWWMOneLiner : HUDMessageBase
 		for ( SWWMOneLiner l=nextl; l; l=l.nextl )
 			rofs += 20;
 		nofs = max(nofs,rofs);
-		double hs;
-		if ( swwm_hudscale ) hs = CleanXFac_1;
-		else hs = max(floor(Screen.GetWidth()/640.),1.);
+		double hs = max(floor(Screen.GetWidth()/640.),1.);
 		Vector2 ss = (Screen.GetWidth()/hs,Screen.GetHeight()/hs);
 		if ( whichline == "" ) return;	// don't draw empty strings
 		// split so it can fit
@@ -208,9 +206,7 @@ Class SWWMWeaponTooltip : HUDMessageBase
 	override void Draw( int bottom, int visibility )
 	{
 		if ( tics <= 0 ) return;
-		double hs;
-		if ( swwm_hudscale ) hs = max(CleanXFac_1-1.,1.);
-		else hs = max(floor(Screen.GetWidth()/640.)-1.,1.);
+		double hs = max(floor(Screen.GetWidth()/640.)-1.,1.);
 		Vector2 ss = (Screen.GetWidth(),Screen.GetHeight())/hs;
 		double fractic = SWWMStatusBar(statusbar)?SWWMStatusBar(statusbar).fractic:0;
 		double ftics = tics+fractic;

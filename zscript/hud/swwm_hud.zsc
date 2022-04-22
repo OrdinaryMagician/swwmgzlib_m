@@ -1007,33 +1007,31 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		}
 		if ( isInventoryBarVisible() )
 		{
-			Array<Inventory> bar;
-			bar.Clear();
-			for ( Inventory i=CPlayer.mo.FirstInv(); i; i=i.NextInv() ) bar.Push(i);
-			int ps = bar.Find(CPlayer.mo.InvSel);
-			Inventory prev[2], next[2];
-			if ( bar.Size() > 1 )
-			{
-				if ( ps+1 >= bar.Size() ) next[0] = bar[0];
-				else next[0] = bar[ps+1];
-				if ( ps-1 < 0 ) prev[0] = bar[bar.Size()-1];
-				else prev[0] = bar[ps-1];
-			}
-			if ( bar.Size() > 2 )
-			{
-				if ( ps+2 >= bar.Size() ) next[1] = bar[(ps+2)-bar.Size()];
-				else next[1] = bar[ps+2];
-				if ( ps-2 < 0 ) prev[1] = bar[bar.Size()+(ps-2)];
-				else prev[1] = bar[ps-2];
-			}
+			int invcount = 0;
+			for ( Inventory i=CPlayer.mo.FirstInv(); i; i=i.NextInv() ) invcount++;
+			double alphstep = clamp(invcount,1,7);
+			Screen.DrawText(NewSmallFont,Font.CR_RED,8,8,String.Format("%d -> %g",invcount,alphstep));
 			double xx = (ss.x-24)/2;
 			double yy = (ss.y+52)/2;
+			int j = 1;
 			Screen.DrawTexture(InventoryTex,false,xx,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
-			DrawInvIcon(prev[1],xx-46,yy+2,1./3.);
-			DrawInvIcon(prev[0],xx-22,yy+2,2./3.);
+			// previous entries
+			for ( Inventory i=CPlayer.mo.InvSel.PrevInv(); i; i=i.PrevInv() )
+			{
+				DrawInvIcon(i,(xx+2)-j*24,yy+2,(alphstep-j)/alphstep);
+				j++;
+				if ( j > 6 ) break;
+			}
+			j = 1;
+			// next entries
+			for ( Inventory i=CPlayer.mo.InvSel.NextInv(); i; i=i.NextInv() )
+			{
+				DrawInvIcon(i,(xx+2)+j*24,yy+2,(alphstep-j)/alphstep);
+				j++;
+				if ( j > 6 ) break;
+			}
+			// current
 			DrawInvIcon(CPlayer.mo.InvSel,xx+2,yy+2,selected:true);
-			DrawInvIcon(next[0],xx+26,yy+2,2./3.);
-			DrawInvIcon(next[1],xx+50,yy+2,1./3.);
 			return;
 		}
 		Screen.DrawTexture(InventoryTex,false,margin,ss.y-(margin+invy+2),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
@@ -1287,8 +1285,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		if ( !(players[consoleplayer].Camera is 'PlayerPawn') ) camhidden = true;
 		else camhidden = false;
 		BeginHUD();
-		if ( swwm_hudscale ) hs = CleanXFac_1;
-		else hs = max(floor(Screen.GetWidth()/640.),1.);
+		hs = max(floor(Screen.GetWidth()/640.),1.);
 		ss = (Screen.GetWidth(),Screen.GetHeight())/hs;
 		margin = clamp(swwm_hudmargin,0,40);
 		FracTic = TicFrac;
