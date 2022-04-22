@@ -443,11 +443,11 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			double alph = fin*fout;
 			Vector2 barpos = vpos-(27,7);
 			Screen.DrawTexture(EnemyBTex,false,barpos.x,barpos.y,DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,alph);
-			int ht = clamp(ct.intp.GetValue(),0,ct.maxhealth);
+			double ht = clamp(ct.intp.GetValue(fractic),0,ct.maxhealth);
 			double hw = (ht*50.)/ct.maxhealth;
 			Screen.DrawTexture(EnemyHTex[ct.Owner.bINVULNERABLE?1:0],false,barpos.x+2,barpos.y+2,DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,alph,DTA_WindowRightF,hw);
 			double ohw = hw;
-			ht = clamp(ct.intpl.GetValue(),0,ct.maxhealth);
+			ht = clamp(ct.intpl.GetValue(fractic),0,ct.maxhealth);
 			hw = (ht*50.)/ct.maxhealth;
 			Screen.DrawTexture(EnemyHTex[2],false,barpos.x+2,barpos.y+2,DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,alph,DTA_WindowLeftF,ohw,DTA_WindowRightF,hw);
 			if ( ct.cummdamage <= 0 ) continue;

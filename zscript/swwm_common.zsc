@@ -96,7 +96,8 @@ Class SWWMQuickCombatTracker : Inventory
 	int cummdamage, cummspan, cummflash;	// please do not misread
 	int fadein;	// used for the hud
 	double lvheight;	// height while alive (used by the hud for positioning)
-	DynamicValueInterpolator intp, intpl;
+	SmoothDynamicValueInterpolator intp;
+	SmoothLinearValueInterpolator intpl;
 
 	static void Update( Actor target, int damage = 0 )
 	{
@@ -126,8 +127,8 @@ Class SWWMQuickCombatTracker : Inventory
 			t.cummspan = target.bISMONSTER?120:30;
 			t.cummflash = 15;
 		}
-		t.intp = DynamicValueInterpolator.Create(t.lasthealth,.5,1,100);
-		t.intpl = DynamicValueInterpolator.Create(t.laghealth[9],.1,1,5);
+		t.intp = SmoothDynamicValueInterpolator.Create(t.lasthealth,.5,1,100);
+		t.intpl = SmoothLinearValueInterpolator.Create(t.laghealth[9],max(1,t.maxhealth/20));
 		t.lifespan = target.bISMONSTER?((damage>0)?700:70):((damage>0)?140:35);
 		t.fadein = 0;
 		t.lvheight = target.Height;
@@ -172,5 +173,67 @@ Class SWWMQuickCombatTracker : Inventory
 		+INVENTORY.UNTOSSABLE;
 		+INVENTORY.UNDROPPABLE;
 		+INVENTORY.UNCLEARABLE;
+	}
+}
+
+// fractic-compatible interpolators, with double value
+Class SmoothLinearValueInterpolator
+{
+	private double val, oldval, diff;
+
+	static SmoothLinearValueInterpolator Create( double val, double diff )
+	{
+		let v = new("SmoothLinearValueInterpolator");
+		v.oldval = v.val = val;
+		v.diff = diff;
+		return v;
+	}
+	void Reset( double newval )
+	{
+		oldval = val = newval;
+	}
+	void Update( double newval )
+	{
+		oldval = val;
+		if ( abs(newval-val) < diff ) val = newval;
+		else if ( val > newval ) val = max(newval,val-diff);
+		else val = min(newval,val+diff);
+	}
+	double GetValue( double fractic = 1. )
+	{
+		return val*fractic+oldval*(1.-fractic);
+	}
+}
+Class SmoothDynamicValueInterpolator
+{
+	private double val, oldval, factor, mindiff, maxdiff;
+
+	static SmoothDynamicValueInterpolator Create( double val, double factor, double mindiff, double maxdiff )
+	{
+		let v = new("SmoothDynamicValueInterpolator");
+		v.oldval = v.val = val;
+		v.factor = factor;
+		v.mindiff = mindiff;
+		v.maxdiff = maxdiff;
+		return v;
+	}
+	void Reset( double newval )
+	{
+		oldval = val = newval;
+	}
+	void Update( double newval )
+	{
+		oldval = val;
+		if ( abs(newval-val) < mindiff ) val = newval;
+		else
+		{
+			double diff = min(abs(newval-val)*factor,maxdiff);
+			if ( val > newval ) val = max(newval,val-diff);
+			else val = min(newval,val+diff);
+		}
+	}
+	double GetValue( double fractic = 1. )
+	{
+		return val*fractic+oldval*(1.-fractic);
 	}
 }
