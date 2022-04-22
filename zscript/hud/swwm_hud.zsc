@@ -416,8 +416,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		// don't draw with automap open
 		if ( automapactive || !swwm_ctrackers ) return;
 		SWWMUtility.PrepareProjData(projdata,ViewPos,ViewRot.x,ViewRot.y,ViewRot.z,players[consoleplayer].fov);
-		int cliptop = projdata.viewy, clipbottom = projdata.viewy+projdata.viewh,
-			clipleft = projdata.viewx, clipright = projdata.viewx+projdata.vieww;
+		Screen.SetClipRect(projdata.viewx,projdata.viewy,projdata.vieww,projdata.viewh);
 		let cam = players[consoleplayer].camera;
 		Vector3 viewvec = (cos(viewrot.x)*cos(viewrot.y),sin(viewrot.x)*cos(viewrot.y),sin(-viewrot.y));
 		if ( !cti ) cti = ThinkerIterator.Create("SWWMQuickCombatTracker",Thinker.STAT_INVENTORY);
@@ -443,21 +442,22 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			double fout = clamp(ct.lifespan-fractic,0.,25.)/25.;
 			double alph = fin*fout;
 			Vector2 barpos = vpos-(27,7);
-			Screen.DrawTexture(EnemyBTex,false,barpos.x,barpos.y,DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,alph,DTA_ClipTop,cliptop,DTA_ClipBottom,clipbottom,DTA_ClipLeft,clipleft,DTA_ClipRight,clipright);
+			Screen.DrawTexture(EnemyBTex,false,barpos.x,barpos.y,DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,alph);
 			int ht = clamp(ct.intp.GetValue(),0,ct.maxhealth);
 			double hw = (ht*50.)/ct.maxhealth;
-			Screen.DrawTexture(EnemyHTex[ct.Owner.bINVULNERABLE?1:0],false,barpos.x+2,barpos.y+2,DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,alph,DTA_WindowRightF,hw,DTA_ClipTop,cliptop,DTA_ClipBottom,clipbottom,DTA_ClipLeft,clipleft,DTA_ClipRight,clipright);
+			Screen.DrawTexture(EnemyHTex[ct.Owner.bINVULNERABLE?1:0],false,barpos.x+2,barpos.y+2,DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,alph,DTA_WindowRightF,hw);
 			double ohw = hw;
 			ht = clamp(ct.intpl.GetValue(),0,ct.maxhealth);
 			hw = (ht*50.)/ct.maxhealth;
-			Screen.DrawTexture(EnemyHTex[2],false,barpos.x+2,barpos.y+2,DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,alph,DTA_WindowLeftF,ohw,DTA_WindowRightF,hw,DTA_ClipTop,cliptop,DTA_ClipBottom,clipbottom,DTA_ClipLeft,clipleft,DTA_ClipRight,clipright);
+			Screen.DrawTexture(EnemyHTex[2],false,barpos.x+2,barpos.y+2,DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,alph,DTA_WindowLeftF,ohw,DTA_WindowRightF,hw);
 			if ( ct.cummdamage <= 0 ) continue;
 			double calph = clamp(ct.cummspan-fractic,0.,20.)/20.;
-			Screen.DrawText(MiniHUDFontOutline,mhudfontcol[MCR_RED],barpos.x+3,barpos.y+10,String.Format("%d",ct.cummdamage),DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,calph*alph,DTA_ClipTop,cliptop,DTA_ClipBottom,clipbottom,DTA_ClipLeft,clipleft,DTA_ClipRight,clipright);
+			Screen.DrawText(MiniHUDFontOutline,mhudfontcol[MCR_RED],barpos.x+3,barpos.y+10,String.Format("%d",ct.cummdamage),DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,calph*alph);
 			if ( ct.cummflash <= 0 ) continue;
 			double falph = max((ct.cummflash-FracTic)/15.,0.)**1.5;
-			Screen.DrawText(MiniHUDFontOutline,mhudfontcol[MCR_REDFLASH],barpos.x+3,barpos.y+10,String.Format("%d",ct.cummdamage),DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,falph*calph*alph,DTA_LegacyRenderStyle,STYLE_Add,DTA_ClipTop,cliptop,DTA_ClipBottom,clipbottom,DTA_ClipLeft,clipleft,DTA_ClipRight,clipright);
+			Screen.DrawText(MiniHUDFontOutline,mhudfontcol[MCR_REDFLASH],barpos.x+3,barpos.y+10,String.Format("%d",ct.cummdamage),DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,falph*calph*alph,DTA_LegacyRenderStyle,STYLE_Add);
 		}
+		Screen.ClearClipRect();
 	}
 
 	override void DrawMyPos()
@@ -738,11 +738,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 					// offset to minimap center
 					rv += basepos;
 					// draw
-					int clipleft = int((basepos.x-HALFMAPSIZE)*hs);
-					int cliptop = int((basepos.y-HALFMAPSIZE)*hs);
-					int clipright = int(clipleft+HALFMAPSIZE*2*hs);
-					int clipbottom = int(cliptop+HALFMAPSIZE*2*hs);
-					Screen.DrawTexture(tx,false,rv.x,rv.y,DTA_ColorOverlay,isportal?Color(128,mm_portalcolor.r,mm_portalcolor.g,mm_portalcolor.b):Color(0,0,0,0),DTA_ScaleX,hs*scl.x,DTA_ScaleY,hs*scl.y,DTA_LegacyRenderStyle,m.GetRenderStyle(),DTA_Alpha,m.Alpha,DTA_FillColor,m.FillColor,DTA_TranslationIndex,m.Translation,DTA_ClipLeft,clipleft,DTA_ClipTop,cliptop,DTA_ClipRight,clipright,DTA_ClipBottom,clipbottom);
+					Screen.DrawTexture(tx,false,rv.x,rv.y,DTA_ColorOverlay,isportal?Color(128,mm_portalcolor.r,mm_portalcolor.g,mm_portalcolor.b):Color(0,0,0,0),DTA_ScaleX,hs*scl.x,DTA_ScaleY,hs*scl.y,DTA_LegacyRenderStyle,m.GetRenderStyle(),DTA_Alpha,m.Alpha,DTA_FillColor,m.FillColor,DTA_TranslationIndex,m.Translation);
 				}
 				ai.Destroy();
 				continue;
@@ -767,11 +763,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			// offset to minimap center
 			rv += basepos;
 			// draw
-			int clipleft = int(basepos.x-HALFMAPSIZE*hs);
-			int cliptop = int(basepos.y-HALFMAPSIZE*hs);
-			int clipright = int(clipleft+HALFMAPSIZE*2*hs);
-			int clipbottom = int(cliptop+HALFMAPSIZE*2*hs);
-			Screen.DrawTexture(tx,false,rv.x,rv.y,DTA_ColorOverlay,isportal?Color(128,mm_portalcolor.r,mm_portalcolor.g,mm_portalcolor.b):Color(0,0,0,0),DTA_ScaleX,hs*scl.x,DTA_ScaleY,hs*scl.y,DTA_LegacyRenderStyle,m.GetRenderStyle(),DTA_Alpha,m.Alpha,DTA_FillColor,m.FillColor,DTA_TranslationIndex,m.Translation,DTA_ClipLeft,clipleft,DTA_ClipTop,cliptop,DTA_ClipRight,clipright,DTA_ClipBottom,clipbottom);
+			Screen.DrawTexture(tx,false,rv.x,rv.y,DTA_ColorOverlay,isportal?Color(128,mm_portalcolor.r,mm_portalcolor.g,mm_portalcolor.b):Color(0,0,0,0),DTA_ScaleX,hs*scl.x,DTA_ScaleY,hs*scl.y,DTA_LegacyRenderStyle,m.GetRenderStyle(),DTA_Alpha,m.Alpha,DTA_FillColor,m.FillColor,DTA_TranslationIndex,m.Translation);
 		}
 	}
 
@@ -792,6 +784,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			Screen.DrawTexture(MiniBox,false,xx,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 			Vector2 basemappos = (xx+HALFMAPSIZE+2,yy+HALFMAPSIZE+2);
 			Screen.Dim(mm_backcolor,1.,int((basemappos.x-HALFMAPSIZE)*hs),int((basemappos.y-HALFMAPSIZE)*hs),int(HALFMAPSIZE*2*hs),int(HALFMAPSIZE*2*hs));
+			Screen.SetClipRect(int((basemappos.x-HALFMAPSIZE)*hs),int((basemappos.y-HALFMAPSIZE)*hs),int(HALFMAPSIZE*2*hs),int(HALFMAPSIZE*2*hs));
 			// draw dat stuff
 			DrawMapLines(basemappos*hs);
 			DrawMapThings(basemappos*hs);
@@ -803,6 +796,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			tv[2] = (3,2);
 			for ( int i=0; i<3; i++ ) tv[i] = (tv[i]+basemappos)*hs;
 			for ( int i=0; i<3; i++ ) Screen.DrawThickLine(int(tv[i].x),int(tv[i].y),int(tv[(i+1)%3].x),int(tv[(i+1)%3].y),max(1.,hs*.5),mm_yourcolor);
+			Screen.ClearClipRect();
 			yy += ((HALFMAPSIZE+2)*2)+5;
 		}
 		// draw stats and timer when automap is open

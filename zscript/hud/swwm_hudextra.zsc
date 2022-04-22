@@ -164,7 +164,7 @@ Class GenericFlash : HUDMessageBase
 	{
 		if ( automapactive || (visibility != BaseStatusBar.HUDMSGLayer_UnderHUD) ) return;
 		if ( cam && (players[consoleplayer].camera != cam) ) return;
-		Screen.Dim(col,(col.a/255.)*alpha*swwm_flashstrength,0,0,Screen.GetWidth(),Screen.GetHeight());
+		Screen.Dim(col,(col.a/255.)*alpha*swwm_flashstrength,0,0,Screen.GetWidth(),Screen.GetHeight(),STYLE_Add);
 	}
 }
 
