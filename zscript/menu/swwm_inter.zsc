@@ -1,10 +1,4 @@
 // shared intermission stat screen code
-Class SWWMStatScreenData : SWWMStaticThinker
-{
-	// to prevent repetition
-	Array<int> lasttip;
-}
-
 Class SWWMStatScreen : StatusScreen abstract
 {
 	TextureID gradtex;
@@ -16,6 +10,7 @@ Class SWWMStatScreen : StatusScreen abstract
 	String tipstr;
 	transient BrokenLines tipl;
 	Font mSmallFont, mBigFont, mTinyFont;
+	double FracTic;	// for smooth animations
 
 	// customizable colors
 	int lnamecolor, lauthcolor;	// name / author text
@@ -74,7 +69,7 @@ Class SWWMStatScreen : StatusScreen abstract
 	override int DrawLF()
 	{
 		if ( sp_state < 1 ) return 0;
-		double GameSecs = bcnt/double(GameTicRate);
+		double GameSecs = (bcnt+FracTic)/double(GameTicRate);
 		int th = (mSmallFont.GetHeight()*(8+(!!wbs.partime)+(wbs.totaltime!=Plrs[me].stime))+32)*CleanYFac_1; // height of the stats box + margin
 		int bh = ((authortexts[0]!="")?(mTinyFont.GetHeight()+mSmallFont.GetHeight()*2+mBigFont.GetHeight()*2):(mSmallFont.GetHeight()*2+mBigFont.GetHeight()*2))*CleanYFac_1; // height of the "level finished" box
 		double xx = Screen.GetWidth()/2-120*CleanXFac_1;
@@ -94,7 +89,7 @@ Class SWWMStatScreen : StatusScreen abstract
 		Screen.DrawText(mBigFont,lsubcolor,xx-mBigFont.StringWidth(str)*CleanXFac_1,yy,str,DTA_ScaleX,CleanXFac_1*2,DTA_ScaleY,CleanYFac_1*2);
 		if ( (glarestr > 0) && (sp_state < 2) )
 		{
-			double alf = clamp(glarestr/20.,0.,1.)**2;
+			double alf = clamp((glarestr-FracTic)/20.,0.,1.)**2;
 			Screen.DrawText(mBigFont,Font.FindFontColor('MiniFlash'),xx-mBigFont.StringWidth(str)*CleanXFac_1,yy,str,DTA_ScaleX,CleanXFac_1*2,DTA_ScaleY,CleanYFac_1*2,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alf);
 		}
 		return 0;
@@ -113,7 +108,7 @@ Class SWWMStatScreen : StatusScreen abstract
 		Screen.DrawText(mBigFont,lsubcolor,xx-mBigFont.StringWidth(str)*CleanXFac_1,yy,str,DTA_ScaleX,CleanXFac_1*2,DTA_ScaleY,CleanYFac_1*2);
 		if ( (glarestr > 0) && (sp_state >= 10) )
 		{
-			double alf = clamp(glarestr/20.,0.,1.)**2;
+			double alf = clamp((glarestr-FracTic)/20.,0.,1.)**2;
 			Screen.DrawText(mBigFont,Font.FindFontColor('MiniFlash'),xx-mBigFont.StringWidth(str)*CleanXFac_1,yy,str,DTA_ScaleX,CleanXFac_1*2,DTA_ScaleY,CleanYFac_1*2,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alf);
 		}
 		yy += mBigFont.GetHeight()*2*CleanYFac_1;
@@ -184,27 +179,22 @@ Class SWWMStatScreen : StatusScreen abstract
 		{
 			int maxtip = StringTable.Localize("$"..SWWMMODPREFIX.."_NINTERTIP").ToInt();
 			if ( maxtip <= 0 ) return;
-			let pdata = SWWMStatScreenData(ThinkerIterator.Create("SWWMStatScreenData",Thinker.STAT_STATIC).Next());
-			if ( !pdata )
-			{
-				pdata = new("SWWMStatScreenData");
-				pdata.ChangeStatNum(Thinker.STAT_STATIC);
-			}
+			let shnd = SWWMStaticHandler(StaticEventHandler.Find("SWWMStaticHandler"));
 			Array<Int> ents;
 			ents.Clear();
 			for ( int i=1; i<=maxtip; i++ ) ents.Push(i);
-			if ( pdata.lasttip.Size() >= maxtip )
+			if ( shnd.lasttip.Size() >= maxtip )
 			{
 				// exclude last one, start over
-				int excludeme = pdata.lasttip[pdata.lasttip.Size()-1];
+				int excludeme = shnd.lasttip[shnd.lasttip.Size()-1];
 				ents.Delete(excludeme-1);
-				pdata.lasttip.Clear();
+				shnd.lasttip.Clear();
 			}
 			else
 			{
-				for ( int i=0; i<pdata.lasttip.Size(); i++ )
+				for ( int i=0; i<shnd.lasttip.Size(); i++ )
 				{
-					int f = ents.Find(pdata.lasttip[i]);
+					int f = ents.Find(shnd.lasttip[i]);
 					if ( f != ents.Size() )
 						ents.Delete(f);
 				}
@@ -212,11 +202,11 @@ Class SWWMStatScreen : StatusScreen abstract
 			whichtip = ents[Random[InterArt](0,ents.Size()-1)];
 			tipstr = String.Format(StringTable.Localize("$"..SWWMMODPREFIX.."_INTERTIP"),whichtip).."\n"..StringTable.Localize("$"..SWWMMODPREFIX.."_INTERTIP"..whichtip);
 			if ( tipl ) tipl.Destroy();
-			pdata.lasttip.Push(whichtip);
+			shnd.lasttip.Push(whichtip);
 		}
 		if ( tipalpha > 0. )
 		{
-			double alf = clamp(tipalpha,0.,1.);
+			double alf = clamp(tipalpha+(tipalphastate*fractic)/GameTicRate,0.,1.);
 			if ( !tipl ) tipl = mSmallFont.BreakLines(tipstr,600);
 			int lw = 0;
 			for ( int i=0; i<tipl.Count(); i++ )
@@ -229,7 +219,7 @@ Class SWWMStatScreen : StatusScreen abstract
 			Screen.DrawTexture(gradtex,false,Screen.GetWidth()/2,yy+mSmallFont.GetHeight()*tipl.Count()*CleanYFac_1/2.,DTA_DestWidth,450*CleanXFac_1,DTA_DestHeight,(mSmallFont.GetHeight()*tipl.Count()+8)*CleanYFac_1,DTA_Rotate,90,DTA_LegacyRenderStyle,STYLE_Shaded,DTA_FillColor,Color(0,0,0),DTA_Alpha,.8*alf,DTA_TopOffset,256,DTA_LeftOffset,128);
 			Screen.DrawTexture(gradtex,false,Screen.GetWidth()/2,yy+mSmallFont.GetHeight()*tipl.Count()*CleanYFac_1/2.,DTA_DestWidth,450*CleanXFac_1,DTA_DestHeight,(mSmallFont.GetHeight()*tipl.Count()+8)*CleanYFac_1,DTA_Rotate,270,DTA_LegacyRenderStyle,STYLE_Shaded,DTA_FillColor,Color(0,0,0),DTA_Alpha,.8*alf,DTA_TopOffset,256,DTA_LeftOffset,128);
 			double alph;
-			if ( tipflash && (gametic < tipflash) ) alph = max((tipflash-gametic)/25.,0.)**1.5;
+			if ( tipflash && (gametic < tipflash) ) alph = max((tipflash-(gametic+fractic))/25.,0.)**1.5;
 			for ( int i=0; i<tipl.Count(); i++ )
 			{
 				Screen.DrawText(mSmallFont,(i==0)?tipcolor0:tipcolor1,xx,yy,tipl.StringAt(i),DTA_ScaleX,CleanXFac_1,DTA_ScaleY,CleanYFac_1,DTA_Alpha,alf);
@@ -261,32 +251,13 @@ Class SWWMStatScreen : StatusScreen abstract
 			drawSWWMFg();
 			break;
 		}
-		if ( glarestr > 0 ) Screen.Dim(glarecolor,(clamp(glarestr/20.,0.,1.)**2)*.3,0,0,Screen.GetWidth(),Screen.GetHeight());
+		if ( glarestr > 0 ) Screen.Dim(glarecolor,(clamp((glarestr-fractic)/20.,0.,1.)**2)*.3,0,0,Screen.GetWidth(),Screen.GetHeight());
 	}
 
-	protected void checkForAccelerateNew( void )
+	override void Draw( double smoothratio )
 	{
-		// check for button presses to skip delays (but only recognize fire/use buttons)
-		for ( int i=0; i < MAXPLAYERS; i++ )
-		{
-			if ( !playeringame[i] ) continue;
-			PlayerInfo p = players[i];
-			if ( (p.cmd.buttons^p.oldbuttons) && ((p.cmd.buttons&p.oldbuttons) == p.oldbuttons) && !p.Bot )
-			{
-				if ( p.cmd.buttons&(BT_ATTACK|BT_ALTATTACK|BT_USE) )
-				{
-					acceleratestage = 1;
-					playerready[i] = true;
-				}
-				if ( p.cmd.buttons&(BT_RELOAD|BT_ZOOM) )
-				{
-					PlaySound("misc/chat");
-					whichtip = 0;
-					tipflash = gametic+25;
-				}
-			}
-			p.oldbuttons = p.buttons;
-		}
+		FracTic = smoothratio;
+		Drawer();
 	}
 
 	override void Ticker( void )
@@ -294,7 +265,6 @@ Class SWWMStatScreen : StatusScreen abstract
 		bcnt++;
 		if ( bcnt == 1 ) StartMusic();
 		glarestr = max(glarestr-1,0);
-		checkForAccelerateNew();
 		tipalpha = min(tipalpha+tipalphastate/double(GameTicRate),2.);
 		switch (CurState)
 		{
@@ -303,17 +273,23 @@ Class SWWMStatScreen : StatusScreen abstract
 			updateStats();
 			break;
 		case ShowNextLoc:
-			tipalphastate = -1;
 			updateShowNextLoc();
 			break;
 		case NoState:
-			tipalpha = 0.;
+			tipalphastate = -2;
 			updateNoState();
 			break;
 		case LeavingIntermission:
 			// sorry nothing
 			break;
 		}
+	}
+
+	override void updateNoState()
+	{
+		// make sure tip alpha is zero, so this transition is less jarring
+		if ( tipalpha > 0. ) return;
+		Super.updateNoState();
 	}
 
 	override void initStats()

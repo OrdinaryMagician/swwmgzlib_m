@@ -26,6 +26,8 @@ Class SWWMStaticHandler : StaticEventHandler
 	int mttics;
 	// checks
 	ThinkerIterator sti;
+	// for intermissions, to prevent repetition
+	ui Array<int> lasttip;
 
 	override void NewGame()
 	{
