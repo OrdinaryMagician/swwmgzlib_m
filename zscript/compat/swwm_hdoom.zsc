@@ -35,7 +35,7 @@ Class SWWMHDoomHandler : StaticEventHandler
 		if ( !detected )
 			return;
 		callout_len = int(ceil((S_GetLength("hdoom/horny")*GameTicRate)/16)*16);
-		SetRandomSeed[hdscreen](Random[hdscreen]()+consoleplayer+MSTime());
+		SetRandomSeed[hdscreen](Random[hdscreen]()+consoleplayer+int(MSTimeF()));
 		Console.Printf(
 			"\cx┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\c-\n"
 			"\cx┃        \cfOh my, someone appears to be \cgH \ckO \cdR \cvN \chY \ct♥        \cx┃\c-\n"
@@ -121,7 +121,7 @@ Class SWWMHDoomHandler : StaticEventHandler
 		double oy = Screen.GetHeight()/2-4*scl;
 		String str = "HORNY";
 		double alf = clamp(16-((timer%16)+e.FracTic)*2,0,16)/16.;
-		rss = int(MSTime()/10);
+		rss = int(MSTimeF()/10.);
 		Vector2 ofs = (RandomShiver(),RandomShiver())*3.*scl*alf;
 		Screen.DrawText(mBigFont,SWWMCREDITSCOL0,ox-(mBigFont.StringWidth(str)*scl*2)/2+ofs.x,oy+8*scl+ofs.y,str,DTA_ScaleX,scl*2,DTA_ScaleY,scl*2);
 		Screen.DrawText(mBigFont,Font.FindFontColor('MiniFlash'),ox-(mBigFont.StringWidth(str)*scl*2)/2+ofs.x,oy+8*scl+ofs.y,str,DTA_ScaleX,scl*2,DTA_ScaleY,scl*2,DTA_LegacyRenderStyle,STYLE_Add,DTA_Alpha,alf);
