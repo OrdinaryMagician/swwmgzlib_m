@@ -140,6 +140,10 @@ SWWM_SETSLOTSTRICT = "\cg!!!ADVERTENCIA!!!\c-\n\cj\"setslotstrict\" está activa
 SWWM_PAUSE = "PAUSA";
 // weapon tooltips
 SWWM_TTNOTE = "Nota: La ayuda de armas se puede desactivar en las opciones de mod.";
+// boss oneliners
+BOSSLINE_IOS = "\crIcono del Pecado\c-: !oremoR nhoJ ,ím a emratam sebed ogeuj le ranag araP¡";
+BOSSLINE_DSPARIL = "\cgD'Sparil\c-: .senrac sut érarutroT";
+BOSSLINE_ARCHANGELUS = "\cfArchangelus\c-: Mortal insensato, ¡solo tu muerte es eterna!";
 // keybinds
 SWWM_MINIMAPIN = "Acercar Zoom de Minimapa";
 SWWM_MINIMAPOUT = "Alejar Zoom de Minimapa";

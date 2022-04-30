@@ -54,85 +54,144 @@ Class PayRespects : HUDMessageBase
 	}
 }
 
-// One-liners
-Class SWWMOneLiner : HUDMessageBase
+// One-liners (now converted into full-on dialogue subtitles)
+Class SWWMOneLine
 {
+	int speaker;
 	String whichline;
 	transient BrokenLines l;
 	int lifespan, curtime;
-	Font mSmallFont;
 	int color;
 	bool force;
+	double nofs, pnofs;
 
-	SWWMOneLiner prevl, nextl;
-	double nofs;
-
-	static SWWMOneLiner Make( String whichline, int lifespan, int color = Font.CR_UNTRANSLATED, bool force = false )
+	bool Tick()
 	{
-		let l = new("SWWMOneLiner");
-		String locstr = SWWMMODPREFIX.."_"..whichline;
-		if ( StringTable.Localize(locstr,false) == locstr )
-			l.whichline = StringTable.Localize("SWWM_"..whichline,false);
-		else l.whichline = StringTable.Localize(locstr,false);
-		l.curtime = l.lifespan = lifespan;
-		l.mSmallFont = Font.GetFont('TewiFont');
-		l.color = color;
-		l.force = force;
-		l.nofs = 0;
-		return l;
+		if ( !force && (players[consoleplayer].Health <= 0) ) curtime = int.min;
+		pnofs = nofs;
+		nofs *= .95;
+		curtime--;
+		return (curtime<-20);
 	}
 
 	override void OnDestroy()
 	{
 		Super.OnDestroy();
-		if ( prevl ) prevl.nextl = nextl;
-		if ( nextl ) nextl.prevl = prevl;
+		if ( l ) l.Destroy();
+	}
+}
+
+Class SWWMOneLiner : HUDMessageBase
+{
+	Array<SWWMOneLine> lines;
+	Font mSmallFont;
+
+	static void AddLine( int speaker, String whichline, int lifespan, int color = Font.CR_UNTRANSLATED, bool force = false )
+	{
+		// first of all, check if we exist in the status bar
+		// this is an ugly way to do it, but haha the only way to "get" a message from the status bar is to detach it (wow, thanks)
+		let lr = SWWMOneLiner(StatusBar.DetachMessageID(-3473));
+		if ( !lr ) lr = new("SWWMOneLiner");
+		if ( !lr.mSmallFont ) lr.mSmallFont = Font.GetFont('TewiFont');
+		StatusBar.AttachMessage(lr,-3473);
+		// if this speaker has an active line, override it
+		SWWMOneLine l;
+		for ( int i=0; i<lr.lines.Size(); i++ )
+		{
+			if ( lr.lines[i].speaker != speaker ) continue;
+			l = lr.lines[i];
+			break;
+		}
+		if ( !l )
+		{
+			l = new("SWWMOneLine");
+			lr.lines.Push(l);
+		}
+		l.speaker = speaker;
+		// hack for mod-relative stuff
+		String locstr = SWWMMODPREFIX.."_"..whichline;
+		if ( StringTable.Localize(locstr,false) == locstr )
+		{
+			locstr = "SWWM_"..whichline;
+			if ( StringTable.Localize(locstr,false) == locstr ) l.whichline = whichline;
+			else l.whichline = StringTable.Localize(locstr,false);
+		}
+		else l.whichline = StringTable.Localize(locstr,false);
+		l.curtime = l.lifespan = lifespan;
+		l.color = color;
+		l.force = force;
+	}
+
+	override void OnDestroy()
+	{
+		Super.OnDestroy();
+		for ( int i=0; i<lines.Size(); i++ )
+		{
+			if ( !lines[i] ) continue;
+			lines[i].Destroy();
+		}
 	}
 
 	override bool Tick()
 	{
-		if ( !force && (players[consoleplayer].Health <= 0) ) curtime = int.min;
-		curtime--;
-		nofs *= .95;
-		return (curtime<-20);
+		bool deleteme = true;
+		for ( int i=0; i<lines.Size(); i++ )
+		{
+			if ( !lines[i].Tick() )
+			{
+				deleteme = false;
+				continue;
+			}
+			lines[i].Destroy();
+			lines.Delete(i);
+			i--;
+		}
+		return deleteme;
 	}
 
 	override void ScreenSizeChanged()
 	{
-		if ( l ) l.Destroy();
+		for ( int i=0; i<lines.Size(); i++ )
+			lines[i].l.Destroy();
 	}
 
 	override void Draw( int bottom, int visibility )
 	{
-		int margin = swwm_hudmargin;
-		int rofs = 0;
-		for ( SWWMOneLiner l=nextl; l; l=l.nextl )
-			rofs += 20;
-		nofs = max(nofs,rofs);
+		int margin = clamp(swwm_hudmargin,0,40);
 		double hs = max(floor(Screen.GetWidth()/640.),1.);
 		Vector2 ss = (Screen.GetWidth()/hs,Screen.GetHeight()/hs);
-		if ( whichline == "" ) return;	// don't draw empty strings
-		// split so it can fit
-		if ( !l ) l = mSmallFont.BreakLines(whichline,int(ss.x*.5));
-		int maxlen = 0;
-		for ( int i=0; i<l.Count(); i++ )
-		{
-			int len = mSmallFont.StringWidth(l.StringAt(i));
-			if ( len > maxlen ) maxlen = len;
-		}
-		int h = mSmallFont.GetHeight();
-		int fh = h*l.Count();
 		double fractic = SWWMStatusBar(statusbar)?SWWMStatusBar(statusbar).fractic:0;
-		double fcurtime = curtime-fractic;
-		double alph = clamp((fcurtime/20.)+1.,0.,1.);
-		alph *= clamp((lifespan-fcurtime)/10.,0.,1.);
-		Screen.Dim("Black",alph*.8,int((Screen.GetWidth()-(maxlen+12)*hs)/2.),int(bottom-(margin+2+fh+nofs)*hs),int((maxlen+12)*hs),int((fh+4)*hs));
-		int yy = int(margin+fh+nofs);
-		for ( int i=0; i<l.Count(); i++ )
+		double rofs = 0;
+		int h = mSmallFont.GetHeight();
+		for ( int i=0; i<lines.Size(); i++ )
 		{
-			int len = mSmallFont.StringWidth(l.StringAt(i));
-			Screen.DrawText(mSmallFont,color,int((ss.x-len)/2.),(bottom/hs)-yy,l.StringAt(i),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
-			yy -= h;
+			let ln = lines[i];
+			ln.pnofs = max(ln.pnofs,rofs);
+			ln.nofs = max(ln.nofs,rofs);
+			double nofs = ln.nofs*fractic+ln.pnofs*(1.-fractic);
+			// don't draw empty strings
+			if ( ln.whichline == "" ) continue;
+			// split so it can fit
+			if ( !ln.l ) ln.l = mSmallFont.BreakLines(ln.whichline,int(ss.x*.5));
+			int maxlen = 0;
+			for ( int j=0; j<ln.l.Count(); j++ )
+			{
+				int len = mSmallFont.StringWidth(ln.l.StringAt(j));
+				if ( len > maxlen ) maxlen = len;
+			}
+			int fh = h*ln.l.Count();
+			double fcurtime = ln.curtime-fractic;
+			double alph = clamp((fcurtime/20.)+1.,0.,1.);
+			alph *= clamp((ln.lifespan-fcurtime)/10.,0.,1.);
+			Screen.Dim("Black",alph*.8,int((Screen.GetWidth()-(maxlen+12)*hs)/2.),int(bottom-(margin+2+fh+nofs)*hs),int((maxlen+12)*hs),int((fh+4)*hs));
+			int yy = int(margin+fh+nofs);
+			for ( int j=0; j<ln.l.Count(); j++ )
+			{
+				int len = mSmallFont.StringWidth(ln.l.StringAt(j));
+				Screen.DrawText(mSmallFont,ln.color,int((ss.x-len)/2.),(bottom/hs)-yy,ln.l.StringAt(j),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+				yy -= h;
+			}
+			rofs += (fh+6);
 		}
 	}
 }

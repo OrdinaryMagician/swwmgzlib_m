@@ -10,7 +10,6 @@ Class SWWMHDoomHandler : StaticEventHandler
 	bool detected;
 	ui int rss;
 
-	ui SWWMOneLiner cl;
 	ui Font mBigFont;
 
 	private ui int GetUIRandom()
@@ -82,17 +81,13 @@ Class SWWMHDoomHandler : StaticEventHandler
 		{
 			S_StartSound("hdoom/horny",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
 			S_StartSound("hdoom/horny",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
-			cl = SWWMOneLiner.Make("HORNY",int(S_GetLength("hdoom/horny")*GameTicRate),force:true);
-			StatusBar.AttachMessage(cl,-3473);
+			SWWMOneLiner.AddLine(1,"HORNY",int((S_GetLength("hdoom/horny")+2)*GameTicRate),force:true);
 		}
 		else if ( (timer == 56) && (players[consoleplayer].mo.GetClassName() == "MarisaPlayer") )
 		{
 			S_StartSound("hdoom/horny2",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
 			S_StartSound("hdoom/horny2",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
-			let l = SWWMOneLiner.Make("HORNY2",int(S_GetLength("hdoom/horny2")*GameTicRate),force:true);
-			l.nextl = cl;
-			cl.prevl = l;
-			StatusBar.AttachMessage(l,-3472);
+			SWWMOneLiner.AddLine(0,"HORNY2",int((S_GetLength("hdoom/horny2")+2)*GameTicRate),force:true);
 		}
 		else if ( timer == callout_len+24 )
 		{

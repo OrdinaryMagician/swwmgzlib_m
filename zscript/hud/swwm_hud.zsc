@@ -182,6 +182,74 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			}
 			return true;
 		}
+		else if ( msg == "marisaoopsie" )
+		{
+			// "oopsie" oneliner, has to be built-in on here, rather than the sidemod
+			if ( players[consoleplayer].Health > 0 )
+			{
+				S_StartSound("marisa/oopsie",CHAN_VOICE,CHANF_UI,1.,0.);
+				SWWMOneLiner.AddLine(0,"OOPSIE",int(S_GetLength("marisa/oopsie")*GameTicRate),force:true);
+			}
+			return true;
+		}
+		// boss message stuff
+		if ( msg == StringTable.Localize("$BOSSLINE_IOS") )
+		{
+			SWWMOneLiner.AddLine(1001,msg,int((S_GetLength("brain/sight")+2)*GameTicRate),force:true);
+			return true;
+		}
+		else if ( msg == StringTable.Localize("$BOSSLINE_ARCHANGELUS") )
+		{
+			SWWMOneLiner.AddLine(1001,msg,int((S_GetLength("dsparil/sight")+2)*GameTicRate),force:true);
+			return true;
+		}
+		else if ( msg == StringTable.Localize("$BOSSLINE_DSPARIL") )
+		{
+			SWWMOneLiner.AddLine(1001,msg,int((S_GetLength("brain/sight")+2)*GameTicRate),force:true);
+			return true;
+		}
+		else if ( msg == StringTable.Localize("$TXT_ACS_MAP02_9_GREET") )
+		{
+			SWWMOneLiner.AddLine(1004,"\cmKorax\c-: "..msg..". "..StringTable.Localize("$TXT_ACS_MAP02_11_AREYO"),
+				int((S_GetLength("KoraxVoiceGreetings")+S_GetLength("KoraxVoiceReady")+2)*GameTicRate),force:true);
+			return true;
+		}
+		else if ( msg == StringTable.Localize("$TXT_ACS_MAP13_11_MYSER") )
+		{
+			SWWMOneLiner.AddLine(1004,"\cmKorax\c-: "..msg..". ",
+				int((S_GetLength("KoraxVoiceBlood")+2)*GameTicRate),force:true);
+			return true;
+		}
+		else if ( msg == StringTable.Localize("$TXT_ACS_MAP22_27_YOUHA") )
+		{
+			SWWMOneLiner.AddLine(1004,"\cmKorax\c-: "..msg.." "..StringTable.Localize("$TXT_ACS_MAP22_29_ITHIN")..".",
+				int((S_GetLength("KoraxVoiceGame")+S_GetLength("KoraxVoiceBoard")+2)*GameTicRate),force:true);
+			return true;
+		}
+		else if ( msg == StringTable.Localize("$TXT_ACS_MAP27_8_WORSH") )
+		{
+			SWWMOneLiner.AddLine(1004,"\cmKorax\c-: "..msg..". "..StringTable.Localize("$TXT_ACS_MAP27_10_THENA")..".",
+				int((S_GetLength("KoraxVoiceWorship")+S_GetLength("KoraxVoiceMaybe")+2)*GameTicRate),force:true);
+			return true;
+		}
+		else if ( msg == StringTable.Localize("$TXT_ACS_MAP35_12_AREYO") )
+		{
+			String rstr = StringTable.Localize("$TXT_ACS_MAP35_14_TOFAC");
+			// this is the most horrendous hack imaginable
+			int firstletter, splitps;
+			[firstletter, splitps] = rstr.GetNextCodePoint(0);
+			msg = "\cmKorax\c-: "..msg.." ";
+			msg.AppendCharacter(StringStruct.CharLower(firstletter));
+			msg = msg..rstr.Mid(splitps);
+			SWWMOneLiner.AddLine(1001,msg,
+				int((S_GetLength("KoraxVoiceStrong")+S_GetLength("KoraxVoiceFace")+2)*GameTicRate),force:true);
+			return true;
+		}
+		else if ( (msg == StringTable.Localize("$TXT_ACS_MAP02_11_AREYO"))
+			|| (msg == StringTable.Localize("$TXT_ACS_MAP22_29_ITHIN"))
+			|| (msg == StringTable.Localize("$TXT_ACS_MAP27_10_THENA"))
+			|| (msg == StringTable.Localize("$TXT_ACS_MAP35_14_TOFAC")) )
+			return true;
 		if ( !fnt || (fnt == smallfont) )
 		{
 			midstr = msg;

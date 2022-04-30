@@ -1184,6 +1184,7 @@ Class SWWMPlayer : PlayerPawn abstract
 		player.damagecount = 0;
 		player.bonuscount = 0;
 		player.poisoncount = 0;
+		lastdamage = 0;
 		PlayRevive();
 	}
 
@@ -1438,6 +1439,7 @@ Class SWWMPlayer : PlayerPawn abstract
 		if ( health < -50 )
 			snd = "*xdeath";
 		A_StartSound(snd,CHAN_VOICE);
+		lastdamage = 0;
 	}
 
 	override void PreTravelled()
@@ -1506,6 +1508,7 @@ Class SWWMPlayer : PlayerPawn abstract
 	}
 	override void Travelled()
 	{
+		lastdamage = 0;
 		// prevent sudden stomping if we were previously falling
 		lastvelz = vel.z;
 		// re-attach shadow

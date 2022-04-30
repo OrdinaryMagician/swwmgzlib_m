@@ -245,6 +245,18 @@ Class SWWMBossBrainPain : Actor
 		Wait;
 	}
 }
+Class IconMessage : Inventory
+{
+	override void DoEffect()
+	{
+		if ( Owner.InStateSequence(Owner.CurState,Owner.SeeState) )
+		{
+			Console.MidPrint(smallfont,StringTable.Localize("$BOSSLINE_IOS"));
+			DepleteOrDestroy();
+			return;
+		}
+	}
+}
 Class SWWMBossBrain : BossBrain
 {
 	bool eyeless;
@@ -258,8 +270,10 @@ Class SWWMBossBrain : BossBrain
 		Actor eye;
 		if ( eye = Actor(ti.Next()) ) eyeless = false;
 		else eyeless = true;
+		if ( eyeless ) return;
+		eye.GiveInventory("IconMessage",1);
 		// check if the eye is to the north of us (TNT MAP30)
-		if ( !eyeless && (eye.pos.y > pos.y) )
+		if ( eye.pos.y > pos.y )
 			tntdir = true;
 	}
 
@@ -339,6 +353,8 @@ Class SWWMBossBrain : BossBrain
 			}
 			Spawn("SWWMBossBrainPain",pos);
 		}
+		MBRN A 80 A_JumpIf(!target||(target.GetClassName() != "MarisaPlayer"),2);
+		MBRN A 120 A_Print("marisaoopsie");
 		MBRN A -1 A_BrainDie();
 		Stop;
 	}

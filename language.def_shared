@@ -163,6 +163,10 @@ SWWM_HORNY = "\cdDemo\c-: Go to horny jail.";
 SWWM_HORNY2 = "";
 // weapon tooltips
 SWWM_TTNOTE = "Note: Weapon tooltips can be deactivated in the mod options.";
+// boss oneliners
+BOSSLINE_IOS = "\crIcon of Sin\c-: !oremoR nhoJ ,em llik tsum uoy emag eht niw oT";
+BOSSLINE_DSPARIL = "\cgD'Sparil\c-: .hself ruoy erutrot lliw I";
+BOSSLINE_ARCHANGELUS = "\cfArchangelus\c-: Foolish mortal, only your death is eternal!";
 // keybinds
 SWWM_MINIMAPIN = "Minimap Zoom In";
 SWWM_MINIMAPOUT = "Minimap Zoom Out";

@@ -1,5 +1,30 @@
 // WorldThing* events (excluding damage)
 
+Class ArchangelusMessage : Inventory
+{
+	override void DoEffect()
+	{
+		if ( Owner.InStateSequence(Owner.CurState,Owner.SeeState) )
+		{
+			Console.MidPrint(smallfont,StringTable.Localize("$BOSSLINE_ARCHANGELUS"));
+			DepleteOrDestroy();
+			return;
+		}
+	}
+}
+Class DSparilMessage : Inventory
+{
+	override void DoEffect()
+	{
+		if ( Owner.InStateSequence(Owner.CurState,Owner.SeeState) )
+		{
+			Console.MidPrint(smallfont,StringTable.Localize("$BOSSLINE_DSPARIL"));
+			DepleteOrDestroy();
+			return;
+		}
+	}
+}
+
 extend Class SWWMHandler
 {
 	private bool HexenMap40()
@@ -112,6 +137,9 @@ extend Class SWWMHandler
 		}
 		if ( swwm_shadows && (e.Thing.bSHOOTABLE || e.Thing.bISMONSTER || (e.Thing is 'Inventory')) && ((e.Thing is 'SWWMPlayer') || (e.Thing.SpawnState.sprite == e.Thing.GetSpriteIndex('XZW1'))) )
 			SWWMShadow.Track(e.Thing);
+		// boss stuff
+		if ( e.Thing.GetClassName() == "Archangelus" ) e.Thing.GiveInventory("ArchangelusMessage",1);
+		else if ( e.Thing.GetClass() == "Sorcerer2" ) e.Thing.GiveInventory("DSparilMessage",1);
 		// vanilla blood color changes
 		if ( (e.Thing.GetClass() == "BaronOfHell") || (e.Thing.GetClass() == "HellKnight") || (e.Thing.GetClass() == "Bishop") || (e.Thing.GetClass() == "Korax") )
 		{
