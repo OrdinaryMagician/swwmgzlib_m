@@ -32,28 +32,40 @@ Class KeyGet
 
 Enum EMiniHUDFontColor
 {
+	MCR_DEMOHUD,
+	MCR_IBUKIHUD,
+	MCR_SAYAHUD,
+	MCR_KIRINHUD,
+	MCR_MARISAHUD,
+	MCR_VOIDHUD,
 	MCR_WHITE,
 	MCR_RED,
 	MCR_GREEN,
 	MCR_BLUE,
+	MCR_YELLOW,
 	MCR_CYAN,
 	MCR_PURPLE,
-	MCR_YELLOW,
 	MCR_BRASS,
 	MCR_SILVER,
 	MCR_GOLD,
 	MCR_MANA,
-	MCR_ELDRITCH,
 	MCR_CRIMSON,
+	MCR_ELDRITCH,
+	MCR_KINYLUM,
+	MCR_NOKRON,
+	MCR_NOKOROKINYLUM,
+	MCR_DEMOBLUE,
+	MCR_DEMOPINK,
 	MCR_FLASH,
-	MCR_REDFLASH
+	MCR_REDFLASH,
+	NUM_MINIHUD_COLOR
 };
 
 Class SWWMStatusBar : BaseStatusBar abstract
 {
 	TextureID ChatTex[6], MiniBox, PauseTex, InventoryTex, bgtex, EnemyBTex, EnemyHTex[3];
 	Font MiniHUDFont, MiniHUDFontOutline, mSmallFont, mBigFont, mTinyFont;
-	int mhudfontcol[15];
+	int mhudfontcol[NUM_MINIHUD_COLOR];
 
 	Array<MsgLine> MainQueue, PickupQueue;
 
@@ -451,32 +463,43 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		mSmallFont = Font.GetFont('TewiFont');
 		mBigFont = Font.GetFont('TewiFontOutline');
 		mTinyFont = Font.GetFont('MiniwiFont');
+		mhudfontcol[MCR_DEMOHUD] = Font.FindFontColor("MiniDemoHUD");
+		mhudfontcol[MCR_IBUKIHUD] = Font.FindFontColor("MiniIbukiHUD");
+		mhudfontcol[MCR_SAYAHUD] = Font.FindFontColor("MiniSayaHUD");
+		mhudfontcol[MCR_KIRINHUD] = Font.FindFontColor("MiniKirinHUD");
+		mhudfontcol[MCR_MARISAHUD] = Font.FindFontColor("MiniMarisaHUD");
+		mhudfontcol[MCR_VOIDHUD] = Font.FindFontColor("MiniVoidHUD");
 		mhudfontcol[MCR_WHITE] = Font.FindFontColor("MiniWhite");
 		mhudfontcol[MCR_RED] = Font.FindFontColor("MiniRed");
 		mhudfontcol[MCR_GREEN] = Font.FindFontColor("MiniGreen");
 		mhudfontcol[MCR_BLUE] = Font.FindFontColor("MiniBlue");
+		mhudfontcol[MCR_YELLOW] = Font.FindFontColor("MiniYellow");
 		mhudfontcol[MCR_CYAN] = Font.FindFontColor("MiniCyan");
 		mhudfontcol[MCR_PURPLE] = Font.FindFontColor("MiniPurple");
-		mhudfontcol[MCR_YELLOW] = Font.FindFontColor("MiniYellow");
 		mhudfontcol[MCR_BRASS] = Font.FindFontColor("MiniBrass");
 		mhudfontcol[MCR_SILVER] = Font.FindFontColor("MiniSilver");
 		mhudfontcol[MCR_GOLD] = Font.FindFontColor("MiniGold");
 		mhudfontcol[MCR_MANA] = Font.FindFontColor("MiniMana");
-		mhudfontcol[MCR_ELDRITCH] = Font.FindFontColor("MiniEldritch");
 		mhudfontcol[MCR_CRIMSON] = Font.FindFontColor("MiniCrimson");
+		mhudfontcol[MCR_ELDRITCH] = Font.FindFontColor("MiniEldritch");
+		mhudfontcol[MCR_KINYLUM] = Font.FindFontColor("MiniKinylum");
+		mhudfontcol[MCR_NOKRON] = Font.FindFontColor("MiniNokron");
+		mhudfontcol[MCR_NOKOROKINYLUM] = Font.FindFontColor("MiniNokorokinylum");
+		mhudfontcol[MCR_DEMOBLUE] = Font.FindFontColor("MiniDemoBlue");
+		mhudfontcol[MCR_DEMOPINK] = Font.FindFontColor("MiniDemoPink");
 		mhudfontcol[MCR_FLASH] = Font.FindFontColor("MiniFlash");
 		mhudfontcol[MCR_REDFLASH] = Font.FindFontColor("MiniRedFlash");
 		GetMinimapColors();
 		hnd = SWWMHandler(EventHandler.Find("SWWMHandler"));
 		PrevFrame = MSTimeF();
 		// fallback colors
-		tclabel = Font.CR_FIRE;
-		tcvalue = Font.CR_WHITE;
-		tcextra = Font.CR_DARKGRAY;
-		tccompl = Font.CR_GOLD;
-		tcsucks = FONT.CR_RED;
-		tclabel_s = "x";
-		tcextra_s = "u";
+		tclabel = mhudfontcol[MCR_BRASS];
+		tcvalue = mhudfontcol[MCR_WHITE];
+		tcextra = mhudfontcol[MCR_IBUKIHUD];
+		tccompl = mhudfontcol[MCR_YELLOW];
+		tcsucks = mhudfontcol[MCR_RED];
+		tclabel_s = "[MiniBrass]";
+		tcextra_s = "[MiniIbukiHUD]";
 	}
 
 	private void DrawTarget()
