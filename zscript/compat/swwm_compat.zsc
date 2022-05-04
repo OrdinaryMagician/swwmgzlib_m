@@ -38,11 +38,6 @@ Class SWWMLevelCompatibility : LevelPostProcessor
 			OffsetSectorPlane(155,1,-80.);
 			SetLineSpecial(652,ACS_Execute,-Int('NERVE_EXITOPEN'));
 			break;
-		// Heretic E4M8
-		case '30D1480A6D4F3A3153739D4CCF659C4E':
-			// remove a multiplayer-exclusive teleport because it's dumb as all fuck that it exists
-			SetThingEdNum(78,0);
-			break;
 		// Micro Slaughter Community Project MAP13 (beta) / MAP14 (v1)
 		case 'E45AA3BE411845AA0DEE7CA5DAAB65FE':
 		case 'CDF12AAE960E6BD11D98E1F0A1782B7B':
