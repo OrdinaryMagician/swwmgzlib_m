@@ -1,8 +1,12 @@
 HardwareShader Texture "models/DevaSigil.png"
 {
-	Shader "shaders/glsl/Shinemask.fp"
+	Shader "shaders/glsl/Envmask.fp"
 	Texture "masktex" "models/DevaSigil_mask.png"
-	Texture "envtex" "models/matcap/dekamap.png"
+	Texture "envtex" "models/envmap/ekaenv.png"
+	Texture "rimtex" "models/envmap/ekarim.png"
+	Define "RIM_LIGHTING"
+	Define "ENVFACT" = ".5"
+	Define "RIMFACT" = ".8"
 }
 HardwareShader PostProcess scene
 {

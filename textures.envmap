@@ -1,0 +1,9 @@
+// duplicate envmaps for two special materials
+Texture "ERRORENV", 512, 512
+{
+	Patch "models/envmap/redenv.png", 0, 0
+}
+Texture "BARRIENV", 512, 512
+{
+	Patch "models/envmap/glss3env.png", 0, 0
+}

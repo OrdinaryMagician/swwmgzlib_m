@@ -32,51 +32,67 @@ Brightmap Texture "models/DoomSilverKey.png"
 }
 HardwareShader Texture "models/DoomRedKey.png"
 {
-	Shader "shaders/glsl/Shinemask.fp"
+	Shader "shaders/glsl/Envmask.fp"
 	Texture "masktex" "models/DoomKey_mask.png"
-	Texture "envtex" "models/matcap/redmap.png"
+	Texture "envtex" "models/envmap/redenv.png"
+	Texture "rimtex" "models/envmap/redrim.png"
+	Define "RIM_LIGHTING"
 }
 HardwareShader Texture "models/DoomYellowKey.png"
 {
-	Shader "shaders/glsl/Shinemask.fp"
+	Shader "shaders/glsl/Envmask.fp"
 	Texture "masktex" "models/DoomKey_mask.png"
-	Texture "envtex" "models/matcap/goldmap.png"
+	Texture "envtex" "models/envmap/goldenv.png"
+	Texture "rimtex" "models/envmap/goldrim.png"
+	Define "RIM_LIGHTING"
 }
 HardwareShader Texture "models/DoomBlueKey.png"
 {
-	Shader "shaders/glsl/Shinemask.fp"
+	Shader "shaders/glsl/Envmask.fp"
 	Texture "masktex" "models/DoomKey_mask.png"
-	Texture "envtex" "models/matcap/blumap.png"
+	Texture "envtex" "models/envmap/bluenv.png"
+	Texture "rimtex" "models/envmap/blurim.png"
+	Define "RIM_LIGHTING"
 }
 HardwareShader Texture "models/DoomGreenKey.png"
 {
-	Shader "shaders/glsl/Shinemask.fp"
+	Shader "shaders/glsl/Envmask.fp"
 	Texture "masktex" "models/DoomKey_mask.png"
-	Texture "envtex" "models/matcap/greenmap.png"
+	Texture "envtex" "models/envmap/greenenv.png"
+	Texture "rimtex" "models/envmap/greenrim.png"
+	Define "RIM_LIGHTING"
 }
 HardwareShader Texture "models/DoomOrangeKey.png"
 {
-	Shader "shaders/glsl/Shinemask.fp"
+	Shader "shaders/glsl/Envmask.fp"
 	Texture "masktex" "models/DoomKey_mask.png"
-	Texture "envtex" "models/matcap/goldmap.png"
+	Texture "envtex" "models/envmap/goldenv.png"
+	Texture "rimtex" "models/envmap/goldrim.png"
+	Define "RIM_LIGHTING"
 }
 HardwareShader Texture "models/DoomBlackKey.png"
 {
-	Shader "shaders/glsl/Shinemask.fp"
+	Shader "shaders/glsl/Envmask.fp"
 	Texture "masktex" "models/DoomKey_mask.png"
-	Texture "envtex" "models/matcap/leadmap.png"
+	Texture "envtex" "models/envmap/leadenv.png"
+	Texture "rimtex" "models/envmap/leadrim.png"
+	Define "RIM_LIGHTING"
 }
 HardwareShader Texture "models/DoomWhiteKey.png"
 {
-	Shader "shaders/glsl/Shinemask.fp"
+	Shader "shaders/glsl/Envmask.fp"
 	Texture "masktex" "models/DoomKey_mask.png"
-	Texture "envtex" "models/matcap/silvermap.png"
+	Texture "envtex" "models/envmap/silverenv.png"
+	Texture "rimtex" "models/envmap/silverrim.png"
+	Define "RIM_LIGHTING"
 }
 HardwareShader Texture "models/DoomSilverKey.png"
 {
-	Shader "shaders/glsl/Shinemask.fp"
+	Shader "shaders/glsl/Envmask.fp"
 	Texture "masktex" "models/DoomKey_mask.png"
-	Texture "envtex" "models/matcap/silvermap.png"
+	Texture "envtex" "models/envmap/silverenv.png"
+	Texture "rimtex" "models/envmap/silverrim.png"
+	Define "RIM_LIGHTING"
 }
 Brightmap Texture "models/DoomKeyLight.png"
 {
@@ -105,27 +121,39 @@ Brightmap Texture "models/DoomPurpleSkull.png"
 }
 HardwareShader Texture "models/DoomRedSkull.png"
 {
-	Shader "shaders/glsl/Shinemask.fp"
+	Shader "shaders/glsl/Envmask.fp"
 	Texture "masktex" "models/DoomSkull_mask.png"
-	Texture "envtex" "models/matcap/redmap.png"
+	Texture "envtex" "models/envmap/redenv.png"
+	Texture "rimtex" "models/envmap/redrim.png"
+	Define "RIM_LIGHTING"
+	Define "RIMSTEP" = ".2"
 }
 HardwareShader Texture "models/DoomBlueSkull.png"
 {
-	Shader "shaders/glsl/Shinemask.fp"
+	Shader "shaders/glsl/Envmask.fp"
 	Texture "masktex" "models/DoomSkull_mask.png"
-	Texture "envtex" "models/matcap/blumap.png"
+	Texture "envtex" "models/envmap/bluenv.png"
+	Texture "rimtex" "models/envmap/blurim.png"
+	Define "RIM_LIGHTING"
+	Define "RIMSTEP" = ".2"
 }
 HardwareShader Texture "models/DoomYellowSkull.png"
 {
-	Shader "shaders/glsl/Shinemask.fp"
+	Shader "shaders/glsl/Envmask.fp"
 	Texture "masktex" "models/DoomSkull_mask.png"
-	Texture "envtex" "models/matcap/goldmap.png"
+	Texture "envtex" "models/envmap/goldenv.png"
+	Texture "rimtex" "models/envmap/goldrim.png"
+	Define "RIM_LIGHTING"
+	Define "RIMSTEP" = ".2"
 }
 HardwareShader Texture "models/DoomPurpleSkull.png"
 {
-	Shader "shaders/glsl/Shinemask.fp"
+	Shader "shaders/glsl/Envmask.fp"
 	Texture "masktex" "models/DoomSkull_mask.png"
-	Texture "envtex" "models/matcap/purpmap.png"
+	Texture "envtex" "models/envmap/purpenv.png"
+	Texture "rimtex" "models/envmap/purprim.png"
+	Define "RIM_LIGHTING"
+	Define "RIMSTEP" = ".2"
 }
 
 pointlight SWWMREDKEY

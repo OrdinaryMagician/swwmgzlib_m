@@ -5,15 +5,21 @@ Brightmap Texture "models/SafetyTether.png"
 }
 HardwareShader Texture "models/SafetyTether.png"
 {
-	Shader "shaders/glsl/Shinemask.fp"
+	Shader "shaders/glsl/Envmask.fp"
 	Texture "masktex" "models/SafetyTether_mask.png"
-	Texture "envtex" "models/matcap/silvermap.png"
+	Texture "envtex" "models/envmap/silverenv.png"
+	Texture "rimtex" "models/envmap/silverrim.png"
+	Define "RIM_LIGHTING"
+	Define "ENVFACT" = ".8"
 }
 HardwareShader Texture "models/SafetyTether_off.png"
 {
-	Shader "shaders/glsl/Shinemask.fp"
+	Shader "shaders/glsl/Envmask.fp"
 	Texture "masktex" "models/SafetyTether_mask.png"
-	Texture "envtex" "models/matcap/silvermap.png"
+	Texture "envtex" "models/envmap/silverenv.png"
+	Texture "rimtex" "models/envmap/silverrim.png"
+	Define "RIM_LIGHTING"
+	Define "ENVFACT" = ".8"
 }
 
 PointLight SAFETYLIGHT

@@ -3,11 +3,16 @@ Brightmap Texture "models/Barrier.png"
 	Map "models/Barrier_bright.png"
 	DisableFullbright
 }
-HardwareShader Texture "models/matcap/barriermap.png"
+HardwareShader Texture "BARRIENV"
 {
-	Shader "shaders/glsl/Shinemap.fp"
-	Define "BARRIER_MAP"
+	Shader "shaders/glsl/Envmap.fp"
+	Texture "rimtex" "models/envmap/glss3rim.png"
 	Texture "bartex" "models/barrierbar.png"
+	Define "RIM_LIGHTING"
+	Define "BARRIER_MAP"
+	Define "ENVFACT" = ".5"
+	Define "RIMFACT" = "2."
+	Define "RIMSTEP" = ".3"
 }
 HardwareShader PostProcess beforebloom
 {

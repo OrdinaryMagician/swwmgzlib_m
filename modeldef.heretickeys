@@ -2,7 +2,7 @@ Model "SWWMKeyGreen"
 {
 	Path "models"
 	Model 0 "HereticGreenKey_d.3d"
-	Skin 0 "matcap/greenmap.png"
+	Skin 0 "envmap/greenenv.png"
 	Scale 0.05 0.05 0.05
 	RollOffset 15
 	ZOffset 16
@@ -14,7 +14,7 @@ Model "SWWMKeyBlue"
 {
 	Path "models"
 	Model 0 "HereticBlueKey_d.3d"
-	Skin 0 "matcap/blumap.png"
+	Skin 0 "envmap/bluenv.png"
 	Scale 0.04 0.04 0.04
 	RollOffset 15
 	ZOffset 16
@@ -26,7 +26,7 @@ Model "SWWMKeyYellow"
 {
 	Path "models"
 	Model 0 "HereticYellowKey_d.3d"
-	Skin 0 "matcap/goldmap.png"
+	Skin 0 "envmap/goldenv.png"
 	Scale 0.05 0.05 0.05
 	RollOffset 15
 	ZOffset 16
@@ -38,7 +38,7 @@ Model "SWWMKeyRed"
 {
 	Path "models"
 	Model 0 "HereticRedKey_d.3d"
-	Skin 0 "matcap/redmap.png"
+	Skin 0 "envmap/redenv.png"
 	Scale 0.05 0.05 0.05
 	RollOffset 15
 	ZOffset 16

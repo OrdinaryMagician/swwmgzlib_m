@@ -4,7 +4,6 @@
 # barrier
 
 graphics/HUD/Icons/I_Barrier.png
-models/matcap/barriermap.png
 models/Barrier*
 models/barrierbar.png
 shaders/pp/Barrier.fp
