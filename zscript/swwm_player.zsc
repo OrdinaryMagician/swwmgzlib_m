@@ -381,7 +381,7 @@ Class SWWMPlayer : PlayerPawn abstract
 		Sector headregion = null;
 		if ( CurSector.moreflags&Sector.SECMF_UNDERWATER ) // check underwater sector
 			headregion = CurSector;
-		else if ( CurSector.heightsec && (Cursector.heightsec.moreflags&Sector.SECMF_UNDERWATER) ) // check height transfer
+		else if ( CurSector.heightsec && (Cursector.heightsec.moreflags&Sector.SECMF_UNDERWATERMASK) ) // check height transfer
 		{
 			let hsec = CurSector.heightsec;
 			double fh = hsec.floorplane.ZAtPoint(pos.xy);
@@ -398,7 +398,7 @@ Class SWWMPlayer : PlayerPawn abstract
 			for ( int i=0; i<CurSector.Get3DFloorCount(); i++ )
 			{
 				let ff = CurSector.Get3DFloor(i);
-				if ( !(ff.flags&F3DFloor.FF_EXISTS) || (ff.flags&F3DFloor.FF_SOLID) || (!(ff.flags&F3DFloor.FF_SWIMMABLE) && (ff.alpha == 0)) ) continue;
+				if ( !(ff.flags&F3DFloor.FF_EXISTS) || (ff.flags&F3DFloor.FF_SOLID) || !(ff.flags&F3DFloor.FF_SWIMMABLE) ) continue;
 				double ff_bottom = ff.bottom.ZAtPoint(pos.xy);
 				double ff_top = ff.top.ZAtPoint(pos.xy);
 				if ( (ff_top <= pos.z) || (ff_bottom > centerpos.z) ) continue;
