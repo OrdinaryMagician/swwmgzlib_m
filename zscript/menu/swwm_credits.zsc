@@ -191,6 +191,7 @@ Class SWWMCreditsMenu : GenericMenu abstract
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Brett Saltzer"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Clint Walker"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Figo"));
+		cpatrons.Push(new("SWWMCreditsEntry").Init("melancholygeek"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Namsan"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("YaGirlJuniper"));
 		ChildInit(parent);
