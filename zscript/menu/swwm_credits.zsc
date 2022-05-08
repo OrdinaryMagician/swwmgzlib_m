@@ -130,7 +130,7 @@ Class SWWMCreditsMenu : GenericMenu abstract
 
 	void UpdateSize()
 	{
-		hs = max(1.,min(floor(Screen.GetWidth()/640),floor(Screen.GetHeight()/266)));
+		hs = max(min(floor(Screen.GetWidth()/640.),floor(Screen.GetHeight()/360.)),1.);
 		ss = (Screen.GetWidth(),Screen.GetHeight())/hs;
 	}
 

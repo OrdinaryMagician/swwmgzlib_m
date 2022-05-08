@@ -27,11 +27,6 @@ OptionValue "SWWMPistolStart"
 	1, "$SWWM_PISTOLSTART_MAP"
 	2, "$SWWM_PISTOLSTART_CLUSTER"
 }
-OptionValue "SWWMHUDScale"
-{
-	0, "$SWWM_TFITSCALE"
-	1, "$SWWM_LFITSCALE"
-}
 OptionMenu "SWWMOptionMenu"
 {
 	Class "SWWMOptionMenu"

@@ -47,8 +47,8 @@ extend Class SWWMHandler
 					bar.AttachMessage(tt,-2910);
 				}
 			}
+			else Console.Printf("'%s' is not a valid SWWM weapon.",wname);
 			return;
-			Console.Printf("'%s' is not a valid SWWM weapon.",wname);
 		}
 		else ModConsoleProcess(e);
 	}

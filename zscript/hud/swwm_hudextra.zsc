@@ -158,7 +158,7 @@ Class SWWMOneLiner : HUDMessageBase
 	override void Draw( int bottom, int visibility )
 	{
 		int margin = clamp(swwm_hudmargin,0,40);
-		double hs = max(floor(Screen.GetWidth()/640.),1.);
+		double hs = max(min(floor(Screen.GetWidth()/640.),floor(Screen.GetHeight()/360.)),1.);
 		Vector2 ss = (Screen.GetWidth()/hs,Screen.GetHeight()/hs);
 		double fractic = SWWMStatusBar(statusbar)?SWWMStatusBar(statusbar).fractic:0;
 		double rofs = 0;
@@ -240,7 +240,7 @@ Class SWWMWeaponTooltip : HUDMessageBase
 	double tics, holdtics, fadeintics, fadeouttics;
 	transient BrokenLines l;
 	SWWMWeaponTooltip next;
-	Font mSmallFont;
+	Font mSmallFont, mBigFont;
 
 	SWWMWeaponTooltip Init( Class<SWWMWeapon> weapon )
 	{
@@ -252,6 +252,7 @@ Class SWWMWeaponTooltip : HUDMessageBase
 		fadeouttics = 15;
 		tics = -10;
 		mSmallFont = Font.GetFont('TewiFont');
+		mBigFont = Font.GetFont('TewiFontOutline');
 		return self;
 	}
 
@@ -265,12 +266,12 @@ Class SWWMWeaponTooltip : HUDMessageBase
 	override void Draw( int bottom, int visibility )
 	{
 		if ( tics <= 0 ) return;
-		double hs = max(floor(Screen.GetWidth()/640.)-1.,1.);
+		double hs = max(min(floor(Screen.GetWidth()/640.),floor(Screen.GetHeight()/360.))-1.,1.);
 		Vector2 ss = (Screen.GetWidth(),Screen.GetHeight())/hs;
 		double fractic = SWWMStatusBar(statusbar)?SWWMStatusBar(statusbar).fractic:0;
 		double ftics = tics+fractic;
 		double alpha = (ftics<fadeintics)?(ftics/fadeintics):(ftics<(fadeintics+holdtics))?1.:(1.-(ftics-(fadeintics+holdtics))/fadeouttics);
-		int w = bigfont.StringWidth(wpn);
+		int w = mBigFont.StringWidth(wpn)*2;
 		if ( !l ) l = mSmallFont.BreakLines(txt,600);
 		int w1 = w;
 		int w2 = 0, w3 = 0;
@@ -283,13 +284,13 @@ Class SWWMWeaponTooltip : HUDMessageBase
 			else if ( (i > 0) && (lw > w2) ) w2 = lw;
 		}
 		int cw = int(ceil((max(w1,w)+8)/6.))*6;
-		int h = bigfont.GetHeight()+8+mSmallFont.GetHeight()*l.Count();
+		int h = mBigFont.GetHeight()*2+8+mSmallFont.GetHeight()*l.Count();
 		Vector2 pos = (int(ss.x/2),ss.y-(swwm_hudmargin+60+h));
 		Screen.Dim("Black",.5*alpha,int((pos.x-(cw+4)/2)*hs),int((pos.y-2)*hs),int((cw+4)*hs),int((h+4)*hs));
-		Screen.DrawText(bigfont,SWWMCREDITSCOL1,pos.x-w1/2,pos.y,wpn,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
+		Screen.DrawText(mBigFont,SWWMCREDITSCOL1,pos.x-w1/2,pos.y,wpn,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha,DTA_ScaleX,2.,DTA_ScaleY,2.);
 		for ( int i=0; i<cw; i+=6 )
-			Screen.DrawChar(mSmallFont,SWWMCREDITSCOL1,(pos.x-cw/2)+i,pos.y+32,0x5F,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
-		pos.y += bigfont.GetHeight()+8;
+			Screen.DrawChar(mSmallFont,SWWMCREDITSCOL1,(pos.x-cw/2)+i,pos.y+20,0x5F,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
+		pos.y += mBigFont.GetHeight()*2+8;
 		for ( int i=0; i<l.Count(); i++ )
 		{
 			Screen.DrawText(mSmallFont,Font.CR_WHITE,pos.x-((i>0)?(w2/2):(w3/2)),pos.y,l.StringAt(i),DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alpha);
@@ -529,7 +530,7 @@ Class DSMapTitle : HUDMessageBase
 	override void Draw( int bottom, int visibility )
 	{
 		if ( tics <= 0 ) return;
-		double hs = max(floor(Screen.GetWidth()/640.),1.);
+		double hs = max(min(floor(Screen.GetWidth()/640.),floor(Screen.GetHeight()/360.)),1.);
 		Vector2 ss = (Screen.GetWidth(),Screen.GetHeight())/hs;
 		double fractic = SWWMStatusBar(statusbar)?SWWMStatusBar(statusbar).fractic:0;
 		double ftics = tics+fractic;
