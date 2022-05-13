@@ -22,8 +22,8 @@ Class SWWMCreditsEntry ui
 				if ( iconheight ) iheight = iconheight;
 				else
 				{
-					Vector2 sz = TexMan.GetScaledSize(itex);
-					iheight = int(sz.y);
+					Vector2 ofs = TexMan.GetScaledOffset(itex);
+					iheight = int(ofs.y);
 				}
 			}
 		}
@@ -80,6 +80,7 @@ Class SWWMCreditsEntry ui
 		if ( hasicon )
 		{
 			yy += iheight;
+			Screen.DrawTexture(itex,true,x+1,yy+1,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_ColorOverlay,Color(255,0,0,0));
 			Screen.DrawTexture(itex,true,x,yy,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true);
 		}
 		int w = mSmallFont.StringWidth(title);
@@ -165,13 +166,13 @@ Class SWWMCreditsMenu : GenericMenu abstract
 		slocal = StringTable.Localize("$SWWM_CLOCAL");
 		spatrons = StringTable.Localize("$SWWM_CPATRON");
 		sthanks = StringTable.Localize("$SWWM_CTHANK");
-		cdev.Push(new("SWWMCreditsEntry").Init("Marisa Kirisame","$SWWM_CDEV2",icon:"graphics/Credits/MariSprite0.png",iconheight:148));
+		cdev.Push(new("SWWMCreditsEntry").Init("Marisa the Magician","$SWWM_CDEV2",icon:"graphics/Credits/MariSprite.png"));
 		cassets.Push(new("SWWMCreditsEntry").Init("Bethesda Game Studios","Fallout: New Vegas\nFallout 4"));
 		cassets.Push(new("SWWMCreditsEntry").Init("Epic Games","Unreal\nUnreal Tournament\nUnreal Tournament 2004\nUnreal Tournament 3"));
 		cassets.Push(new("SWWMCreditsEntry").Init("Ion Storm","Deus Ex"));
 		cassets.Push(new("SWWMCreditsEntry").Init("Looking Glass Studios","Thief\nSystem Shock 2"));
 		cassets.Push(new("SWWMCreditsEntry").Init("From Software","Dark Souls\nDark Souls II\nDark Souls III"));
-		clocal.Push(new("SWWMCreditsEntry").Init("Marisa Kirisame","$SWWM_LOCES"));
+		clocal.Push(new("SWWMCreditsEntry").Init("Marisa the Magician","$SWWM_LOCES"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("Snacks"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("john"));
 		cpatrons.Push(new("SWWMCreditsEntry").Init("FireFly"));
