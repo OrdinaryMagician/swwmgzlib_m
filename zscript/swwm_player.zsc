@@ -149,6 +149,12 @@ Class SWWMPlayer : PlayerPawn abstract
 		if ( health > maxhealth ) maxhealth = starthealth = min(default.health,health);
 	}
 
+	// NEW: only increases health cap
+	virtual void CheatGive_MaxHealth( int amount = 0 )
+	{
+		maxhealth = starthealth = (amount>0)?min(default.health,maxhealth+amount):default.health;
+	}
+
 	virtual void CheatGive_Backpack()
 	{
 		if ( SWWMMAXBACKPACK <= 0 ) return;
@@ -277,6 +283,30 @@ Class SWWMPlayer : PlayerPawn abstract
 		}
 	}
 
+	virtual bool CheatGive_Item( Class<Inventory> type, int amount = 0 )
+	{
+		if ( amount <= 0 ) amount = GetDefaultByType(type).Amount;
+		let itm = FindInventory(type);
+		if ( itm )
+		{
+			int oldamt = itm.Amount;
+			itm.Amount += amount;
+			if ( (itm.Amount < oldamt) || (itm.Amount > itm.MaxAmount) )
+				itm.Amount = itm.MaxAmount;
+			return true;
+		}
+		itm = Inventory(Spawn(type));
+		if ( !itm.CallTryPickup(self) )
+		{
+			// just in case it was a count item
+			itm.ClearCounters();
+			itm.Destroy();
+			return false;
+		}
+		itm.Amount = amount;
+		return true;
+	}
+
 	override void CheatGive( String name, int amount )
 	{
 		if ( !player.mo || (player.health <= 0) ) return;
@@ -293,6 +323,7 @@ Class SWWMPlayer : PlayerPawn abstract
 			CheatGive_PuzzlePieces();
 		}
 		else if ( name ~== "health" ) CheatGive_Health(amount);
+		else if ( name ~== "maxhealth" ) CheatGive_MaxHealth(amount);
 		else if ( name ~== "backpack" ) CheatGive_Backpack();
 		else if ( name ~== "ammo" ) CheatGive_Ammo();
 		else if ( name ~== "armor" ) CheatGive_Armor();
@@ -309,7 +340,158 @@ Class SWWMPlayer : PlayerPawn abstract
 					Console.Printf("'%s' is not a valid inventory item",name);
 				return;
 			}
-			GiveInventory(type,amount,true);
+			if ( !CheatGive_Item(type,amount) && CheckLocalView() )
+				Console.Printf("Cannot give '%s'",name);
+		}
+	}
+
+	virtual void CheatTake_Health( int amount = 0 )
+	{
+		if ( amount >= health )
+		{
+			CheatSuicide();
+			if ( player == players[consoleplayer] ) HideConsole();
+			return;
+		}
+		player.health = health -= amount;
+	}
+
+	virtual void CheatTake_MaxHealth( int amount = 0 )
+	{
+		if ( healdecrease <= 0 ) return;
+		maxhealth = starthealth = (amount>0)?max(healdecrease,maxhealth-amount):healdecrease:
+		if ( health > maxhealth ) health = maxhealth;
+	}
+
+	virtual void CheatTake_Backpack()
+	{
+		Inventory i = inv;
+		while ( i )
+		{
+			let next = i.inv;
+			if ( (i.GetClassName() == "HammerspaceEmbiggener") || (i is 'BackpackItem') )
+				i.DepleteOrDestroy();
+			i = next;
+		}
+	}
+
+	virtual void CheatTake_Ammo()
+	{
+		for ( Inventory i=inv; i; i=i.inv )
+		{
+			if ( (i is 'Ammo') || (i is 'MagAmmo') )
+				i.Amount = 0;
+		}
+	}
+
+	virtual void CheatTake_Armor()
+	{
+		Inventory i = inv;
+		while ( i )
+		{
+			let next = i.inv;
+			// avoid unclearable (internal) or nodrain (powerup) armors
+			if ( ((i is 'SWWMArmor') && !i.bUNCLEARABLE && !(SWWMArmor(i).bNODRAIN)) || (i is 'SWWMSpareArmor') )
+				i.DepleteOrDestroy();
+			i = next;
+		}
+	}
+
+	virtual void CheatTake_Keys()
+	{
+		Inventory i = inv;
+		while ( i )
+		{
+			let next = i.inv;
+			if ( i is 'Key' ) i.DepleteOrDestroy();
+			i = next;
+		}
+	}
+
+	virtual void CheatTake_Weapons()
+	{
+		Inventory i = inv;
+		while ( i )
+		{
+			let next = i.inv;
+			// don't take away slot 1 melee (marked as wimpy)
+			if ( (i is 'Weapon') && !Weapon(i).bWimpyWeapon )
+				i.DepleteOrDestroy();
+			i = next;
+		}
+	}
+
+	virtual void CheatTake_Artifacts()
+	{
+		Inventory i = inv;
+		while ( i )
+		{
+			let next = i.inv;
+			if ( i.bINVBAR && i.Icon.isValid() && !(i is 'PuzzleItem') )
+				i.DepleteOrDestroy();
+			i = next;
+		}
+	}
+
+	virtual void CheatTake_PuzzlePieces()
+	{
+		Inventory i = inv;
+		while ( i )
+		{
+			let next = i.inv;
+			if ( i is 'PuzzleItem' ) i.DepleteOrDestroy();
+			i = next;
+		}
+	}
+
+	virtual void CheatTake_Item( Class<Inventory> type, int amount = 0 )
+	{
+		Inventory i = inv;
+		while ( i )
+		{
+			let next = i.inv;
+			if ( i is type )
+			{
+				i.Amount -= max(amount,1);
+				if ( i.Amount <= 0 ) i.DepleteOrDestroy();
+			}
+			i = next;
+		}
+	}
+
+	override void CheatTake( String name, int amount )
+	{
+		if ( !player.mo || (player.health <= 0) ) return;
+		// interchangeable
+		if ( (name ~== "all") || (name ~== "everything") )
+		{
+			CheatTake_Ammo();
+			CheatTake_Backpack();
+			CheatTake_Armor();
+			CheatTake_Keys();
+			CheatTake_Weapons();
+			CheatTake_Artifacts();
+			CheatTake_PuzzlePieces();
+		}
+		else if ( name ~== "health" ) CheatTake_Health(amount);
+		else if ( name ~== "maxhealth" ) CheatTake_MaxHealth(amount);
+		else if ( name ~== "backpack" ) CheatTake_Backpack();
+		else if ( name ~== "ammo" ) CheatTake_Ammo();
+		else if ( name ~== "armor" ) CheatTake_Armor();
+		else if ( name ~== "keys" ) CheatTake_Keys();
+		else if ( name ~== "weapons" ) CheatTake_Weapons();
+		else if ( name ~== "artifacts" ) CheatTake_Artifacts();
+		else if ( name ~== "puzzlepieces" ) CheatTake_PuzzlePieces();
+		else
+		{
+			Class<Inventory> type = name;
+			if ( !type || type.IsAbstract() )
+			{
+				if ( CheckLocalView() )
+					Console.Printf("'%s' is not a valid inventory item",name);
+				return;
+			}
+			CheatTake_Item(type,amount);
 		}
 	}
 

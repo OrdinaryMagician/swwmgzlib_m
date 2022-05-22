@@ -1378,7 +1378,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		BeginHUD();
 		hs = max(min(floor(Screen.GetWidth()/640.),floor(Screen.GetHeight()/360.)),1.);
 		ss = (Screen.GetWidth(),Screen.GetHeight())/hs;
-		margin = clamp(swwm_hudmargin,0,40);
+		margin = clamp(swwm_hudmargin,0,20);
 		FracTic = TicFrac;
 		if ( camhidden )
 		{

@@ -47,7 +47,7 @@ OptionMenu "SWWMOptionMenu"
 	Slider "$SWWM_VBOB", "swwm_bobstrength", 0.0, 1.0, 0.1, 1
 	Option "$SWWM_MM_ENABLE", "swwm_mm_enable", "YesNo"
 	Option "$SWWM_FORCESTATS", "swwm_forcestats", "SWWMForceStats"
-	Slider "$SWWM_HUDMARGIN", "swwm_hudmargin", 0, 40, 1, 0
+	Slider "$SWWM_HUDMARGIN", "swwm_hudmargin", 0, 20, 1, 0
 	Slider "$SWWM_MAXMSG", "swwm_maxshown", 1, 10, 1, 0
 	Slider "$SWWM_MAXMSGBIG", "swwm_maxshownbig", 1, 20, 1, 0
 	Slider "$SWWM_MAXPICK", "swwm_maxpickup", 1, 10, 1, 0
