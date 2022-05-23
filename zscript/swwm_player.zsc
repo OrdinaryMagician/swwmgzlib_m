@@ -350,7 +350,7 @@ Class SWWMPlayer : PlayerPawn abstract
 		if ( amount >= health )
 		{
 			CheatSuicide();
-			if ( player == players[consoleplayer] ) HideConsole();
+			if ( player == players[consoleplayer] ) Console.HideConsole();
 			return;
 		}
 		player.health = health -= amount;
@@ -359,7 +359,7 @@ Class SWWMPlayer : PlayerPawn abstract
 	virtual void CheatTake_MaxHealth( int amount = 0 )
 	{
 		if ( healdecrease <= 0 ) return;
-		maxhealth = starthealth = (amount>0)?max(healdecrease,maxhealth-amount):healdecrease:
+		maxhealth = starthealth = (amount>0)?max(healdecrease,maxhealth-amount):healdecrease;
 		if ( health > maxhealth ) health = maxhealth;
 	}
 
@@ -415,7 +415,7 @@ Class SWWMPlayer : PlayerPawn abstract
 		{
 			let next = i.inv;
 			// don't take away slot 1 melee (marked as wimpy)
-			if ( (i is 'Weapon') && !Weapon(i).bWimpyWeapon )
+			if ( (i is 'Weapon') && !Weapon(i).bWimpy_Weapon )
 				i.DepleteOrDestroy();
 			i = next;
 		}
