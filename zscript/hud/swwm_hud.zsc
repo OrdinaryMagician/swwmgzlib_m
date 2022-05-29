@@ -522,7 +522,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			// ignore local player
 			if ( ct.Owner == CPlayer.mo ) continue;
 			// ignore trackers clearly outside of player view
-			Vector3 smpos = level.Vec3Offset(ct.Owner.prev*(1.-fractic)+ct.Owner.pos*fractic,(0,0,ct.lvheight));
+			Vector3 smpos = level.Vec3Offset(SWWMUtility.LerpVector3(ct.Owner.prev,ct.Owner.pos,fractic),(0,0,ct.lvheight));
 			Vector3 tdir = level.Vec3Diff(viewpos,smpos);
 			if ( viewvec dot tdir < 0 ) continue;
 			Vector3 ndc = SWWMUtility.ProjectPoint(projdata,viewpos+tdir);
@@ -676,9 +676,9 @@ Class SWWMStatusBar : BaseStatusBar abstract
 
 	private void DrawMapLines( Vector2 basepos )
 	{
-		double zoomlevel = oldminimapzoom*(1.-FracTic)+minimapzoom*FracTic;
+		double zoomlevel = SWWMUtility.Lerp(oldminimapzoom,minimapzoom,FracTic);
 		double zoomview = MAPVIEWDIST*zoomlevel, zoomclip = CLIPDIST*zoomlevel;
-		Vector2 cpos = players[consoleplayer].Camera.prev.xy*(1.-FracTic)+players[consoleplayer].Camera.pos.xy*FracTic;
+		Vector2 cpos = SWWMUtility.LerpVector2(players[consoleplayer].Camera.prev.xy,players[consoleplayer].Camera.pos.xy,FracTic);
 		Sector csec = players[consoleplayer].Camera.CurSector;
 		for ( int i=0; i<level.lines.Size(); i++ )
 		{
@@ -780,9 +780,9 @@ Class SWWMStatusBar : BaseStatusBar abstract
 
 	private void DrawMapMarkers( Vector2 basepos )
 	{
-		double zoomlevel = oldminimapzoom*(1.-FracTic)+minimapzoom*FracTic;
+		double zoomlevel = SWWMUtility.Lerp(oldminimapzoom,minimapzoom,FracTic);
 		double zoomview = MAPVIEWDIST*zoomlevel, zoomclip = CLIPDIST*zoomlevel;
-		Vector2 cpos = players[consoleplayer].Camera.prev.xy*(1.-FracTic)+players[consoleplayer].Camera.pos.xy*FracTic;
+		Vector2 cpos = SWWMUtility.LerpVector2(players[consoleplayer].Camera.prev.xy,players[consoleplayer].Camera.pos.xy,FracTic);
 		Sector csec = players[consoleplayer].Camera.CurSector;
 		if ( !mi ) mi = ThinkerIterator.Create("MapMarker",Thinker.STAT_MAPMARKER);
 		else mi.Reinit();

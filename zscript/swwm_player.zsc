@@ -670,10 +670,10 @@ Class SWWMPlayer : PlayerPawn abstract
 		player.WeaponState |= WF_WEAPONBOBBING;	// always bob
 		Vector2 cur = Super.BobWeapon(ticfrac);
 		if ( !oldbob ) player.WeaponState &= ~WF_WEAPONBOBBING;
-		double fangle = oldangle*(1.-ticfrac)+angle*ticfrac;
-		double fpitch = (oldpitch*(1.-ticfrac)+pitch*ticfrac);
-		double flagangle = (oldlagangle*(1.-ticfrac)+lagangle*ticfrac);
-		double flagpitch = (oldlagpitch*(1.-ticfrac)+lagpitch*ticfrac);
+		double fangle = SWWMUtility.Lerp(oldangle,angle,ticfrac);
+		double fpitch = SWWMUtility.Lerp(oldpitch,pitch,ticfrac);
+		double flagangle = SWWMUtility.Lerp(oldlagangle,lagangle,ticfrac);
+		double flagpitch = SWWMUtility.Lerp(oldlagpitch,lagpitch,ticfrac);
 		double diffang = fangle-flagangle;
 		double diffpitch = fpitch-flagpitch;
 		if ( abs(diffang) > 1. )
@@ -686,7 +686,7 @@ Class SWWMPlayer : PlayerPawn abstract
 			int sgn = (diffpitch>0)?1:-1;
 			diffpitch = abs(diffpitch)**.7*sgn;
 		}
-		Vector3 flagvel = oldlagvel*(1.-ticfrac)+lagvel*ticfrac;
+		Vector3 flagvel = SWWMUtility.LerpVector3(oldlagvel,lagvel,ticfrac);
 		double diffx = flagvel dot (cos(flagangle+90),sin(flagangle+90),0);
 		double diffy = flagvel dot (0,0,1);
 		if ( abs(diffx) > 1. )
@@ -699,7 +699,7 @@ Class SWWMPlayer : PlayerPawn abstract
 			int sgn = (diffy>0)?1:-1;
 			diffy = abs(diffy)**.5*sgn;
 		}
-		return cur*(oldlagready*(1.-ticfrac)+lagready*ticfrac);
+		return cur*SWWMUtility.Lerp(oldlagready,lagready,ticfrac);
 	}
 
 	override void PlayerThink()

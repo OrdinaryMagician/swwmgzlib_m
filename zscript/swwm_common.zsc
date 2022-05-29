@@ -201,7 +201,7 @@ Class SmoothLinearValueInterpolator
 	}
 	double GetValue( double fractic = 1. )
 	{
-		return val*fractic+oldval*(1.-fractic);
+		return SWWMUtility.Lerp(oldval,val,fractic);
 	}
 }
 Class SmoothDynamicValueInterpolator
@@ -234,6 +234,6 @@ Class SmoothDynamicValueInterpolator
 	}
 	double GetValue( double fractic = 1. )
 	{
-		return val*fractic+oldval*(1.-fractic);
+		return SWWMUtility.Lerp(oldval,val,fractic);
 	}
 }

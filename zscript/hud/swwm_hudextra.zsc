@@ -168,7 +168,7 @@ Class SWWMOneLiner : HUDMessageBase
 			let ln = lines[i];
 			ln.pnofs = max(ln.pnofs,rofs);
 			ln.nofs = max(ln.nofs,rofs);
-			double nofs = ln.nofs*fractic+ln.pnofs*(1.-fractic);
+			double nofs = SWWMUtility.Lerp(ln.pnofs,ln.nofs,fractic);
 			// don't draw empty strings
 			if ( ln.whichline == "" ) continue;
 			// split so it can fit
