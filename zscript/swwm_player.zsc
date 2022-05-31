@@ -19,7 +19,8 @@ Class SWWMPlayer : PlayerPawn abstract
 	double ssup;
 	bool sendtoground;
 	int dodgetics;
-	readonly int dodgeiframes;
+	readonly int dodgedelay, dodgeiframes;
+	Property DodgeDelay : dodgedelay;
 	Property DodgeIFrames : dodgeiframes;
 
 	enum EUnderType
@@ -110,7 +111,8 @@ Class SWWMPlayer : PlayerPawn abstract
 		SWWMPlayer.ResurrectType RT_NONE;
 		SWWMPlayer.PainThresholds 0, 25, 50, 75;
 		SWWMPlayer.Buoyancy .99;	// Unreal standard™
-		SWWMPlayer.DodgeIFrames 8;
+		SWWMPlayer.DodgeDelay 20;
+		SWWMPlayer.DodgeIFrames 6;
 		+DONTGIB;
 		+NOICEDEATH;
 		+DONTMORPH;
@@ -1121,7 +1123,7 @@ Class SWWMPlayer : PlayerPawn abstract
 		vel.z += clamp(-vel.z*.4,0.,30.);
 		player.jumptics = -1;
 		PlayDodge(dodge);
-		dodgetics = 15;
+		dodgetics = dodgedelay;
 		let i = FindInventory("SWWMIFrames");
 		if ( !i )
 		{
@@ -1766,7 +1768,7 @@ Class SWWMPlayer : PlayerPawn abstract
 		}
 		// reduce gravity while dodging
 		if ( dodgetics > 0 )
-			grav *= SWWMUtility.Lerp(1.,.2,dodgetics/15.);
+			grav *= SWWMUtility.Lerp(1.,.2,dodgetics/double(dodgedelay));
 		vel.z -= grav;
 	}
 
