@@ -19,6 +19,8 @@ Class SWWMPlayer : PlayerPawn abstract
 	double ssup;
 	bool sendtoground;
 	int dodgetics;
+	readonly int dodgeiframes;
+	Property DodgeIFrames : dodgeiframes;
 
 	enum EUnderType
 	{
@@ -73,10 +75,12 @@ Class SWWMPlayer : PlayerPawn abstract
 	readonly double dodgespeed;
 	readonly double crouchingspeed;
 	readonly double mincrouch;
+	readonly double buoyancy;
 	Property MoveSpeed : walkspeed, runspeed;
 	Property DodgeSpeed : dodgespeed;
 	Property CrouchingSpeed : crouchingspeed;
 	Property MinCrouch : mincrouch;
+	Property Buoyancy : buoyancy;
 	bool bDucking;
 
 	enum EInvWipe
@@ -105,6 +109,8 @@ Class SWWMPlayer : PlayerPawn abstract
 		SWWMPlayer.MinCrouch .5;
 		SWWMPlayer.ResurrectType RT_NONE;
 		SWWMPlayer.PainThresholds 0, 25, 50, 75;
+		SWWMPlayer.Buoyancy .99;	// Unreal standard™
+		SWWMPlayer.DodgeIFrames 8;
 		+DONTGIB;
 		+NOICEDEATH;
 		+DONTMORPH;
@@ -821,6 +827,17 @@ Class SWWMPlayer : PlayerPawn abstract
 		if ( player.weaponstate&WF_WEAPONBOBBING ) lagready = lagready*.9+.1;
 		else lagready = lagready*.4;
 		lagvel = lagvel*.8+vel*.2;
+		// spawn bubbles while underwater
+		if ( (waterlevel > 1) && !Random[ExploS](0,5) )
+		{
+			int numpt = Random[ExploS](-2,2);
+			for ( int i=0; i<numpt; i++ )
+			{
+				let p = Spawn("SWWMBubble",Vec3Offset(FRandom[ExploS](-radius,radius)*.8,FRandom[ExploS](-radius,radius)*.8,FRandom[ExploS](height*.1,height*.9)));
+				p.scale *= FRandom[ExploS](.02,.2);
+				p.vel += vel*.2;
+			}
+		}
 		CheckUnderwaterAmb();
 		if ( player.onground && !bNoGravity && !lastground && (waterlevel < 2) )
 		{
@@ -1105,6 +1122,13 @@ Class SWWMPlayer : PlayerPawn abstract
 		player.jumptics = -1;
 		PlayDodge(dodge);
 		dodgetics = 15;
+		let i = FindInventory("SWWMIFrames");
+		if ( !i )
+		{
+			i = Inventory(Spawn("SWWMIFrames"));
+			i.AttachToOwner(self);
+		}
+		i.special1 = dodgeiframes;
 	}
 
 	override void CheckJump()
@@ -1719,6 +1743,31 @@ Class SWWMPlayer : PlayerPawn abstract
 			oldlagvel = lagvel = vel;
 			lastvelz = vel.z;
 		}
+	}
+
+	// let's customize our gravity
+	override void FallAndSink( double grav, double oldfloorz )
+	{
+		if ( !player || (player.mo != self) || (player.cheats&CF_TOTALLYFROZEN) )
+		{
+			Super.FallAndSink(grav,oldfloorz);
+			return;
+		}
+		// do nothing if standing on ground or "floating"
+		if ( player.onground || bNOGRAVITY ) return;
+		// ensure we don't pass terminal velocity just from falling
+		if ( vel.z < -50 ) return;
+		// we don't care about "the doom way" here, gravity is
+		// ALWAYS in effect when not standing on solid ground
+		if ( waterlevel > 1 )
+		{
+			// handle buoyancy
+			grav *= 1.-buoyancy;
+		}
+		// reduce gravity while dodging
+		if ( dodgetics > 0 )
+			grav *= SWWMUtility.Lerp(1.,.2,dodgetics/15.);
+		vel.z -= grav;
 	}
 
 	virtual void PlayJumping()
@@ -2362,5 +2411,45 @@ Class SWWMVoodooDoll : PlayerPawn
 		XZWZ PQR 2;
 		XZWZ S -1;
 		Stop;
+	}
+}
+
+// for dodging
+Class SWWMIFrames : SWWMArmor
+{
+	Default
+	{
+		+SWWMARMOR.NOHITSOUND;
+		+SWWMARMOR.NOHITFLASH;
+		+SWWMARMOR.NODRAIN;
+		SWWMArmor.ArmorPriority 255;
+	}
+	override int HandleDamage( int damage, Name damageType, int flags )
+	{
+		return damage;
+	}
+	override void AttachToOwner( Actor other )
+	{
+		Super.AttachToOwner(other);
+		Owner.bSHOOTABLE = false;
+		Owner.bNONSHOOTABLE = true;
+	}
+	override void DetachFromOwner()
+	{
+		Super.DetachFromOwner();
+		if ( Owner.Health <= 0 ) return;
+		Owner.bSHOOTABLE = true;
+		Owner.bNONSHOOTABLE = false;
+	}
+	override void OwnerDied()
+	{
+		Super.OwnerDied();
+		Owner.bNONSHOOTABLE = false;
+	}
+	override void DoEffect()
+	{
+		Super.DoEffect();
+		if ( special1-- <= 0 )
+			Destroy();
 	}
 }
