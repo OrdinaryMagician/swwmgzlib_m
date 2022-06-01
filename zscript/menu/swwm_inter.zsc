@@ -289,41 +289,14 @@ Class SWWMStatScreen : StatusScreen abstract
 	{
 		if ( evt.type == InputEvent.Type_KeyDown )
 		{
-			Array<int> usekey, firekey, altfirekey, reloadkey, zoomkey;
-			Bindings.GetAllKeysForCommand(usekey,"+use");
-			for ( int i=0; i<usekey.Size(); i++ )
+			String cmd = Bindings.GetBinding(evt.KeyScan);
+			if ( (cmd ~== "+use") || (cmd ~== "+attack") || (cmd ~== "+altattack") )
 			{
-				if ( evt.KeyScan != usekey[i] ) continue;
 				accelerateStage = 1;
 				return true;
 			}
-			Bindings.GetAllKeysForCommand(firekey,"+attack");
-			for ( int i=0; i<firekey.Size(); i++ )
+			if ( (cmd ~== "+reload") || (cmd ~== "+zoom") )
 			{
-				if ( evt.KeyScan != firekey[i] ) continue;
-				accelerateStage = 1;
-				return true;
-			}
-			Bindings.GetAllKeysForCommand(altfirekey,"+altattack");
-			for ( int i=0; i<altfirekey.Size(); i++ )
-			{
-				if ( evt.KeyScan != altfirekey[i] ) continue;
-				accelerateStage = 1;
-				return true;
-			}
-			Bindings.GetAllKeysForCommand(reloadkey,"+reload");
-			for ( int i=0; i<reloadkey.Size(); i++ )
-			{
-				if ( evt.KeyScan != reloadkey[i] ) continue;
-				PlaySound("misc/chat");
-				whichtip = 0;
-				tipflash = gametic+25;
-				return true;
-			}
-			Bindings.GetAllKeysForCommand(zoomkey,"+zoom");
-			for ( int i=0; i<zoomkey.Size(); i++ )
-			{
-				if ( evt.KeyScan != zoomkey[i] ) continue;
 				PlaySound("misc/chat");
 				whichtip = 0;
 				tipflash = gametic+25;
