@@ -152,7 +152,7 @@ extend Class SWWMWeapon
 			// things can instantly cease to exist after taking damage (wow)
 			if ( hits[i].a )
 			{
-				if ( hits[i].a.player ) hits[i].a.A_QuakeEx(2,2,2,6,0,1,"",QF_RELATIVE|QF_SCALEDOWN,rollIntensity:0.25);
+				if ( hits[i].a.player ) hits[i].a.A_QuakeEx(2,2,2,6,0,1,"",QF_RELATIVE|QF_SCALEDOWN|QF_3D,rollIntensity:0.25);
 				if ( !hits[i].a.bNOBLOOD && !hits[i].a.bDORMANT && !hits[i].a.bINVULNERABLE )
 				{
 					hits[i].a.TraceBleed(newdmg,invoker);
@@ -166,7 +166,7 @@ extend Class SWWMWeapon
 			}
 		}
 		self.angle += clamp(diff/hits.Size(),-5.,5.);	// averaged reorient
-		A_QuakeEx(1,1,1,3,0,1,"",QF_RELATIVE|QF_SCALEDOWN,rollIntensity:0.12);
+		A_QuakeEx(1,1,1,3,0,1,"",QF_RELATIVE|QF_SCALEDOWN|QF_3D,rollIntensity:0.12);
 		if ( hitsound == "" )
 		{
 			if ( blooded ) A_StartSound("melee/hitf",CHAN_WEAPON,CHANF_OVERLAP);
@@ -231,7 +231,7 @@ extend Class SWWMWeapon
 		p.angle = atan2(HitNormal.y,HitNormal.x);
 		p.pitch = asin(-HitNormal.z);
 		if ( d.HitType == TRACE_HitFloor ) p.CheckSplash(40);
-		A_QuakeEx(1,1,1,3,0,1,"",QF_RELATIVE|QF_SCALEDOWN,rollIntensity:0.12);
+		A_QuakeEx(1,1,1,3,0,1,"",QF_RELATIVE|QF_SCALEDOWN|QF_3D,rollIntensity:0.12);
 		A_BumpFOV(.98);
 		A_StartSound((hitsound!="")?hitsound:"melee/hit",CHAN_WEAPON,CHANF_OVERLAP);
 		A_AlertMonsters();

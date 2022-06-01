@@ -111,7 +111,7 @@ Class TetherShockwave : Actor
 	override void PostBeginPlay()
 	{
 		Super.PostBeginPlay();
-		A_QuakeEx(7,7,7,30,0,300+min(special1,50)*4,"",QF_RELATIVE|QF_SCALEDOWN,falloff:200,rollIntensity:1.5);
+		A_QuakeEx(7,7,7,30,0,300+min(special1,50)*4,"",QF_RELATIVE|QF_SCALEDOWN|QF_3D,falloff:200,rollIntensity:1.5);
 		if ( target.player != players[consoleplayer] )
 		{
 			A_StartSound("powerup/tethershock",CHAN_FOOTSTEP,CHANF_OVERLAP,attenuation:.3);

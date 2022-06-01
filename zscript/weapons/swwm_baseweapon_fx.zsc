@@ -186,7 +186,7 @@ Class PunchImpact : Actor
 	override void PostBeginPlay()
 	{
 		Super.PostBeginPlay();
-		A_QuakeEx(2,2,2,12,0,200,"",QF_RELATIVE|QF_SCALEDOWN,falloff:100,rollIntensity:.3);
+		A_QuakeEx(2,2,2,12,0,200,"",QF_RELATIVE|QF_SCALEDOWN|QF_3D,falloff:100,rollIntensity:.3);
 		A_StartSound("melee/hit",CHAN_VOICE,CHANF_DEFAULT,bAMBUSH?.6:1.);
 		A_SprayDecal("WallCrack",-20);
 		int numpt = Random[Ponch](5,10);

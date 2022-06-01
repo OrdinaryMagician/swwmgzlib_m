@@ -99,7 +99,7 @@ Class SWWMBossBrainExpl : Actor
 {
 	void A_Ignite()
 	{
-		A_QuakeEx(3,3,3,20,0,400,"",QF_RELATIVE|QF_SCALEDOWN,falloff:300,rollintensity:2.);
+		A_QuakeEx(3,3,3,20,0,400,"",QF_RELATIVE|QF_SCALEDOWN|QF_3D,falloff:300,rollintensity:2.);
 		A_StartSound("explodium/hit",CHAN_VOICE,CHANF_DEFAULT,.4,.5);
 		Scale *= FRandom[ExploS](0.8,1.1);
 		Scale.x *= RandomPick[ExploS](-1,1);
@@ -338,7 +338,7 @@ Class SWWMBossBrain : BossBrain
 		MBRN A 10
 		{
 			A_StartSound("brain/pain",CHAN_VOICE,attenuation:ATTN_NONE);
-			A_QuakeEx(3,3,3,15,0,65535,"",QF_RELATIVE|QF_SCALEDOWN,rollIntensity:.3);
+			A_QuakeEx(3,3,3,15,0,65535,"",QF_RELATIVE|QF_SCALEDOWN,falloff:65535,rollIntensity:.3);
 			if ( !eyeless ) SpawnBrainExpl(false);
 			Spawn("SWWMBossBrainPain",pos);
 		}
@@ -347,7 +347,7 @@ Class SWWMBossBrain : BossBrain
 		MBRN A 120
 		{
 			A_StartSound("brain/death",CHAN_VOICE,attenuation:ATTN_NONE);
-			A_QuakeEx(9,9,9,120,0,65535,"",QF_RELATIVE|QF_SCALEDOWN,rollIntensity:1.);
+			A_QuakeEx(9,9,9,120,0,65535,"",QF_RELATIVE|QF_SCALEDOWN,falloff:65535,rollIntensity:1.);
 			if ( !eyeless )
 			{
 				SpawnBrainExpl(true);
