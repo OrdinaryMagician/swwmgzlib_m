@@ -4,6 +4,7 @@
 Class SWWMSaveVerData : SWWMStaticThinker
 {
 	String ver, modver;
+	int uid;
 }
 
 Class SWWMStaticHandler : StaticEventHandler
@@ -17,6 +18,7 @@ Class SWWMStaticHandler : StaticEventHandler
 	// versioning
 	bool tainted;
 	String taintver, taintmodver;
+	int uid;
 	int checktic;
 	int maptime;
 	bool unloading;
@@ -36,6 +38,7 @@ Class SWWMStaticHandler : StaticEventHandler
 		svd.ChangeStatNum(Thinker.STAT_STATIC);
 		svd.ver = StringTable.Localize("$SWWM_SHORTVER");
 		svd.modver = StringTable.Localize("$"..SWWMMODPREFIX.."_SHORTVER");
+		uid = 0;
 	}
 
 	override void WorldUnloaded( WorldEvent e )
@@ -89,15 +92,20 @@ Class SWWMStaticHandler : StaticEventHandler
 			tainted = true;
 			taintver = "\cg(no version info)\c-";
 			taintmodver = "\cg(no version info)\c-";
-			return;
+			uid = 0;
 		}
-		String cver = StringTable.Localize("$SWWM_SHORTVER");
-		String cmodver = StringTable.Localize("$"..SWWMMODPREFIX.."_SHORTVER");
-		if ( (svd.ver != cver) || (svd.modver != cmodver) )
+		else
 		{
-			tainted = true;
-			taintver = svd.ver;
-			taintmodver = svd.modver;
+			String cver = StringTable.Localize("$SWWM_SHORTVER");
+			String cmodver = StringTable.Localize("$"..SWWMMODPREFIX.."_SHORTVER");
+			if ( (svd.ver != cver) || (svd.modver != cmodver) )
+			{
+				tainted = true;
+				taintver = svd.ver;
+				taintmodver = svd.modver;
+			}
+			if ( svd.uid == uid ) checktic = 0;
+			uid = svd.uid;
 		}
 	}
 
@@ -206,8 +214,21 @@ Class SWWMStaticHandler : StaticEventHandler
 		}
 	}
 
+	override void NetworkProcess( ConsoleEvent e )
+	{
+		if ( e.IsManual ) return;
+		if ( e.Name ~== "swwmsessionid" )
+		{
+			let ti = ThinkerIterator.Create("SWWMSaveVerData",Thinker.STAT_STATIC);
+			let svd = SWWMSaveVerData(ti.Next());
+			if ( !uid ) uid = e.Args[0];
+			if ( svd && !svd.uid ) svd.uid = e.Args[0];
+		}
+	}
+
 	override void PostUiTick()
 	{
+		if ( !uid ) EventHandler.SendNetworkEvent("swwmsessionid",SystemTime.Now());
 		if ( gamestate != GS_TITLELEVEL ) titlefirst = true;	// we skip it
 		if ( (gametic > 0) && !(gametic%GameTicRate) )
 		{
