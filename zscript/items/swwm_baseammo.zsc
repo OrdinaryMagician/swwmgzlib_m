@@ -202,7 +202,7 @@ Class SWWMAmmo : Ammo
 							ma.Amount = 0;
 							ma.AttachToOwner(Owner);
 						}
-						if ( ma.Amount < (ma.MaxAmount-ma.ClipSize) )
+						if ( ma.Amount <= (ma.MaxAmount-ma.ClipSize) )
 						{
 							ma.Amount += ma.ClipSize;
 							excess--;
@@ -224,7 +224,7 @@ Class SWWMAmmo : Ammo
 					}
 				}
 			}
-			else if ( MagAmmoType && !GetDefaultByType(MagAmmoType).bUNDROPPABLE && !GetDefaultByType(MagAmmoType).bUNTOSSABLE )
+			else if ( MagAmmoType )
 			{
 				// can we split it into mag ammo?
 				let ma = MagAmmo(Owner.FindInventory(MagAmmoType));
@@ -234,22 +234,32 @@ Class SWWMAmmo : Ammo
 					ma.Amount = 0;
 					ma.AttachToOwner(Owner);
 				}
-				if ( ma.Amount < ma.MaxAmount )
+				if ( !GetDefaultByType(MagAmmoType).bUNDROPPABLE && !GetDefaultByType(MagAmmoType).bUNTOSSABLE )
 				{
-					// split into bullets
-					for ( int i=0; i<item.Amount; i++ )
+					if ( ma.Amount < ma.MaxAmount )
 					{
-						if ( Amount < MaxAmount )
+						// split into bullets
+						for ( int i=0; i<item.Amount; i++ )
 						{
-							Amount++;
-							continue;
+							if ( Amount < MaxAmount )
+							{
+								Amount++;
+								continue;
+							}
+							int bul = ma.ClipSize;
+							int maxgiveamt = min(ma.MaxAmount-ma.Amount,bul);
+							int dropamt = bul-maxgiveamt;
+							if ( dropamt > 0 ) ma.CreateTossable(dropamt);
+							ma.Amount = min(ma.MaxAmount,ma.Amount+bul);
 						}
-						int bul = ma.ClipSize;
-						int maxgiveamt = min(ma.MaxAmount-ma.Amount,bul);
-						int dropamt = bul-maxgiveamt;
-						if ( dropamt > 0 ) ma.CreateTossable(dropamt);
-						ma.Amount = min(ma.MaxAmount,ma.Amount+bul);
+						item.bPickupGood = true;
+						return true;
 					}
+				}
+				else if ( ma.Amount <= (ma.MaxAmount-ma.ClipSize*item.Amount) )
+				{
+					// when mag ammo is undroppable, can only divide in full mags EXACTLY
+					ma.Amount += ma.ClipSize*item.Amount;
 					item.bPickupGood = true;
 					return true;
 				}
@@ -447,6 +457,19 @@ Class MagAmmo : Inventory abstract
 							}
 						}
 					}
+				}
+				else if ( pamo.Amount < pamo.MaxAmount )
+				{
+					int toadd = Amount+item.Amount;
+					while ( pamo.Amount < pamo.MaxAmount )
+					{
+						pamo.Amount++;
+						toadd -= ClipSize;
+					}
+					Amount = toadd;
+					if ( Amount > MaxAmount ) CreateTossable(Amount-MaxAmount);
+					item.bPickupGood = true;
+					return true;
 				}
 			}
 			if ( Amount < MaxAmount )
