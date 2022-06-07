@@ -51,11 +51,28 @@ Class SWWMWeapon : Weapon abstract
 			int dropme = AmmoGive1-ammogiven;
 			if ( dropme > 0 )
 			{
-				// hacky, but it works
-				let a = Ammo(Spawn(AmmoType1,Owner.pos));
-				a.Owner = Owner;
-				a.Amount = dropme;
-				a.CreateTossable(dropme);
+				if ( (ownedWeapon.Ammo1 is 'SWWMAmmo') && SWWMAmmo(ownedWeapon.Ammo1).MagAmmoType )
+				{
+					// can we add it as mag ammo?
+					MagAmmo ma = MagAmmo(Owner.FindInventory(SWWMAmmo(ownedWeapon.Ammo1).MagAmmoType));
+					if ( !ma )
+					{
+						ma = MagAmmo(Spawn(SWWMAmmo(ownedWeapon.Ammo1).MagAmmoType));
+						ma.Amount = 0;
+						ma.AttachToOwner(Owner);
+					}
+					while ( ma.Amount <= (ma.MaxAmount-ma.ClipSize) )
+					{
+						ma.Amount += ma.ClipSize;
+						dropme--;
+					}
+				}
+				if ( dropme > 0 )
+				{
+					// hacky, but it works
+					ownedWeapon.Ammo1.CreateTossable(dropme);
+					ownedWeapon.Ammo1.Amount += dropme;
+				}
 			}
 		}
 		if ( ownedWeapon.Ammo2 )
@@ -65,11 +82,28 @@ Class SWWMWeapon : Weapon abstract
 			int dropme = AmmoGive2-ammogiven;
 			if ( dropme > 0 )
 			{
-				// hacky, but it works
-				let a = Ammo(Spawn(AmmoType2,Owner.pos));
-				a.Owner = Owner;
-				a.Amount = dropme;
-				a.CreateTossable(dropme);
+				if ( (ownedWeapon.Ammo2 is 'SWWMAmmo') && SWWMAmmo(ownedWeapon.Ammo2).MagAmmoType )
+				{
+					// can we add it as mag ammo?
+					MagAmmo ma = MagAmmo(Owner.FindInventory(SWWMAmmo(ownedWeapon.Ammo2).MagAmmoType));
+					if ( !ma )
+					{
+						ma = MagAmmo(Spawn(SWWMAmmo(ownedWeapon.Ammo2).MagAmmoType));
+						ma.Amount = 0;
+						ma.AttachToOwner(Owner);
+					}
+					while ( ma.Amount <= (ma.MaxAmount-ma.ClipSize) )
+					{
+						ma.Amount += ma.ClipSize;
+						dropme--;
+					}
+				}
+				if ( dropme > 0 )
+				{
+					// hacky, but it works
+					ownedWeapon.Ammo2.CreateTossable(dropme);
+					ownedWeapon.Ammo2.Amount += dropme;
+				}
 			}
 		}
 		return gotstuff;
@@ -107,6 +141,7 @@ Class SWWMWeapon : Weapon abstract
 	}
 	override void OwnerDied()
 	{
+		ClearBufferedAmmo();
 		if ( Owner.player && (Owner.player.ReadyWeapon == self) )
 		{
 			Owner.A_StopSound(CHAN_WEAPONEXTRA);
@@ -115,6 +150,16 @@ Class SWWMWeapon : Weapon abstract
 		}
 		A_ClearRefire();
 		Super.OwnerDied();
+	}
+	override void Travelled()
+	{
+		ClearBufferedAmmo();
+		Super.Travelled();
+	}
+	override void DetachFromOwner()
+	{
+		ClearBufferedAmmo();
+		Super.DetachFromOwner();
 	}
 	override String GetObituary( Actor victim, Actor inflictor, Name mod, bool playerattack )
 	{

@@ -1,0 +1,130 @@
+// "ammo buffer" system for delayed reloads
+Class AmmoBuffer
+{
+	Class<Ammo> AmmoType;
+	Class<MagAmmo> MagAmmoType;
+	int Amount;
+}
+
+extend Class SWWMWeapon
+{
+	Array<AmmoBuffer> BufferedAmmo;
+
+	protected void BufferAmmo( Class<Ammo> type, int amount )
+	{
+		AmmoBuffer b;
+		for ( int i=0; i<BufferedAmmo.Size(); i++ )
+		{
+			if ( BufferedAmmo[i].AmmoType != type ) continue;
+			BufferedAmmo[i].Amount += amount;
+			return;
+		}
+		b = new("AmmoBuffer");
+		b.AmmoType = type;
+		b.MagAmmoType = null;
+		b.Amount = amount;
+		BufferedAmmo.Push(b);
+	}
+
+	protected void BufferMagAmmo( Class<MagAmmo> type, int amount )
+	{
+		AmmoBuffer b;
+		for ( int i=0; i<BufferedAmmo.Size(); i++ )
+		{
+			if ( BufferedAmmo[i].MagAmmoType != type ) continue;
+			BufferedAmmo[i].Amount += amount;
+			return;
+		}
+		b = new("AmmoBuffer");
+		b.AmmoType = null;
+		b.MagAmmoType = type;
+		b.Amount = amount;
+		BufferedAmmo.Push(b);
+	}
+
+	protected int FetchBufferedAmmo( Class<Ammo> type, int amount, bool fullfetch = false )
+	{
+		for ( int i=0; i<BufferedAmmo.Size(); i++ )
+		{
+			if ( BufferedAmmo[i].AmmoType != type ) continue;
+			int retrieved = min(BufferedAmmo[i].amount,amount);
+			if ( fullfetch && (retrieved != amount) ) return 0;
+			BufferedAmmo[i].amount -= retrieved;
+			if ( BufferedAmmo[i].amount <= 0 )
+			{
+				BufferedAmmo[i].Destroy();
+				BufferedAmmo.Delete(i);
+			}
+			return retrieved;
+		}
+		return 0;
+	}
+
+	protected int FetchBufferedMagAmmo( Class<MagAmmo> type, int amount, bool fullfetch = false )
+	{
+		for ( int i=0; i<BufferedAmmo.Size(); i++ )
+		{
+			if ( BufferedAmmo[i].MagAmmoType != type ) continue;
+			int retrieved = min(BufferedAmmo[i].amount,amount);
+			if ( fullfetch && (retrieved != amount) ) return 0;
+			BufferedAmmo[i].amount -= retrieved;
+			if ( BufferedAmmo[i].amount <= 0 )
+			{
+				BufferedAmmo[i].Destroy();
+				BufferedAmmo.Delete(i);
+			}
+			return retrieved;
+		}
+		return 0;
+	}
+
+	protected void ClearBufferedAmmo()
+	{
+		for ( int i=0; i<BufferedAmmo.Size(); i++ )
+		{
+			if ( BufferedAmmo[i].Amount > 0 )
+			{
+				if ( BufferedAmmo[i].AmmoType )
+				{
+					let amo = Owner.FindInventory(BufferedAmmo[i].AmmoType);
+					if ( !amo )
+					{
+						amo = Inventory(Spawn(BufferedAmmo[i].AmmoType));
+						amo.AttachToOwner(Owner);
+						amo.Amount = 0;
+					}
+					int given = min(amo.MaxAmount-amo.Amount,BufferedAmmo[i].Amount);
+					int excess = BufferedAmmo[i].Amount-given;
+					amo.Amount += given;
+					if ( (excess > 0) && !sv_infiniteammo && !FindInventory('PowerInfiniteAmmo',true) )
+					{
+						amo.Amount += excess;
+						amo.CreateTossable(excess);
+					}
+				}
+				else if ( BufferedAmmo[i].MagAmmoType )
+				{
+					let amo = Owner.FindInventory(BufferedAmmo[i].MagAmmoType);
+					if ( !amo )
+					{
+						amo = Inventory(Spawn(BufferedAmmo[i].MagAmmoType));
+						amo.AttachToOwner(Owner);
+						amo.Amount = 0;
+					}
+					int given = min(amo.MaxAmount-amo.Amount,BufferedAmmo[i].Amount);
+					int excess = BufferedAmmo[i].Amount-given;
+					amo.Amount += given;
+					if ( (excess > 0) && !sv_infiniteammo && !FindInventory('PowerInfiniteAmmo',true) )
+					{
+						amo.Amount += excess;
+						amo.CreateTossable(excess);
+					}
+					MagAmmo(amo).MagFill();
+				}
+			}
+			BufferedAmmo[i].Destroy();
+			BufferedAmmo.Delete(i);
+			i--;
+		}
+	}
+}
