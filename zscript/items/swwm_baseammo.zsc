@@ -405,6 +405,20 @@ Class MagAmmo : Inventory abstract
 					Amount -= ClipSize;
 				}
 			}
+			else if ( pamo.Amount < pamo.MaxAmount )
+			{
+				// see if we can fill mags with this, and drop the excess
+				int toadd = Amount+item.Amount;
+				while ( (pamo.Amount < pamo.MaxAmount) && (toadd >= ClipSize) )
+				{
+					pamo.Amount++;
+					toadd -= ClipSize;
+				}
+				Amount = toadd;
+				if ( Amount > MaxAmount ) CreateTossable(Amount-MaxAmount);
+				item.bPickupGood = true;
+				return true;
+			}
 			else
 			{
 				int excess = Amount+item.Amount;
@@ -428,13 +442,6 @@ Class MagAmmo : Inventory abstract
 						// drop full mag if possible
 						if ( excess >= ClipSize )
 						{
-							// first of all, check if we can ADD a mag
-							if ( pamo.Amount < pamo.MaxAmount )
-							{
-								pamo.Amount++;
-								excess -= ClipSize;
-								continue;
-							}
 							double ang = FRandom[Junk](0,360);
 							last = DoDrop(ParentAmmo);
 							last.SetOrigin(item.pos,false);
@@ -457,19 +464,6 @@ Class MagAmmo : Inventory abstract
 							}
 						}
 					}
-				}
-				else if ( pamo.Amount < pamo.MaxAmount )
-				{
-					int toadd = Amount+item.Amount;
-					while ( pamo.Amount < pamo.MaxAmount )
-					{
-						pamo.Amount++;
-						toadd -= ClipSize;
-					}
-					Amount = toadd;
-					if ( Amount > MaxAmount ) CreateTossable(Amount-MaxAmount);
-					item.bPickupGood = true;
-					return true;
 				}
 			}
 			if ( Amount < MaxAmount )
