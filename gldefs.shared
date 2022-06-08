@@ -226,6 +226,16 @@ HardwareShader Texture "graphics/HUD/EnemyBarInvul.png"
 	Define "BASE_RES" = "vec2(50.,3.)"
 	Texture "noisetex" "textures/graynoise.png"
 }
+HardwareShader Texture "graphics/dsmapfont.png"
+{
+	Shader "shaders/glsl/AreaName.fp"
+	Texture "gradtex" "graphics/areaname_grad.png"
+}
+HardwareShader Texture "graphics/dsmapfont_sub.png"
+{
+	Shader "shaders/glsl/AreaName.fp"
+	Texture "gradtex" "graphics/areaname_grad.png"
+}
 
 HardwareShader PostProcess beforebloom
 {
