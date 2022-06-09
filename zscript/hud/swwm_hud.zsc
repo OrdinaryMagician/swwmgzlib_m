@@ -458,7 +458,7 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		PauseTex = TexMan.CheckForTexture("graphics/"..SWWMMODPREFIX.."pause.png",TexMan.Type_Any);
 		bgtex = TexMan.CheckForTexture("graphics/tempbg.png",TexMan.Type_Any);
 		mm_zoom = minimapzoom = oldminimapzoom = 1.;
-		MiniHudFont = Font.GetFont("MiniHUD");
+		MiniHudFont = Font.GetFont("MiniHUDShadow");
 		MiniHudFontOutline = Font.GetFont("MiniHUDOutline");
 		mSmallFont = Font.GetFont('TewiFont');
 		mBigFont = Font.GetFont('TewiFontOutline');
