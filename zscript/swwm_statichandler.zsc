@@ -123,28 +123,6 @@ Class SWWMStaticHandler : StaticEventHandler
 		S_StartSound("compat/warn",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
 	}
 
-	override void RenderOverlay( RenderEvent e )
-	{
-		// warn on use of incorrect render settings
-		// make sure to find the cvars, rather than use them directly
-		// just in case anything changes in the future and we end up
-		// breaking shit (not the first time a mod does that)
-		int yy = 8;
-		let backend = CVar.FindCVar('vid_preferbackend');
-		let rmode = CVar.FindCVar('vid_rendermode');
-		if ( backend && (backend.GetInt() > 1) )
-		{
-			String str = "UNSUPPORTED VIDEO BACKEND - PLEASE SWITCH TO OPENGL OR VULKAN";
-			Screen.DrawText(newsmallfont,Font.CR_RED,(Screen.GetWidth()-newsmallfont.StringWidth(str)*CleanXFac_1)/2,yy,str,DTA_CleanNoMove_1,true);
-			yy += 16*CleanYFac_1;
-		}
-		if ( rmode && (rmode.GetInt() != 4) )
-		{
-			String str = "UNSUPPORTED RENDER MODE - PLEASE SWITCH TO HARDWARE RENDERING";
-			Screen.DrawText(newsmallfont,Font.CR_RED,(Screen.GetWidth()-newsmallfont.StringWidth(str)*CleanXFac_1)/2,yy,str,DTA_CleanNoMove_1,true);
-		}
-	}
-
 	override void ConsoleProcess( ConsoleEvent e )
 	{
 		if ( e.Name ~== "swwmresetcvars" )
