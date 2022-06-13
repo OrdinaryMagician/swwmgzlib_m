@@ -11,6 +11,7 @@ Class SWWMStatScreen : StatusScreen abstract
 	transient BrokenLines tipl;
 	Font mSmallFont, mBigFont, mTinyFont;
 	double FracTic;	// for smooth animations
+	bool bNoDrawNextLoc;
 
 	// customizable colors
 	int lnamecolor, lauthcolor;	// name / author text
@@ -247,7 +248,7 @@ Class SWWMStatScreen : StatusScreen abstract
 			drawSWWMBg();
 			drawLF();
 			drawStats();
-			drawEL();
+			if ( !bNoDrawNextLoc ) drawEL();
 			drawSWWMFg();
 			break;
 		}
@@ -312,6 +313,22 @@ Class SWWMStatScreen : StatusScreen abstract
 		// make sure tip alpha is zero, so this transition is less jarring
 		if ( tipalpha > 0. ) return;
 		Super.updateNoState();
+	}
+
+	override void initShowNextLoc()
+	{
+		if ( wbs.next == "" )
+		{
+			// the base statscreen skips directly here, which looks
+			// very jarring with this one, so just skip to NoState
+			bNoDrawNextLoc = true;
+			initNoState();
+			return;
+		}
+		CurState = ShowNextLoc;
+		acceleratestage = 0;
+		cnt = SHOWNEXTLOCDELAY*GameTicRate;
+		noautostartmap = false;
 	}
 
 	override void initStats()
