@@ -17,10 +17,10 @@ Class SWWMHealth : Inventory abstract
 
 	override bool Use( bool pickup )
 	{
-		// healing items can't be used if at max health, unless they're powerup health
-		if ( !pickup && !bBIGPOWERUP && (Owner.Health >= GetDefaultByType(giveme).MaxAmount) ) return false;
-		// healing items won't get auto-used on pickup if their healing could "be wasted", unless they're powerup health
-		if ( pickup && !bBIGPOWERUP && (Owner.Health+giveamt > GetDefaultByType(giveme).MaxAmount) ) return false;
+		// healing items can't be used if at max health unless it's bonus health
+		if ( (MaxAmount > 0) && (Owner.Health >= GetDefaultByType(giveme).MaxAmount) ) return false;
+		// healing items won't get auto-used on pickup if their healing could "be wasted", unless they're powerup or bonus health
+		if ( pickup && !bBIGPOWERUP && (MaxAmount > 0) && (Owner.Health+giveamt > GetDefaultByType(giveme).MaxAmount) ) return false;
 		if ( pickup && ((Owner.player == players[consoleplayer]) || bBIGPOWERUP) )
 			Owner.A_StartSound(UseSound,CHAN_ITEMEXTRA,CHANF_OVERLAP);
 		SWWMHandler.HealthFlash(Owner.PlayerNumber());
