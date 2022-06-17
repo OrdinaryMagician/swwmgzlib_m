@@ -502,12 +502,8 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		tcextra_s = "[MiniIbukiHUD]";
 	}
 
-	private void DrawTarget()
+	private void DrawTrackers( out bool projinit )
 	{
-		// don't draw with automap open
-		if ( automapactive || !swwm_ctrackers ) return;
-		SWWMUtility.PrepareProjData(projdata,ViewPos,ViewRot.x,ViewRot.y,ViewRot.z,players[consoleplayer].fov);
-		Screen.SetClipRect(projdata.viewx,projdata.viewy,projdata.vieww,projdata.viewh);
 		let cam = players[consoleplayer].camera;
 		Vector3 viewvec = (cos(viewrot.x)*cos(viewrot.y),sin(viewrot.x)*cos(viewrot.y),sin(-viewrot.y));
 		if ( !cti ) cti = ThinkerIterator.Create("SWWMQuickCombatTracker",Thinker.STAT_INVENTORY);
@@ -517,10 +513,17 @@ Class SWWMStatusBar : BaseStatusBar abstract
 		Vector2 ssb = (Screen.GetWidth(),Screen.GetHeight())/hsb;
 		while ( ct = SWWMQuickCombatTracker(cti.Next()) )
 		{
+			// this ensures that projection data isn't cached if there are no bars, to avoid needless GC thrashing
+			if ( !projinit )
+			{
+				projinit = true;
+				SWWMUtility.PrepareProjData(projdata,ViewPos,ViewRot.x,ViewRot.y,ViewRot.z,players[consoleplayer].fov);
+				Screen.SetClipRect(projdata.viewx,projdata.viewy,projdata.vieww,projdata.viewh);
+			}
 			// ignore unowned (can happen?)
 			if ( !ct.Owner ) continue;
-			// ignore local player
-			if ( ct.Owner == CPlayer.mo ) continue;
+			// ignore local player or camera
+			if ( (ct.Owner.player == CPlayer) || (ct.Owner == cam) ) continue;
 			// ignore trackers clearly outside of player view
 			Vector3 smpos = level.Vec3Offset(SWWMUtility.LerpVector3(ct.Owner.prev,ct.Owner.pos,fractic),(0,0,ct.lvheight));
 			Vector3 tdir = level.Vec3Diff(viewpos,smpos);
@@ -548,7 +551,44 @@ Class SWWMStatusBar : BaseStatusBar abstract
 			double falph = max((ct.cummflash-FracTic)/15.,0.)**1.5;
 			Screen.DrawText(MiniHUDFontOutline,mhudfontcol[MCR_REDFLASH],barpos.x+3,barpos.y+10,String.Format("%d",ct.cummdamage),DTA_VirtualWidthF,ssb.x,DTA_VirtualHeightF,ssb.y,DTA_KeepRatio,true,DTA_Alpha,falph*calph*alph,DTA_LegacyRenderStyle,STYLE_Add);
 		}
-		Screen.ClearClipRect();
+	}
+
+	private void DrawNumbers( out bool projinit )
+	{
+		SWWMDamNum snum = hnd.damnums;
+		if ( !snum ) return;
+		do
+		{
+			// this ensures that projection data isn't cached if there are no bars, to avoid needless GC thrashing
+			if ( !projinit )
+			{
+				projinit = true;
+				SWWMUtility.PrepareProjData(projdata,ViewPos,ViewRot.x,ViewRot.y,ViewRot.z,players[consoleplayer].fov);
+				Screen.SetClipRect(projdata.viewx,projdata.viewy,projdata.vieww,projdata.viewh);
+			}
+			Vector3 ndc = SWWMUtility.ProjectPoint(projdata,ViewPos+level.Vec3Diff(ViewPos,snum.pos));
+			if ( ndc.z >= 1. ) continue;
+			Vector2 vpos = SWWMUtility.NDCToViewport(projdata,ndc)/hs;
+			String tag = String.Format("%+d",-snum.damage);
+			double alph = clamp((snum.lifespan+fractic)/35.,0.,1.);
+			Vector2 fo = (0,0);
+			int initspd = (128-snum.seed);
+			int boostup = 64+snum.seed2;
+			fo.x = (.05*initspd)*((snum.initialspan-(snum.lifespan-fractic))**.8);
+			fo.y = -((snum.initialspan-(snum.lifespan-fractic))**1.5)+boostup*sin((90./snum.initialspan)*(level.maptime+fractic-snum.starttic));
+			Screen.DrawText(MiniHUDFontOutline,snum.tcolor,(vpos.x-fo.x)-(MiniHUDFontOutline.StringWidth(tag))/2,(vpos.y-fo.y)-(MiniHUDFontOutline.GetHeight())/2,tag,DTA_VirtualWidthF,ss.x,DTA_VirtualHeightF,ss.y,DTA_KeepRatio,true,DTA_Alpha,alph);
+		}
+		while ( snum = snum.next );
+	}
+
+	private void DrawTarget()
+	{
+		// don't draw with automap open
+		if ( automapactive ) return;
+		bool projinit = false;
+		if ( swwm_ctrackers ) DrawTrackers(projinit);
+		if ( swwm_damnums ) DrawNumbers(projinit);
+		if ( projinit ) Screen.ClearClipRect();
 	}
 
 	override void DrawMyPos()

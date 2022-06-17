@@ -176,6 +176,45 @@ Class SWWMQuickCombatTracker : Inventory
 	}
 }
 
+// supersimplified damage numbers
+Class SWWMDamNum play
+{
+	int tcolor;
+	int damage;
+	Vector3 pos;
+	int lifespan, initialspan;
+	int starttic, seed, seed2;
+	SWWMDamNum next;
+
+	static SWWMDamNum Spawn( int damage, Vector3 pos, Name type = '' )
+	{
+		let hnd = SWWMHandler(EventHandler.Find("SWWMHandler"));
+		if ( !hnd ) return null;
+		let o = new("SWWMDamNum");
+		o.damage = damage;
+		o.pos = pos;
+		o.tcolor = Font.FindFontColor("MiniRed");
+		for ( int i=0; i<hnd.damtypes.Size(); i++ )
+		{
+			if ( hnd.damtypes[i] != type ) continue;
+			o.tcolor = Font.FindFontColor(hnd.damcolors[i]);
+			break;
+		}
+		o.lifespan = o.initialspan = 60;
+		o.starttic = level.maptime;
+		o.seed = Random[ScoreBits]();
+		o.seed2 = Random[ScoreBits]();
+		o.next = hnd.damnums;
+		hnd.damnums = o;
+		return o;
+	}
+	bool Tick()
+	{
+		lifespan--;
+		return (lifespan <= 0);
+	}
+}
+
 // fractic-compatible interpolators, with double value
 Class SmoothLinearValueInterpolator
 {

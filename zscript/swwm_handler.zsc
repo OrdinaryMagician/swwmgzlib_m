@@ -15,6 +15,9 @@ Class SWWMHandler : EventHandler
 	int iskdizd;
 	Array<String> bludtypes;
 
+	SWWMDamNum damnums;
+	Array<String> damtypes, damcolors;
+
 	override void OnRegister()
 	{
 		// "uninitialize" some vars
@@ -44,12 +47,47 @@ Class SWWMHandler : EventHandler
 				bludtypes.Push(list[i]);
 			}
 		}
+		// read damnum colors
+		damtypes.Clear();
+		damcolors.Clear();
+		for ( int lmp = Wads.FindLump("DAMTYPES"); lmp != -1; lmp = Wads.FindLump("DAMTYPES",lmp+1) )
+		{
+			String dat = Wads.ReadLump(lmp);
+			Array<String> list;
+			// fucking Windows
+			dat.Replace("\r","");
+			list.Clear();
+			dat.Split(list,"\n");
+			for ( int i=0; i<list.Size(); i++ )
+			{
+				if ( (list[i].Length() == 0) || (list[i].Left(1) == "#") || (list[i].Left(1) == "") )
+					continue;
+				int spc = list[i].IndexOf(" ");
+				damtypes.Push(list[i].Left(spc));
+				damcolors.Push(list[i].Mid(spc+1));
+			}
+		}
 	}
 
 	override void WorldTick()
 	{
 		QueueMaintenance();
 		FlashTick();
+		// tick damage numbers
+		SWWMDamNum so = damnums;
+		SWWMDamNum soprev = null, sonext;
+		while ( so )
+		{
+			sonext = so.next;
+			if ( so.Tick() )
+			{
+				if ( soprev ) soprev.next = sonext;
+				else damnums = sonext;
+				so.Destroy();
+			}
+			else soprev = so;
+			so = sonext;
+		}
 		// healthbar on whatever the player is aiming at
 		for ( int i=0; i<MAXPLAYERS; i++ )
 		{
