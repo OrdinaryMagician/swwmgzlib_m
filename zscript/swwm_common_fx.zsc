@@ -792,6 +792,17 @@ Class SWWMItemFog : Actor
 		+FORCEXYBILLBOARD;
 		FloatBobPhase 0;
 	}
+	override void Tick()
+	{
+		if ( isFrozen() ) return;
+		if ( !CheckNoDelay() || (tics == -1) ) return;
+		if ( tics > 0 ) tics--;
+		while ( !tics )
+		{
+			if ( !SetState(CurState.NextState) )
+				return;
+		}
+	}
 	States
 	{
 	Spawn:
@@ -856,6 +867,7 @@ Class SWWMTeleportSparkle : Actor
 		A_FadeOut(specialf2);
 		if ( vel != (0,0,0) )
 		{
+			prev = pos;
 			SetOrigin(level.Vec3Offset(pos,vel),true);
 			vel *= .98;
 		}
@@ -966,6 +978,17 @@ Class SWWMTeleportFog : Actor
 		A_StartSound("misc/teleport",CHAN_VOICE);
 		Spawn("TeleLight",pos);
 	}
+	override void Tick()
+	{
+		if ( isFrozen() ) return;
+		if ( !CheckNoDelay() || (tics == -1) ) return;
+		if ( tics > 0 ) tics--;
+		while ( !tics )
+		{
+			if ( !SetState(CurState.NextState) )
+				return;
+		}
+	}
 	States
 	{
 	Spawn:
@@ -1061,7 +1084,11 @@ Class SWWMPickupFlash : Actor
 		}
 		else if ( bINVISIBLE ) bINVISIBLE = false;
 		// try to reduce calls to SetOrigin as much as possible, for performance
-		if ( target.pos != invoker.lastitempos ) SetOrigin(target.Vec3Offset(0,0,16),true);
+		if ( target.pos != invoker.lastitempos )
+		{
+			prev = pos;
+			SetOrigin(target.Vec3Offset(0,0,16),true);
+		}
 		invoker.lastitempos = target.pos;
 		if ( target.bFLOATBOB && !bFLOATBOB )
 		{
@@ -1072,6 +1099,17 @@ Class SWWMPickupFlash : Actor
 		else if ( !target.bFLOATBOB && bFLOATBOB ) bFLOATBOB = false;
 		A_SetScale(FRandom[ClientSparkles](.9,1.1)*(max(target.radius,target.height)/16.));
 		alpha = FRandom[ClientSparkles](.9,1.)*clamp((max(0,Distance3DSquared(players[consoleplayer].Camera)-40000.)/160000000.)**.25,0.,1.);
+	}
+	override void Tick()
+	{
+		if ( isFrozen() ) return;
+		if ( !CheckNoDelay() || (tics == -1) ) return;
+		if ( tics > 0 ) tics--;
+		while ( !tics )
+		{
+			if ( !SetState(CurState.NextState) )
+				return;
+		}
 	}
 	States
 	{
@@ -1273,6 +1311,17 @@ Class SWWMPuff : Actor
 		+PUFFGETSOWNER;
 		+HITTRACER;
 		FloatBobPhase 0;
+	}
+	override void Tick()
+	{
+		if ( isFrozen() ) return;
+		if ( !CheckNoDelay() || (tics == -1) ) return;
+		if ( tics > 0 ) tics--;
+		while ( !tics )
+		{
+			if ( !SetState(CurState.NextState) )
+				return;
+		}
 	}
 	States
 	{

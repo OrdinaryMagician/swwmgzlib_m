@@ -55,20 +55,13 @@ extend Class SWWMHandler
 		if ( e.Damage > 0 )
 		{
 			SWWMQuickCombatTracker.Update(e.Thing,e.Damage);
-			SWWMDamNum.Spawn(e.Damage,e.Thing.Vec3Offset(FRandom[ScoreBits](-8,8),FRandom[ScoreBits](-8,8),FRandom[ScoreBits](-8,8)+e.Thing.Height/2),e.DamageType);
+			SWWMDamNum.Spawn(self,e.Damage,e.Thing.Vec3Offset(FRandom[ScoreBits](-8,8),FRandom[ScoreBits](-8,8),FRandom[ScoreBits](-8,8)+e.Thing.Height/2),e.DamageType);
 		}
 		if ( (e.Thing.Health > 0) || e.Thing.bKilled || e.Thing.bCorpse )
 			return;
 		DoGibThing(e);
-		if ( e.DamageSource && e.DamageSource.player )
-		{
-			// gross hack using services for "hit fx"
-			let si = ServiceIterator.Find("HitFXService");
-			Service sv;
-			while ( sv = si.Next() )
-				sv.GetInt("HitFX",stringArg:e.DamageType,intArg:e.Damage,objectArg:e.DamageSource.player.mo);
-			si.Destroy();
-		}
+		if ( e.DamageSource && e.DamageSource.player && hitfxsv )
+			hitfxsv.GetInt("HitFX",stringArg:e.DamageType,intArg:e.Damage,objectArg:e.DamageSource.player.mo);
 		// death exit hax
 		// could be telefragging Romero, or a voodoo doll telefragging a barrel (death exits in Eviternity)
 		if ( (e.DamageType == 'Telefrag') && e.DamageSource && e.DamageSource.player

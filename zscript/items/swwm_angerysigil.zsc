@@ -241,9 +241,13 @@ Class AngerySigilX : SWWMItemOverlay
 		if ( angle != target.angle ) A_SetAngle(target.angle,SPF_INTERPOLATE);
 		FloatBobPhase = target.FloatBobPhase;
 		if ( !bsprite ) bsprite = GetSpriteIndex('XZW1');
+		bool bOldInvis = bInvisible;
 		bInvisible = target.bInvisible||(target.sprite!=bsprite);
-		SetState(SpawnState+bInvisible);
-		A_SoundVolume(CHAN_VOICE,bInvisible?0.:1.);
+		if ( bOldInvis != bInvisible )
+		{
+			SetState(SpawnState+bInvisible);
+			A_SoundVolume(CHAN_VOICE,bInvisible?0.:1.);
+		}
 	}
 	States
 	{

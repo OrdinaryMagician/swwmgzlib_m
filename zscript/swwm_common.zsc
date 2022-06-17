@@ -88,6 +88,90 @@ Class SWWMKeyMarker : MapMarker
 	}
 }
 
+Class SWWMDamageAccumulator : Inventory
+{
+	Actor inflictor, source;
+	Array<Int> amounts;
+	int total;
+	Name type;
+	bool dontgib;
+	int flags;
+	bool bReentrant;
+
+	override void DoEffect()
+	{
+		Super.DoEffect();
+		// so many damn safeguards in this
+		if ( !Owner || (Owner.Health <= 0) )
+		{
+			Destroy();
+			return;
+		}
+		int gibhealth = Owner.GetGibHealth();
+		// お前はもう死んでいる
+		if ( (Owner.health-total <= gibhealth) && !dontgib )
+		{
+			// safeguard for inflictors that have somehow ceased to exist, which apparently STILL CAN HAPPEN
+			if ( inflictor ) inflictor.bEXTREMEDEATH = true;
+			else type = 'Extreme';
+		}
+		// make sure accumulation isn't reentrant (could be needed for some projectiles)
+		bReentrant = true;
+		// 何？
+		for ( int i=0; i<amounts.Size(); i++ )
+		{
+			if ( !Owner ) break;
+			Owner.DamageMobj(inflictor,source,amounts[i],type,DMG_THRUSTLESS|flags);
+		}
+		// clean up
+		if ( inflictor )
+		{
+			bReentrant = false;
+			inflictor.bEXTREMEDEATH = false;
+		}
+		Destroy();
+	}
+
+	static void Accumulate( Actor victim, int amount, Actor inflictor, Actor source, Name type, bool dontgib = false, int flags = 0 )
+	{
+		if ( !victim ) return;
+		SWWMDamageAccumulator match = SWWMDamageAccumulator(victim.FindInventory("SWWMDamageAccumulator"));
+		if ( !match )
+		{
+			match = SWWMDamageAccumulator(Spawn("SWWMDamageAccumulator"));
+			match.AttachToOwner(victim);
+		}
+		match.amounts.Push(amount);
+		match.total += amount;
+		match.inflictor = inflictor;
+		match.source = source;
+		match.type = type;
+		match.dontgib = dontgib;
+		match.flags = flags;
+	}
+
+	static clearscope int GetAmount( Actor victim )
+	{
+		let ti = ThinkerIterator.Create("SWWMDamageAccumulator",STAT_USER);
+		SWWMDamageAccumulator match = SWWMDamageAccumulator(victim.FindInventory("SWWMDamageAccumulator"));
+		if ( !match ) return 0;
+		if ( !match.source ) return match.total;
+		for ( Inventory i=match.source.inv; i; i=i.inv )
+		{
+			if ( i.GetClassName() != "AngeryPower" ) continue;
+			return (match.total>85899345)?int.max:(match.total*25);
+		}
+		return match.total;
+	}
+
+	default
+	{
+		+INVENTORY.UNTOSSABLE;
+		+INVENTORY.UNDROPPABLE;
+		+INVENTORY.UNCLEARABLE;
+	}
+}
+
 // very lightweight combat tracker, more Souls-y
 Class SWWMQuickCombatTracker : Inventory
 {
@@ -186,10 +270,8 @@ Class SWWMDamNum play
 	int starttic, seed, seed2;
 	SWWMDamNum next;
 
-	static SWWMDamNum Spawn( int damage, Vector3 pos, Name type = '' )
+	static SWWMDamNum Spawn( SWWMHandler hnd, int damage, Vector3 pos, Name type = '' )
 	{
-		let hnd = SWWMHandler(EventHandler.Find("SWWMHandler"));
-		if ( !hnd ) return null;
 		let o = new("SWWMDamNum");
 		o.damage = damage;
 		o.pos = pos;
