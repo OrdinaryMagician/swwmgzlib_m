@@ -149,6 +149,7 @@ Class SWWMCreditsMenu : GenericMenu abstract
 	override void Init( Menu parent )
 	{
 		Super.Init(parent);
+		Animated = true;
 		mSmallFont = Font.GetFont('TewiFont');
 		mBigFont = Font.GetFont('TewiFontOutline');
 		bgtex = TexMan.CheckForTexture("graphics/tempbg.png",TexMan.Type_Any);
@@ -314,7 +315,7 @@ Class SWWMCreditsMenu : GenericMenu abstract
 		Super.Drawer();
 		UpdateSize();
 		// logo
-		double yy = spos;
+		double yy = spos-(speed*System.GetTimeFrac())/GameTicRate;
 		double xx = ss.x/2.;
 		yy += DrawLogo(xx,yy);
 		// developer

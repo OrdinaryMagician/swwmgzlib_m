@@ -15,9 +15,10 @@ Class SWWMHelpMenu : GenericMenu
 	override void Init( Menu parent )
 	{
 		Super.Init(parent);
+		Animated = true;
 		curpage = 0;
 		prevpage = -1;
-		fadetic = gametic;
+		fadetic = MenuTime();
 		pagedir = 0;
 		numpages = StringTable.Localize("$"..SWWMMODPREFIX.."_HELP_NPAGE").ToInt();
 		if ( numpages <= 0 ) ThrowAbortException("Tried to open SWWMHelpMenu with no help pages defined");
@@ -36,7 +37,7 @@ Class SWWMHelpMenu : GenericMenu
 
 	override bool MenuEvent( int mkey, bool fromcontroller )
 	{
-		double alph = clamp((gametic-fadetic)*(5./GameTicRate),0.,1.);
+		double alph = clamp((MenuTime()-fadetic)*(5./GameTicRate),0.,1.);
 		switch ( mkey )
 		{
 		case MKEY_Enter:
@@ -49,7 +50,7 @@ Class SWWMHelpMenu : GenericMenu
 				prevpage = curpage;
 				curpage++;
 				pagedir = 1;
-				fadetic = gametic;
+				fadetic = MenuTime();
 			}
 			return true;
 			break;
@@ -63,7 +64,7 @@ Class SWWMHelpMenu : GenericMenu
 				prevpage = curpage;
 				curpage--;
 				pagedir = -1;
-				fadetic = gametic;
+				fadetic = MenuTime();
 			}
 			return true;
 			break;
@@ -152,7 +153,7 @@ Class SWWMHelpMenu : GenericMenu
 			Screen.DrawTexture(bgtex,false,(vsize.x-tsize.x)/2,(vsize.y-tsize.y)/2,DTA_VirtualWidthF,vsize.x,DTA_VirtualHeightF,vsize.y,DTA_KeepRatio,true,DTA_ColorOverlay,Color(192,0,0,0),DTA_Alpha,.8);
 		}
 		else Screen.Dim("Black",.8,0,0,Screen.GetWidth(),Screen.GetHeight());
-		double alph = clamp((gametic-fadetic)*(5./GameTicRate),0.,1.);
+		double alph = clamp(((MenuTime()+System.GetTimeFrac())-fadetic)*(5./GameTicRate),0.,1.);
 		if ( (prevpage == -1) || (alph >= 1.) ) DrawPage(curpage);
 		else
 		{

@@ -145,6 +145,12 @@ Class SWWMOptionMenu : OptionMenu
 
 Class SWWMCleanMenu : ListMenu
 {
+	override void Init( Menu parent, ListMenuDescriptor desc )
+	{
+		Super.Init(parent,desc);
+		Animated = true;
+	}
+
 	override bool MouseEvent( int type, int x, int y )
 	{
 		if ( mDesc.DisplayWidth() != ListMenuDescriptor.CleanScale )
@@ -585,17 +591,17 @@ Mixin Class SWWMSelector
 			yofs *= CleanYFac_1;
 			double x = (320-GetWidth())/2;
 			SWWMUtility.AdjustClean_1(x,y);
-			Screen.DrawTexture(tex,true,x+xofs,y+yofs,DTA_ScaleX,CleanXFac_1/4.,DTA_ScaleY,CleanYFac_1/4.,DTA_Rotate,15.*sin(8*Menu.MenuTime()));
+			Screen.DrawTexture(tex,true,x+xofs,y+yofs,DTA_ScaleX,CleanXFac_1/4.,DTA_ScaleY,CleanYFac_1/4.,DTA_Rotate,15.*sin(8*(Menu.MenuTime()+System.GetTimeFrac())));
 			x = (320+GetWidth())/2;
 			SWWMUtility.AdjustClean_1x(x);
-			Screen.DrawTexture(tex,true,x-xofs,y+yofs,DTA_ScaleX,CleanXFac_1/4.,DTA_ScaleY,CleanYFac_1/4.,DTA_Rotate,-15.*sin(8*Menu.MenuTime()));
+			Screen.DrawTexture(tex,true,x-xofs,y+yofs,DTA_ScaleX,CleanXFac_1/4.,DTA_ScaleY,CleanYFac_1/4.,DTA_Rotate,-15.*sin(8*(Menu.MenuTime()+System.GetTimeFrac())));
 		}
 		else
 		{
 			double x = (w-GetWidth())/2;
-			Screen.DrawTexture(tex,true,x+xofs,y+yofs,DTA_ScaleX,.25,DTA_ScaleY,.25,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43,DTA_Rotate,15.*sin(8*Menu.MenuTime()));
+			Screen.DrawTexture(tex,true,x+xofs,y+yofs,DTA_ScaleX,.25,DTA_ScaleY,.25,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43,DTA_Rotate,15.*sin(8*(Menu.MenuTime()+System.GetTimeFrac())));
 			x = (w+GetWidth())/2;
-			Screen.DrawTexture(tex,true,x-xofs,y+yofs,DTA_ScaleX,.25,DTA_ScaleY,.25,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43,DTA_Rotate,-15.*sin(8*Menu.MenuTime()));
+			Screen.DrawTexture(tex,true,x-xofs,y+yofs,DTA_ScaleX,.25,DTA_ScaleY,.25,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43,DTA_Rotate,-15.*sin(8*(Menu.MenuTime()+System.GetTimeFrac())));
 		}
 	}
 }
@@ -683,7 +689,7 @@ Class ListMenuItemSWWMTextItemM : ListMenuItemSelectable
 				{
 					int ch;
 					[ch, pos] = text.GetNextCodePoint(pos);
-					double yy = y+4*sin(32*i+8*Menu.MenuTime())*CleanYFac_1;
+					double yy = y+4*sin(32*i+8*(Menu.MenuTime()+System.GetTimeFrac()))*CleanYFac_1;
 					Screen.DrawChar(font,mColorSelected,xx,yy,ch,DTA_ScaleX,CleanXFac_1*scl,DTA_ScaleY,CleanYFac_1*scl);
 					xx += (font.GetCharWidth(ch)+kern)*CleanXFac_1*scl;
 				}
@@ -694,7 +700,7 @@ Class ListMenuItemSWWMTextItemM : ListMenuItemSelectable
 				{
 					int ch;
 					[ch, pos] = text.GetNextCodePoint(pos);
-					double yy = y+4*sin(32*i+8*Menu.MenuTime());
+					double yy = y+4*sin(32*i+8*(Menu.MenuTime()+System.GetTimeFrac()));
 					Screen.DrawChar(mFont,mColorSelected,xx,yy,ch,DTA_VirtualWidth,w,DTA_VirtualHeight,h,DTA_FullscreenScale,FSMode_ScaleToFit43,DTA_ScaleX,scl,DTA_ScaleY,scl);
 					xx += (font.GetCharWidth(ch)+kern)*scl;
 				}
