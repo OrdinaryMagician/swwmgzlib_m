@@ -791,7 +791,7 @@ Class SWWMUtility
 		let mo = p.camera;
 		if ( !mo ) return false;
 		Vector3 pp;
-		if ( !mo.CheckSight(a,SF_IGNOREVISIBILITY|SF_IGNOREWATERBOUNDARY) ) return false;
+		if ( !a.CheckSight(mo,SF_IGNOREVISIBILITY|SF_IGNOREWATERBOUNDARY) ) return false;
 		if ( mo is 'PlayerPawn' ) pp = mo.Vec2OffsetZ(0,0,PlayerPawn(mo).player.viewz);
 		else pp = mo.Vec3Offset(0,0,mo.CameraHeight);
 		Vector3 sc = level.SphericalCoords(pp,a.pos,(mo.angle,mo.pitch));
