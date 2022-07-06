@@ -190,6 +190,15 @@ Class SWWMUtility
 		return c;
 	}
 
+	// yes, "smerp", blame my unreal engine roots
+	// sine method, strong easing in/out, but calls a trig function
+	// iirc unreal uses cubic hermite with just plain multiplication, which
+	// is less expensive, but the easing is too subtle for my needs
+	static clearscope double smerp( double theta )
+	{
+		return (sin((theta-.5)*180.)+1.)/2.;
+	}
+
 	// not sure if I should use this, looks a bit ugly
 	static clearscope void ThousandsStr( out String s )
 	{
