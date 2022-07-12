@@ -1,15 +1,12 @@
 $pitchshiftrange 0
 
-crash/crash1	sounds/DUCK.ogg
-crash/crash2	sounds/BORK98.ogg
-crash/crash3	sounds/BORKXP.ogg
-crash/crash4	sounds/GNOME.ogg
-crash/crash5	sounds/FRANCETIM.ogg
-crash/crash6	sounds/ONO.ogg
-crash/crash7	sounds/pussy.ogg
-$random crash/crash { crash/crash1 crash/crash2 crash/crash3 crash/crash4 crash/crash5 crash/crash6 crash/crash7 }
-crash/glass	sounds/GLASSCRK.ogg
-crash/curb	sounds/CURB.ogg
+title/explo1	sounds/OUCHEX1.ogg
+title/explo2	sounds/OUCHEX2.ogg
+title/explo3	sounds/OUCHEX3.ogg
+title/explo4	sounds/OUCHEX4.ogg
+$random title/explo { title/explo1 title/explo2 title/explo3 title/explo4 }
+$limit title/explo 64
+title/preexp	sounds/BFpreexp.ogg
 brutal/bdscreen	sounds/BDSCREEN.ogg
 hdoom/horny	sounds/HORNYJAIL.ogg
 hdoom/horny2	sounds/HORNYJAIL2.ogg

@@ -267,3 +267,14 @@ HardwareShader PostProcess beforebloom
 	Uniform float timer
 	Uniform vec3 lightcol
 }
+HardwareShader PostProcess screen
+{
+	Name "SplodeAnim"
+	Shader "shaders/pp/splode.fp" 330
+	Texture gzlogo "graphics/GZLOGO.png"
+	Texture splodanm "graphics/SPLODANM.png"
+	Uniform vec2 shake
+	Uniform float cleanfac
+	Uniform float fade
+	Uniform int sframe
+}

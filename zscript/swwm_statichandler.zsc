@@ -12,6 +12,7 @@ Class SWWMStaticHandler : StaticEventHandler
 	// crash handler
 	ui bool wasinmap;
 	ui int timer, msgpick;
+	ui int rss;
 	// broccoli doccoli
 	bool isbd;
 	String bdname;
@@ -234,6 +235,17 @@ Class SWWMStaticHandler : StaticEventHandler
 		}
 	}
 
+	private ui int GetUIRandom()
+	{
+		return (rss = (rss<<1)*35447+(rss/87));
+	}
+
+	private ui double RandomShiver()
+	{
+		int sd = GetUIRandom();
+		return ((abs(sd)%11)-5)*.1;
+	}
+
 	override void UiTick()
 	{
 		// Fancy crash effect
@@ -245,24 +257,39 @@ Class SWWMStaticHandler : StaticEventHandler
 		else if ( (gamestate == GS_FULLCONSOLE) && ((wasinmap && !players[consoleplayer].viewheight) || (timer > 0)) )
 		{
 			wasinmap = false;
-			if ( timer == 1 )
+			PPShader.SetUniform1f("SplodeAnim","cleanfac",CleanXFac_1);
+			rss = int(MSTimeF());
+			PPShader.SetUniform2f("SplodeAnim","shake",((timer/30.)**3.)*(RandomShiver(),RandomShiver()));
+			if ( timer == 0 )
+			{
+				S_StartSound("title/preexp",CHAN_WEAPON,CHANF_OVERLAP|CHANF_UI,1.,0.);
+				PPShader.SetEnabled("SplodeAnim",true);
+				PPShader.SetUniform1f("SplodeAnim","fade",0.);
+				PPShader.SetUniform1i("SplodeAnim","sframe",0);
+			}
+			else if ( timer == 30 )
+			{
+				S_StartSound("title/explo",CHAN_WEAPON,CHANF_OVERLAP|CHANF_UI,1.,0.);
+				S_StartSound("title/explo",CHAN_WEAPON,CHANF_OVERLAP|CHANF_UI,1.,0.);
+				PPShader.SetUniform1i("SplodeAnim","sframe",1);
+			}
+			else if ( timer <= 100 ) PPShader.SetUniform1i("SplodeAnim","sframe",min(1+(timer-30)/2,32));
+			else if ( timer > 100 ) PPShader.SetUniform1f("SplodeAnim","fade",clamp((timer-100)/10.,0.,1.));
+			// messages
+			if ( timer == 120 )
 			{
 				msgpick = Random[UIStuff](1,8);
+				S_StartSound("misc/chat",CHAN_VOICE,CHANF_UI,1.,0.);
 				Console.Printf("\cf%s\c-",StringTable.Localize("$CRASHMSG"..msgpick.."A"));
-				if ( isbd )
-				{
-					S_StartSound("crash/glass",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
-					S_StartSound("crash/glass",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
-				}
-				else S_StartSound("crash/crash",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
 			}
-			else if ( timer == 70 )
+			else if ( timer == 180 )
 			{
+				S_StartSound("misc/chat",CHAN_VOICE,CHANF_UI,1.,0.);
 				Console.Printf("\cf%s\c-",StringTable.Localize("$CRASHMSG"..msgpick.."B"));
-				S_StartSound("crash/curb",CHAN_YOUDONEFUCKEDUP,CHANF_UI|CHANF_NOPAUSE|CHANF_OVERLAP,1,ATTN_NONE);
 			}
-			else if ( timer == 140 )
+			else if ( timer == 240 )
 			{
+				S_StartSound("misc/chat",CHAN_VOICE,CHANF_UI,1.,0.);
 				if ( isbd ) Console.Printf("\cfYou shouldn't have tried running this with "..bdname..".\c-");
 				else Console.Printf("\cfYou should probably screenshot this error and show it to Marisa.\c-");
 				Console.Printf("\cfLoaded Version:\n \cjLibrary: %s\c-\n \cjMod: %s\c-",StringTable.Localize("$SWWM_SHORTVER"),StringTable.Localize("$"..SWWMMODPREFIX.."_SHORTVER"));

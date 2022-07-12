@@ -20,8 +20,8 @@ Class SWWMPlayer : PlayerPawn abstract
 	bool sendtoground;
 	int dodgetics;
 	readonly int dodgedelay, dodgeiframes;
-	Property DodgeDelay : dodgedelay;
-	Property DodgeIFrames : dodgeiframes;
+	Property DodgeDelay : dodgedelay;	// time delay before player can dodge again
+	Property DodgeIFrames : dodgeiframes;	// how many invincibility frames (tics) to gain during dodge
 
 	enum EUnderType
 	{
@@ -40,14 +40,14 @@ Class SWWMPlayer : PlayerPawn abstract
 	};
 	readonly int restype;
 	int restimer;
-	Property ResurrectType : restype;
+	Property ResurrectType : restype;	// see EResType
 
 	int lastunder;
 	Color undercol;
 	int deadtimer;
 
 	readonly int thr_xpain, thr_hipain, thr_pain, thr_lopain;
-	Property PainThresholds : thr_lopain, thr_pain, thr_hipain, thr_xpain;
+	Property PainThresholds : thr_lopain, thr_pain, thr_hipain, thr_xpain;	// damage thresholds for pain sounds
 
 	transient int bumptic;
 	transient double lastbump;
@@ -58,30 +58,31 @@ Class SWWMPlayer : PlayerPawn abstract
 
 	readonly int healdecrease, healdecreasefact, healdecay;
 	int healtimer;
-	Property HealthDecay : healdecay;
-	Property HealthDecrease : healdecrease, healdecreasefact;
+	Property HealthDecay : healdecay;				// minimum health before gradual decay begins
+	Property HealthDecrease : healdecrease, healdecreasefact;	// minimum possible health cap from repeated revives
+									// + how much to decrease per death down to the minimum cap
 
 	transient SWWMItemTracer itrace;
 
 	private int SPlayerFlags;
 
-	FlagDef CanDodge : SPlayerFlags, 0;
-	FlagDef CanAirDodge : SPlayerFlags, 1;
-	FlagDef CanBunnyhop : SPlayerFlags, 2;
-	FlagDef CanLongJump : SPlayerFlags, 3;
-	FlagDef CanWallKick : SPlayerFlags, 4;
-	FlagDef CanWallClimb : SPlayerFlags, 5;
+	FlagDef CanDodge : SPlayerFlags, 0;		// can do quick dodges
+	FlagDef CanAirDodge : SPlayerFlags, 1;		// can do quick dodges IN AIR
+	FlagDef CanBunnyhop : SPlayerFlags, 2;		// can chain jumps together
+	FlagDef CanLongJump : SPlayerFlags, 3;		// first jump while sprinting is a long jump
+	FlagDef CanWallKick : SPlayerFlags, 4;		// can kick off walls to jump
+	FlagDef CanWallClimb : SPlayerFlags, 5;		// can push up tall ledges
 
 	readonly double walkspeed, runspeed;
 	readonly double dodgespeed;
 	readonly double crouchingspeed;
 	readonly double mincrouch;
 	readonly double buoyancy;
-	Property MoveSpeed : walkspeed, runspeed;
-	Property DodgeSpeed : dodgespeed;
-	Property CrouchingSpeed : crouchingspeed;
-	Property MinCrouch : mincrouch;
-	Property Buoyancy : buoyancy;
+	Property MoveSpeed : walkspeed, runspeed;	// real walk/run speed factors
+	Property DodgeSpeed : dodgespeed;		// speed of dodge push
+	Property CrouchingSpeed : crouchingspeed;	// speed at which player crouches and gets back up
+	Property MinCrouch : mincrouch;			// minimum crouch height
+	Property Buoyancy : buoyancy;			// buoyancy factor in water (<1 = sink, 1 = don't sink, >1 = float up)
 	bool bDucking;
 
 	enum EInvWipe
