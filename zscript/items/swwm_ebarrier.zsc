@@ -150,17 +150,17 @@ Class BarrierPower : PowerIronFeet
 			endlv = true;
 			break;
 		}
-		if ( !endlv && (Owner.pos.z <= Owner.floorz) )
+		if ( !endlv && ((Owner.pos.z == Owner.CurSector.floorplane.ZAtPoint(Owner.pos.xy)) || Owner.waterlevel) )
 		{
 			bool damageterrain = false;
-			if ( (Owner.floorsector.damageamount > 0) && (Owner.floorsector.damageinterval > 0) ) damageterrain = true;
+			if ( (Owner.CurSector.damageamount > 0) && (Owner.CurSector.damageinterval > 0) ) damageterrain = true;
 			else
 			{
-				let t = Owner.GetFloorTerrain();
+				let t = Owner.CurSector.GetFloorTerrain(0);
 				if ( t && (t.DamageAmount > 0) && (t.DamageTimeMask > 0) )
 					damageterrain = true;
 			}
-			if ( damageterrain && (Owner.floorsector.flags&Sector.SECF_ENDLEVEL) ) endlv = true;
+			if ( damageterrain && (Owner.CurSector.flags&Sector.SECF_ENDLEVEL) ) endlv = true;
 		}
 		if ( !endlv ) return;
 		EffectTics = min(0,EffectTics);
@@ -236,16 +236,16 @@ Class EBarrier : Inventory
 			damageterrain = true;
 			break;
 		}
-		if ( !damageterrain && (Owner.pos.z <= Owner.floorz) )
+		if ( !damageterrain && ((Owner.pos.z == Owner.CurSector.floorplane.ZAtPoint(Owner.pos.xy)) || Owner.waterlevel) )
 		{
-			if ( (Owner.floorsector.damageamount > 0) && (Owner.floorsector.damageinterval > 0) ) damageterrain = true;
+			if ( (Owner.CurSector.damageamount > 0) && (Owner.CurSector.damageinterval > 0) ) damageterrain = true;
 			else
 			{
-				let t = Owner.GetFloorTerrain();
+				let t = Owner.CurSector.GetFloorTerrain(0);
 				if ( t && (t.DamageAmount > 0) && (t.DamageTimeMask > 0) )
 					damageterrain = true;
 			}
-			if ( damageterrain && (Owner.floorsector.flags&Sector.SECF_ENDLEVEL) ) endlevelterrain = true;
+			if ( damageterrain && (Owner.CurSector.flags&Sector.SECF_ENDLEVEL) ) endlevelterrain = true;
 		}
 		// do not auto-use for these
 		if ( endlevelterrain ) return;
