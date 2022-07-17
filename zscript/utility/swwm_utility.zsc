@@ -458,13 +458,13 @@ Class SWWMUtility
 		Vector3 amin = ap+(-a.radius,-a.radius,0),
 			amax = ap+(a.radius,a.radius,a.height);
 		double distsq = 0.;
-		if ( p.x < amin.x ) distsq += (amin.x-p.x)**2;
-		if ( p.x > amax.x ) distsq += (p.x-amax.x)**2;
-		if ( p.y < amin.y ) distsq += (amin.y-p.y)**2;
-		if ( p.y > amax.y ) distsq += (p.y-amax.y)**2;
-		if ( p.z < amin.z ) distsq += (amin.z-p.z)**2;
-		if ( p.z > amax.z ) distsq += (p.z-amax.z)**2;
-		return (distsq <= (radius**2));
+		if ( p.x < amin.x ) distsq += (amin.x-p.x)*(amin.x-p.x);
+		if ( p.x > amax.x ) distsq += (p.x-amax.x)*(p.x-amax.x);
+		if ( p.y < amin.y ) distsq += (amin.y-p.y)*(amin.y-p.y);
+		if ( p.y > amax.y ) distsq += (p.y-amax.y)*(p.y-amax.y);
+		if ( p.z < amin.z ) distsq += (amin.z-p.z)*(amin.z-p.z);
+		if ( p.z > amax.z ) distsq += (p.z-amax.z)*(p.z-amax.z);
+		return (distsq <= (radius*radius));
 	}
 
 	// Liang-Barsky line clipping
