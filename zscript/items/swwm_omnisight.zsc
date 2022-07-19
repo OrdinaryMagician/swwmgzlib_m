@@ -25,7 +25,6 @@ Class Omnisight : Inventory
 	Default
 	{
 		Tag "$T_OMNISIGHT";
-		Inventory.Icon "graphics/HUD/Icons/I_Omnisight.png";
 		Inventory.PickupSound "misc/p_pkup";
 		Inventory.PickupMessage "$I_OMNISIGHT";
 		Inventory.PickupFlash "SWWMCyanPickupFlash";
