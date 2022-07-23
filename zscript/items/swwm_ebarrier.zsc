@@ -278,6 +278,7 @@ Class EBarrier : Inventory
 		Inventory.PickupFlash "SWWMCyanPickupFlash";
 		+INVENTORY.INVBAR;
 		+FLOATBOB;
+		+DONTGIB;
 		FloatBobStrength 0.25;
 		Radius 6;
 		Height 28;

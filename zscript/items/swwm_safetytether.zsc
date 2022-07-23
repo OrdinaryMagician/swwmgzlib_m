@@ -268,6 +268,7 @@ Class SafetyTether : Inventory
 		+INVENTORY.INVBAR;
 		+COUNTITEM;
 		+FLOATBOB;
+		+DONTGIB;
 		FloatBobStrength 0.25;
 		Radius 5;
 		Height 23;

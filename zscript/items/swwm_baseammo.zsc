@@ -298,6 +298,7 @@ Class SWWMAmmo : Ammo
 		+INVENTORY.IGNORESKILL;
 		Inventory.PickupFlash "SWWMPickupFlash";
 		+FLOATBOB;
+		+DONTGIB;
 		FloatBobStrength 0.25;
 	}
 }
@@ -329,6 +330,7 @@ Class MagAmmo : Inventory abstract
 		Inventory.Amount 1;
 		Inventory.PickupFlash "SWWMPickupFlash";
 		+FLOATBOB;
+		+DONTGIB;
 		FloatBobStrength 0.25;
 	}
 
@@ -680,6 +682,7 @@ Class SWWMAmmoSpawner : Inventory abstract
 		+NOINTERACTION;
 		+NOTELEPORT;
 		+DONTSPLASH;
+		+DONTGIB;
 		-SPECIAL;
 	}
 }

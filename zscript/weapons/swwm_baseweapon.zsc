@@ -344,6 +344,7 @@ Class SWWMWeapon : Weapon abstract
 		+WEAPON.NOALERT;
 		+WEAPON.NODEATHINPUT;
 		+FLOATBOB;
+		+DONTGIB;
 		FloatBobStrength 0.25;
 	}
 }

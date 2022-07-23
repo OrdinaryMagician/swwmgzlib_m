@@ -249,6 +249,7 @@ Class HammerspaceEmbiggener : Inventory
 		+INVENTORY.UNTOSSABLE;
 		+INVENTORY.ALWAYSPICKUP;
 		+FLOATBOB;
+		+DONTGIB;
 		FloatBobStrength 0.25;
 		Radius 8;
 		Height 24;

@@ -117,6 +117,7 @@ Class SWWMSpareArmor : Inventory abstract
 		Inventory.PickupFlash "SWWMGreenPickupFlash";
 		Inventory.UseSound "misc/armor_pkup";
 		+FLOATBOB;
+		+DONTGIB;
 		FloatBobStrength 0.25;
 	}
 }

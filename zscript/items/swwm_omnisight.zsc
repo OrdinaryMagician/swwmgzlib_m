@@ -33,6 +33,7 @@ Class Omnisight : Inventory
 		+INVENTORY.BIGPOWERUP;
 		+FLOATBOB;
 		+NOTDMATCH;
+		+DONTGIB;
 		FloatBobStrength 0.25;
 		Radius 6;
 		Height 26;

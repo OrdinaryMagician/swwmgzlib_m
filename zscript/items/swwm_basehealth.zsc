@@ -38,6 +38,7 @@ Class SWWMHealth : Inventory abstract
 		Inventory.UseSound "misc/health_pkup";
 		Inventory.PickupFlash "SWWMBluePickupFlash";
 		+FLOATBOB;
+		+DONTGIB;
 		FloatBobStrength 0.25;
 	}
 }
